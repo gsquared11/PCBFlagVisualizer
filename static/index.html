@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PCB Flag Data Viewer</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>PCB Flag Data Viewer</h1>
+        <div class="controls">
+            <div>
+                <label for="tableSelect">Select Table:</label>
+                <select id="tableSelect">
+                    <option value="">Loading tables...</option>
+                </select>
+            </div>
+            <button id="refreshBtn">Refresh Data</button>
+        </div>
+        <div id="errorContainer" class="error hidden"></div>
+        <div id="loadingContainer" class="loading">Loading...</div>
+        <div id="tableContainer" class="hidden">
+            <table id="dataTable">
+                <thead>
+                    <tr id="tableHeaders"></tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>
