@@ -110,6 +110,7 @@ async function loadTableData() {
 }
 
 // Display table data
+// Display table data
 function displayTableData(data) {
     if (!data || !data.data || data.data.length === 0) {
         showError('No data available');
@@ -135,7 +136,7 @@ function displayTableData(data) {
         columns.forEach(column => {
             const td = document.createElement('td');
 
-            // Check if the column is 'date_time' and format it
+            // Check if the column is 'date_time' and format it in CST
             if (column === 'date_time' && row[column]) {
                 const date = new Date(row[column]);
                 td.textContent = date.toLocaleString('en-US', {
@@ -144,7 +145,8 @@ function displayTableData(data) {
                     day: 'numeric',
                     hour: 'numeric',
                     minute: 'numeric',
-                    hour12: true
+                    hour12: true,
+                    timeZone: 'America/Chicago'  // CST Time Zone
                 });
             } else {
                 td.textContent = row[column] !== null ? row[column] : '';
