@@ -110,8 +110,6 @@ async function loadTableData() {
 }
 
 // Display table data
-// Display table data
-// Display table data
 function displayTableData(data) {
     if (!data || !data.data || data.data.length === 0) {
         showError('No data available');
@@ -137,21 +135,14 @@ function displayTableData(data) {
         columns.forEach(column => {
             const td = document.createElement('td');
 
-            // Check if the column is 'date_time' and format it in CST
+            // Check if the column is 'date_time' and convert from UTC to CST
             if (column === 'date_time' && row[column]) {
-                const date = new Date(row[column]);
-                const options = {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                    hour: 'numeric',
-                    minute: 'numeric',
-                    hour12: true,
-                    timeZone: 'America/Chicago'  // CST Time Zone
-                };
+                // Use Luxon to parse the UTC time and convert to CST
+                const date = DateTime.fromISO(row[column], { zone: 'utc' })
+                    .setZone('America/Chicago');
 
-                const formattedDate = new Intl.DateTimeFormat('en-US', options).format(date);
-                td.textContent = `${formattedDate} CST`; // Append "CST" to the output
+                // Format the date in CST with a clear timezone indication
+                td.textContent = date.toFormat('MMMM d, yyyy h:mm a') + ' CST';
             } else {
                 td.textContent = row[column] !== null ? row[column] : '';
             }
