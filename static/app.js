@@ -28,12 +28,13 @@ async function initialize() {
 async function loadTables() {
     showLoading(true);
     try {
-        const response = await fetch('/api/tables');
+        const response = await fetch(`${window.location.origin}/api/tables`);
         if (!response.ok) {
             throw new Error(`HTTP error! Status: ${response.status}`);
         }
         
         const data = await response.json();
+        console.log('API Response:', data);
         
         // Clear existing options
         tableSelect.innerHTML = '';
