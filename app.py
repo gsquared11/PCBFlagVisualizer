@@ -42,11 +42,15 @@ def get_tables():
 
 @app.route('/api/table-data/<table_name>', methods=['GET'])
 def get_table_data(table_name):
-    """Get data from a specific table."""
+    """Get data from a specific table with pagination."""
     try:
         # Basic validation to prevent SQL injection
         if not table_name.isalnum() and not all(c.isalnum() or c == '_' for c in table_name):
             return jsonify({"error": "Invalid table name"}), 400
+        
+        # Get limit and offset from query parameters
+        limit = request.args.get('limit', default=100, type=int)
+        offset = request.args.get('offset', default=0, type=int)
         
         conn = get_db_connection()
         cursor = conn.cursor()
@@ -55,8 +59,15 @@ def get_table_data(table_name):
         cursor.execute(f"SELECT TOP 1 * FROM {table_name}")
         columns = [column[0] for column in cursor.description]
         
-        # Get data (limiting to 100 rows for performance)
-        cursor.execute(f"SELECT TOP 100 * FROM {table_name}")
+        # Get data using OFFSET and FETCH NEXT for pagination
+        query = f"""
+            SELECT * 
+            FROM {table_name} 
+            ORDER BY (SELECT NULL) 
+            OFFSET {offset} ROWS 
+            FETCH NEXT {limit} ROWS ONLY
+        """
+        cursor.execute(query)
         rows = cursor.fetchall()
         
         # Convert to list of dictionaries
@@ -73,10 +84,23 @@ def get_table_data(table_name):
                 row_dict[columns[i]] = value
             result.append(row_dict)
         
+        # Get the total number of rows for pagination info
+        cursor.execute(f"SELECT COUNT(*) FROM {table_name}")
+        total_rows = cursor.fetchone()[0]
+        
         cursor.close()
         conn.close()
         
-        return jsonify({"data": result})
+        # Return data along with pagination info
+        return jsonify({
+            "data": result,
+            "pagination": {
+                "total_rows": total_rows,
+                "limit": limit,
+                "offset": offset,
+                "next_offset": offset + limit if offset + limit < total_rows else None
+            }
+        })
     
     except Exception as e:
         return jsonify({"error": str(e)}), 500

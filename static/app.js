@@ -1,4 +1,7 @@
 // DOM elements
+let currentPage = 1;
+let limit = 100;
+let offset = 0;
 const tableSelect = document.getElementById('tableSelect');
 const refreshBtn = document.getElementById('refreshBtn');
 const errorContainer = document.getElementById('errorContainer');
@@ -11,6 +14,21 @@ const tableBody = document.getElementById('tableBody');
 document.addEventListener('DOMContentLoaded', initialize);
 tableSelect.addEventListener('change', loadTableData);
 refreshBtn.addEventListener('click', loadTableData);
+const prevPageBtn = document.getElementById('prevPageBtn');
+const nextPageBtn = document.getElementById('nextPageBtn');
+const currentPageDisplay = document.getElementById('currentPage');
+prevPageBtn.addEventListener('click', () => {
+    if (offset > 0) {
+        offset -= limit;
+        currentPage--;
+        loadTableData();
+    }
+});
+nextPageBtn.addEventListener('click', () => {
+    offset += limit;
+    currentPage++;
+    loadTableData();
+});
 
 // Initialize the application
 async function initialize() {
@@ -71,13 +89,18 @@ async function loadTableData() {
     tableContainer.classList.add('hidden');
     
     try {
-        const response = await fetch(`/api/table-data/${encodeURIComponent(selectedTable)}`);
+        // Include limit and offset in the API request
+        const response = await fetch(`/api/table-data/${encodeURIComponent(selectedTable)}?limit=${limit}&offset=${offset}`);
         if (!response.ok) {
             throw new Error(`HTTP error! Status: ${response.status}`);
         }
         
         const data = await response.json();
+        console.log('API Response:', data);
+
         displayTableData(data);
+        updatePagination(data.pagination);  // Update pagination controls
+        
         hideError();
     } catch (error) {
         showError('Failed to load data: ' + error.message);
@@ -90,6 +113,7 @@ async function loadTableData() {
 function displayTableData(data) {
     if (!data || !data.data || data.data.length === 0) {
         showError('No data available');
+        tableContainer.classList.add('hidden');
         return;
     }
     
@@ -133,4 +157,15 @@ function showError(message) {
 // Hide error message
 function hideError() {
     errorContainer.classList.add('hidden');
+}
+
+// Update the pagination controls
+function updatePagination(pagination) {
+    currentPageDisplay.textContent = `Page ${currentPage}`;
+    
+    // Disable Previous button on the first page
+    prevPageBtn.disabled = offset <= 0;
+
+    // Disable Next button if there's no more data
+    nextPageBtn.disabled = !pagination.next_offset;
 }
