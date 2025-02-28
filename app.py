@@ -85,3 +85,5 @@ def get_table_data(table_name):
 def index():
     """Serve the main HTML page."""
     return send_from_directory('static', 'index.html')
+
+app.run(host='0.0.0.0', port=8000)
