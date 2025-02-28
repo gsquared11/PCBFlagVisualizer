@@ -1,4 +1,0 @@
-{
-    "appService.defaultWebAppToDeploy": "/subscriptions/3d439e61-a343-4ad3-aefd-6a34f2e1e211/resourceGroups/appsvc_linux_centralus/providers/Microsoft.Web/sites/pcb-flag-viewer",
-    "appService.deploySubpath": "."
-}
