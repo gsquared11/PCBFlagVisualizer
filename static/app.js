@@ -9,6 +9,7 @@ const loadingContainer = document.getElementById('loadingContainer');
 const tableContainer = document.getElementById('tableContainer');
 const tableHeaders = document.getElementById('tableHeaders');
 const tableBody = document.getElementById('tableBody');
+const DateTime = luxon.DateTime;
 
 // Event listeners
 document.addEventListener('DOMContentLoaded', initialize);
