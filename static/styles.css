@@ -1,36 +1,40 @@
 /* General Styles */
 body {
     font-family: 'Arial', sans-serif;
-    background-color: #f4f4f9;
-    color: #333;
+    background: linear-gradient(to right, #4a90e2, #357abd);
+    color: #f0f8ff;
     line-height: 1.6;
     max-width: 1200px;
     margin: 0 auto;
     padding: 20px;
+    backdrop-filter: blur(10px);
 }
 
 /* Heading */
 h1 {
-    color: #2d2d2d;
+    color: #ffffff;
     text-align: center;
-    font-size: 2.5em;
+    font-size: 2.8em;
     margin-bottom: 20px;
-    font-weight: 600;
+    font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 1.5px;
+    text-shadow: 2px 4px 6px rgba(0, 0, 0, 0.3);
 }
 
 /* Container */
 .container {
-    background-color: #fff;
-    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 15px;
     padding: 30px;
-    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease;
+    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(15px);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .container:hover {
     transform: translateY(-5px);
+    box-shadow: 0 15px 25px rgba(0, 0, 0, 0.3);
 }
 
 /* Table Styles */
@@ -38,31 +42,33 @@ table {
     width: 100%;
     border-collapse: collapse;
     margin-top: 20px;
-    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
-    border-radius: 8px;
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.15);
+    border-radius: 10px;
     overflow: hidden;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
 }
 
 th, td {
     padding: 15px;
     text-align: left;
-    border-bottom: 1px solid #eaeaea;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    color: #ffffff;
 }
 
 th {
-    background-color: #4a4a72;
-    color: white;
+    background-color: rgba(0, 102, 204, 0.8);
     text-transform: uppercase;
     letter-spacing: 0.05em;
     font-size: 0.9em;
 }
 
 tr:nth-child(even) {
-    background-color: #fafafa;
+    background-color: rgba(255, 255, 255, 0.05);
 }
 
 tr:hover {
-    background-color: #f0f0f0;
+    background-color: rgba(255, 255, 255, 0.1);
 }
 
 /* Loading and Error Messages */
@@ -70,16 +76,16 @@ tr:hover {
     text-align: center;
     margin: 20px 0;
     font-style: italic;
-    color: #888;
+    color: #ccccff;
 }
 
 .error {
-    color: #e74c3c;
+    color: #ff4c4c;
     padding: 15px;
-    background-color: #fceaea;
+    background-color: rgba(255, 77, 77, 0.2);
     border-radius: 5px;
     margin: 20px 0;
-    border-left: 5px solid #e74c3c;
+    border-left: 5px solid #ff4c4c;
 }
 
 /* Controls */
@@ -94,43 +100,46 @@ tr:hover {
 
 /* Button Styles */
 button {
-    background-color: #4a4a72;
+    background: linear-gradient(145deg, #3a85e0, #3276cb);
     color: white;
     border: none;
     padding: 10px 20px;
-    border-radius: 5px;
+    border-radius: 50px;
     cursor: pointer;
-    transition: background-color 0.3s, transform 0.3s;
-    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+    transition: background 0.3s, transform 0.3s, box-shadow 0.3s;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
 }
 
 button:hover {
-    background-color: #393964;
+    background: linear-gradient(145deg, #357abd, #2c6ab5);
     transform: translateY(-3px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
 }
 
 button:active {
-    background-color: #2f2f53;
+    background: #2c6ab5;
     transform: translateY(1px);
 }
 
 button:disabled {
     background-color: #ccc;
     cursor: not-allowed;
+    opacity: 0.6;
 }
 
 /* Select Dropdown */
 select {
     padding: 10px;
-    border-radius: 5px;
+    border-radius: 30px;
     border: 1px solid #ddd;
-    background-color: white;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    background: rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+    backdrop-filter: blur(10px);
     transition: border 0.3s;
 }
 
 select:focus {
-    border: 1px solid #4a4a72;
+    border: 1px solid #4a90e2;
     outline: none;
 }
 
@@ -148,14 +157,15 @@ select:focus {
     padding: 8px 15px;
     cursor: pointer;
     border: none;
-    background-color: #4a4a72;
+    background: linear-gradient(145deg, #4a90e2, #357abd);
     color: white;
-    border-radius: 5px;
-    transition: background-color 0.3s;
+    border-radius: 30px;
+    transition: background 0.3s, box-shadow 0.3s;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
 }
 
 .pagination button:hover {
-    background-color: #393964;
+    background: linear-gradient(145deg, #357abd, #2c6ab5);
 }
 
 .pagination button:disabled {
