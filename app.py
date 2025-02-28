@@ -9,14 +9,6 @@ CORS(app)  # Enable CORS for all routes
 
 # Get connection string from environment variable
 connection_string = os.environ.get('SQL_CONNECTION_STRING')
-if not connection_string:
-    # Fallback for development (replace with your connection details)
-    server = 'your-server.database.windows.net'
-    database = 'your-database'
-    username = 'your-username'
-    password = 'your-password'
-    driver = '{ODBC Driver 17 for SQL Server}'
-    connection_string = f'DRIVER={driver};SERVER={server};DATABASE={database};UID={username};PWD={password}'
 
 def get_db_connection():
     """Create and return a database connection."""
