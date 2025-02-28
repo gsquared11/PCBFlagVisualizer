@@ -15,14 +15,15 @@
   
   body {
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
-    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    background: -webkit-linear-gradient(135deg, var(--primary-color), var(--secondary-color)); /* Safari */
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); /* Standard */
     color: var(--text-color);
     line-height: 1.6;
     max-width: 1200px;
     margin: 0 auto;
     padding: 2rem;
     min-height: 100vh;
-  }
+}
   
   /* Typography */
   h1 {
@@ -42,11 +43,6 @@
     box-shadow: var(--shadow-md);
     backdrop-filter: blur(8px);
     transition: transform var(--transition), box-shadow var(--transition);
-  }
-  
-  .container:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--shadow-lg);
   }
   
   /* Table Styles */
@@ -143,7 +139,6 @@
     border: none;
     background: rgba(0, 0, 0, 0.3);
     color: var(--text-color);
-    backdrop-filter: blur(8px);
     transition: box-shadow var(--transition);
     appearance: none;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");

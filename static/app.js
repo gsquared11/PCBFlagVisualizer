@@ -1,6 +1,6 @@
 // DOM elements
 let currentPage = 1;
-let limit = 100;
+let limit = 50;
 let offset = 0;
 const tableSelect = document.getElementById('tableSelect');
 const refreshBtn = document.getElementById('refreshBtn');
@@ -134,7 +134,21 @@ function displayTableData(data) {
         const tr = document.createElement('tr');
         columns.forEach(column => {
             const td = document.createElement('td');
-            td.textContent = row[column] !== null ? row[column] : '';
+
+            // Check if the column is 'date_time' and format it
+            if (column === 'date_time' && row[column]) {
+                const date = new Date(row[column]);
+                td.textContent = date.toLocaleString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: 'numeric',
+                    minute: 'numeric',
+                    hour12: true
+                });
+            } else {
+                td.textContent = row[column] !== null ? row[column] : '';
+            }
             tr.appendChild(td);
         });
         tableBody.appendChild(tr);
