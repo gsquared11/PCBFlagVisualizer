@@ -59,11 +59,11 @@ def get_table_data(table_name):
         cursor.execute(f"SELECT TOP 1 * FROM {table_name}")
         columns = [column[0] for column in cursor.description]
         
-        # Get data using OFFSET and FETCH NEXT for pagination
+        # Get data using OFFSET and FETCH NEXT for pagination, sorted by id DESC
         query = f"""
             SELECT * 
             FROM {table_name} 
-            ORDER BY (SELECT NULL) 
+            ORDER BY id DESC 
             OFFSET {offset} ROWS 
             FETCH NEXT {limit} ROWS ONLY
         """
