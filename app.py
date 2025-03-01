@@ -232,6 +232,51 @@ def get_all_time_flag_distribution():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     
+@app.route('/api/flags-by-day', methods=['GET'])
+def get_flags_by_day():
+    """Return all flags for a specific day (YYYY-MM-DD)."""
+    try:
+        date_str = request.args.get('date')
+        if not date_str:
+            # No date provided, return empty
+            return jsonify([])
+
+        # Convert the date string to a datetime object
+        day_start = datetime.strptime(date_str, '%Y-%m-%d')
+        # End of the day is day_start + 1 day, exclusive
+        day_end = day_start + timedelta(days=1)
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        # Query all records that fall on the specified day
+        query = """
+            SELECT *
+            FROM flag_data
+            WHERE date_time >= ? AND date_time < ?
+            ORDER BY date_time ASC
+        """
+        cursor.execute(query, (day_start, day_end))
+        rows = cursor.fetchall()
+
+        # Gather column names
+        columns = [col[0] for col in cursor.description]
+        result = []
+        for row in rows:
+            row_dict = {}
+            for i, val in enumerate(row):
+                # Convert datetime objects to ISO strings, etc.
+                if hasattr(val, 'isoformat'):
+                    val = val.isoformat()
+                row_dict[columns[i]] = val
+            result.append(row_dict)
+
+        cursor.close()
+        conn.close()
+        return jsonify(result)
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 @app.route('/', methods=['GET'])
 def index():
     """Serve the main HTML page."""

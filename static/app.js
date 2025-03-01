@@ -11,9 +11,12 @@ const loadingContainer = document.getElementById("loadingContainer");
 const tableContainer = document.getElementById("tableContainer");
 const tableHeaders = document.getElementById("tableHeaders");
 const tableBody = document.getElementById("tableBody");
+const flagDate = document.getElementById("flagDate");
+const loadFlagsByDayBtn = document.getElementById("loadFlagsByDayBtn");
+const flagsByDayContainer = document.getElementById("flagsByDayContainer");
 const DateTime = luxon.DateTime;
 const columnNameMap = {
-  date_time: "Time and Date",
+  date_time: "Time and Date (recorded every 4 hours)",
   flag_type: "Flag Type",
   id: "Entry Number",
 };
@@ -58,6 +61,30 @@ nextPageBtn.addEventListener("click", () => {
   currentPage++;
   loadTableData();
 });
+
+// Listen for a click on "Show Flags"
+loadFlagsByDayBtn.addEventListener("click", () => {
+  const selectedDate = flagDate.value; // e.g. "2025-03-10"
+  if (!selectedDate) {
+    showError("Please select a date.");
+    return;
+  }
+  loadFlagsByDay(selectedDate);
+});
+
+// Fetch data for the selected day
+async function loadFlagsByDay(date) {
+  try {
+    const response = await fetch(`/api/flags-by-day?date=${date}`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+    const data = await response.json();
+    displayFlagsByDay(data, date);
+  } catch (error) {
+    showError("Failed to load flags for the selected day: " + error.message);
+  }
+}
 
 // Initialize the application
 async function initialize() {
@@ -208,97 +235,129 @@ async function loadAllTimeFlagDistribution() {
 
 // Function to create a bar chart using Chart.js
 function createBarChart(containerId, data) {
-    const container = document.getElementById(containerId);
-    
-    // Clear existing content
-    container.innerHTML = "";
-   
-    // Create and append a canvas element for the bar chart
-    const canvas = document.createElement("canvas");
-    container.appendChild(canvas);
-    const ctx = canvas.getContext("2d");
-  
-    // Prepare data for the chart
-    const labels = data.map((item) => item.flag_type);
-    const counts = data.map((item) => item.count);
+  const container = document.getElementById(containerId);
 
-    // Use the same flag color mapping as before
-    const colors = labels.map(flag => flagColorMapping[flag.trim().toLowerCase()] || 'gray');
-  
-    // Create the bar chart
-    new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: labels,
-          datasets: [{
-            label: 'All‑Time Flag Distribution',
-            data: counts,
-            backgroundColor: colors,
-            borderColor: 'black', // increased contrast for lines
-            borderWidth: 1
-          }]
+  // Clear existing content
+  container.innerHTML = "";
+
+  // Create and append a canvas element for the bar chart
+  const canvas = document.createElement("canvas");
+  container.appendChild(canvas);
+  const ctx = canvas.getContext("2d");
+
+  // Prepare data for the chart
+  const labels = data.map((item) => item.flag_type);
+  const counts = data.map((item) => item.count);
+
+  // Use the same flag color mapping as before
+  const colors = labels.map(
+    (flag) => flagColorMapping[flag.trim().toLowerCase()] || "gray"
+  );
+
+  // Create the bar chart
+  new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: "All‑Time Flag Distribution",
+          data: counts,
+          backgroundColor: colors,
+          borderColor: "black", // increased contrast for lines
+          borderWidth: 1,
         },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: {
-          y: {
-            beginAtZero: true,
-            title: {
-              display: true,
-              text: "Count",
-              color: "white",
-            },
-            ticks: {
-              stepSize: 1,
-              color: "white",
-            },
-            // Light grid lines for contrast
-            grid: {
-              color: "rgba(255, 255, 255, 0.2)",
-            },
-          },
-          x: {
-            title: {
-              display: true,
-              text: "Flag Type",
-              color: "white",
-            },
-            ticks: {
-              color: "white",
-            },
-            grid: {
-              color: "rgba(255, 255, 255, 0.2)",
-            },
-          },
-        },
-        plugins: {
-          // White chart title
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        y: {
+          beginAtZero: true,
           title: {
             display: true,
-            text: "All-Time Flag Distribution",
+            text: "Count",
             color: "white",
-            font: {
-              size: 18,
-            },
           },
-          legend: {
-            display: false,
-            labels: {
-              color: "white",
-            },
+          ticks: {
+            stepSize: 1,
+            color: "white",
           },
-          tooltip: {
-            callbacks: {
-              label: function (context) {
-                return `${context.label}: ${context.raw}`;
-              },
+          // Light grid lines for contrast
+          grid: {
+            color: "rgba(255, 255, 255, 0.2)",
+          },
+        },
+        x: {
+          title: {
+            display: true,
+            text: "Flag Type",
+            color: "white",
+          },
+          ticks: {
+            color: "white",
+          },
+          grid: {
+            color: "rgba(255, 255, 255, 0.2)",
+          },
+        },
+      },
+      plugins: {
+        // White chart title
+        title: {
+          display: true,
+          text: "All-Time Flag Distribution",
+          color: "white",
+          font: {
+            size: 18,
+          },
+        },
+        legend: {
+          display: false,
+          labels: {
+            color: "white",
+          },
+        },
+        tooltip: {
+          callbacks: {
+            label: function (context) {
+              return `${context.label}: ${context.raw}`;
             },
           },
         },
       },
-    });
+    },
+  });
+}
+
+// Display the flags for the chosen day
+function displayFlagsByDay(data, date) {
+  if (!data || data.length === 0) {
+    flagsByDayContainer.innerHTML = `<div class="no-data">No flags for ${date}</div>`;
+    return;
   }
+
+  // Example: display them in a simple list
+  let html = `<h3>Flags for ${date}</h3>`;
+  html += "<ul>";
+  data.forEach((row) => {
+    // row.flag_type might be "Yellow Flag", etc.
+    // row.date_time is an ISO string
+    const dateTimeLocal =
+      DateTime.fromISO(row.date_time, { zone: "utc" })
+        .setZone("America/Chicago")
+        .toFormat("MMMM d, yyyy h:mm a") + " CST";
+
+    html += `<li>
+               <strong>${row.flag_type}</strong> 
+               <em>(${dateTimeLocal})</em>
+             </li>`;
+  });
+  html += "</ul>";
+
+  flagsByDayContainer.innerHTML = html;
+}
 
 // Load data from flag_data
 async function loadTableData() {
