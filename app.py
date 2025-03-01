@@ -4,10 +4,11 @@ import json
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 
+# Initialize Flask app and enable CORS for all routes (multiple connections)
 app = Flask(__name__, static_folder='static')
-CORS(app)  # Enable CORS for all routes
+CORS(app)
 
-# Get connection string from environment variable
+# Get connection string from environment variable on Azure
 connection_string = os.environ.get('SQL_CONNECTION_STRING')
 
 def get_db_connection():
@@ -35,6 +36,7 @@ def get_tables():
         cursor.close()
         conn.close()
         
+        # Returns a list of table names as jsons
         return jsonify({"tables": tables})
     
     except Exception as e:
@@ -55,11 +57,11 @@ def get_table_data(table_name):
         conn = get_db_connection()
         cursor = conn.cursor()
         
-        # Get column names
+        # Get column names for the table
         cursor.execute(f"SELECT TOP 1 * FROM {table_name}")
         columns = [column[0] for column in cursor.description]
         
-        # Get data using OFFSET and FETCH NEXT for pagination, sorted by id DESC
+        # Get data using OFFSET and FETCH NEXT for pagination, sorted by id DESC (most recent)
         query = f"""
             SELECT * 
             FROM {table_name} 
@@ -70,7 +72,7 @@ def get_table_data(table_name):
         cursor.execute(query)
         rows = cursor.fetchall()
         
-        # Convert to list of dictionaries
+        # Convert rows to list of dictionaries with column names as keys
         result = []
         for row in rows:
             row_dict = {}

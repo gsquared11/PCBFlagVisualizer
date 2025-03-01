@@ -7,19 +7,19 @@
     <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
+    <!-- Main Container -->
     <div class="container">
         <h1>PCB Flag Data Viewer</h1>
+        <!-- Controls For Refresh -->
         <div class="controls">
-            <div>
-                <label for="tableSelect">Select Table:</label>
-                <select id="tableSelect">
-                    <option value="">Loading tables...</option>
-                </select>
-            </div>
+            <!-- Button to Refresh Data -->
             <button id="refreshBtn">Refresh Data</button>
         </div>
+         <!-- Error Message Container (Hidden by Default) -->
         <div id="errorContainer" class="error hidden"></div>
+        <!-- Loading Indicator (Visible During Data Fetch) -->
         <div id="loadingContainer" class="loading">Loading...</div>
+        <!-- Data Table Container (Hidden Until Data is Loaded) -->
         <div id="tableContainer" class="hidden">
             <table id="dataTable">
                 <thead>
@@ -28,12 +28,14 @@
                 <tbody id="tableBody"></tbody>
             </table>
         </div>
+         <!-- Pagination Controls -->
         <div id="paginationContainer" class="pagination">
             <button id="prevPageBtn" disabled>Previous</button>
             <span id="currentPage">Page 1</span>
             <button id="nextPageBtn">Next</button>
         </div>
     </div>
+    <!-- Include Luxon for Date Manipulation -->
     <script src="https://cdn.jsdelivr.net/npm/luxon@3/build/global/luxon.min.js"></script>
     <script src="/static/app.js" defer></script>
 </body>

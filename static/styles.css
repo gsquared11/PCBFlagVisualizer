@@ -1,197 +1,237 @@
-/* Base Styles */
+/* =====================================
+   Root Variables
+   ===================================== */
+/* Define theme colors, shadows, and transitions for consistent styling */
 :root {
-    --primary-color: #3a86ff;
-    --secondary-color: #8338ec;
-    --text-color: #ffffff;
-    --bg-overlay: rgba(255, 255, 255, 0.15);
-    --table-bg: rgba(0, 0, 0, 0.2);
-    --table-hover: rgba(255, 255, 255, 0.1);
-    --shadow-sm: 0 4px 6px rgba(0, 0, 0, 0.1);
-    --shadow-md: 0 8px 16px rgba(0, 0, 0, 0.1);
-    --shadow-lg: 0 12px 24px rgba(0, 0, 0, 0.15);
-    --border-radius: 12px;
-    --transition: 0.25s ease;
-  }
-  
-  body {
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
-    background: -webkit-linear-gradient(135deg, var(--primary-color), var(--secondary-color)); /* Safari */
-    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); /* Standard */
-    color: var(--text-color);
-    line-height: 1.6;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 2rem;
-    min-height: 100vh;
+  --primary-color: #3a86ff;      /* Primary brand color (Blue) */
+  --secondary-color: #8338ec;    /* Secondary accent color (Purple) */
+  --text-color: #ffffff;          /* Text color for better contrast */
+  --bg-overlay: rgba(255, 255, 255, 0.15);  /* Semi-transparent overlay for containers */
+  --table-bg: rgba(0, 0, 0, 0.2);           /* Background color for tables */
+  --table-hover: rgba(255, 255, 255, 0.1);  /* Hover state for table rows */
+  --shadow-sm: 0 4px 6px rgba(0, 0, 0, 0.1);    /* Small shadow */
+  --shadow-md: 0 8px 16px rgba(0, 0, 0, 0.1);   /* Medium shadow */
+  --shadow-lg: 0 12px 24px rgba(0, 0, 0, 0.15); /* Large shadow */
+  --border-radius: 12px;          /* Border radius for rounded elements */
+  --transition: 0.25s ease;       /* Smooth transition for hover states */
 }
+
+/* =====================================
+ Base Styles
+ ===================================== */
+/* Apply global styles for body and typography */
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background: -webkit-linear-gradient(135deg, var(--primary-color), var(--secondary-color)); /* Safari Gradient */
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));          /* Standard Gradient */
+  color: var(--text-color);
+  line-height: 1.6;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  min-height: 100vh;
+}
+
+/* =====================================
+ Typography
+ ===================================== */
+/* Styles for primary heading */
+h1 {
+  color: var(--text-color);
+  text-align: center;
+  font-size: 2.5rem;
+  margin-bottom: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+/* =====================================
+ Container Styles
+ ===================================== */
+/* Main container with background overlay and shadow */
+.container {
+  background: var(--bg-overlay);
+  border-radius: var(--border-radius);
+  padding: 2rem;
+  box-shadow: var(--shadow-md);
+  backdrop-filter: blur(8px);      /* Frosted glass effect */
+  transition: transform var(--transition), box-shadow var(--transition);
+}
+
+/* =====================================
+ Table Styles
+ ===================================== */
+/* General table styling */
+table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin-top: 1.5rem;
+  border-radius: var(--border-radius);
+  overflow: hidden;
+  background: var(--table-bg);
+  color: var(--text-color);
+}
+
+/* Table headers and cells */
+th, td {
+  padding: 1rem;
+  text-align: left;
+}
+
+th {
+  background-color: rgba(0, 0, 0, 0.3);
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+/* Table row separation and hover effect */
+tr:not(:last-child) td {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+tr:hover td {
+  background-color: var(--table-hover);
+}
+
+/* =====================================
+ Feedback States
+ ===================================== */
+/* Loading message */
+.loading {
+  text-align: center;
+  margin: 1.5rem 0;
+  font-weight: 500;
+  opacity: 0.8;
+}
+
+/* Error message */
+.error {
+  color: #ff4d6d;
+  padding: 1rem;
+  background-color: rgba(255, 77, 109, 0.1);
+  border-radius: var(--border-radius);
+  margin: 1.5rem 0;
+  border-left: 4px solid #ff4d6d;
+}
+
+/* =====================================
+ Layout Components
+ ===================================== */
+/* Flexbox layout for controls */
+.controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+/* =====================================
+ Interactive Elements (Buttons and Select)
+ ===================================== */
+/* Primary buttons */
+button {
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 50px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background var(--transition), transform var(--transition), box-shadow var(--transition);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Button hover and active states */
+button:hover {
+  background: var(--secondary-color);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+button:active {
+  transform: translateY(0);
+}
+
+button:disabled {
+  background-color: #6c757d;
+  opacity: 0.5;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Custom select styling */
+select {
+  padding: 0.75rem 1rem;
+  border-radius: 50px;
+  border: none;
+  background: rgba(0, 0, 0, 0.3);
+  color: var(--text-color);
+  transition: box-shadow var(--transition);
+  appearance: none;
+  background-image: url("data:image/svg+xml,...");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 1em;
+  padding-right: 2.5rem;
+  font-weight: 500;
+}
+
+select:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
+}
+
+/* =====================================
+ Pagination
+ ===================================== */
+/* Pagination container */
+.pagination {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin: 1.5rem 0;
+}
+
+/* Pagination buttons */
+.pagination button {
+  padding: 0.5rem 1rem;
+  min-width: 2.5rem;
+}
+
+/* =====================================
+ Utility Classes
+ ===================================== */
+/* Hide elements (e.g., for loading states) */
+.hidden {
+  display: none;
+}
+
+/* =====================================
+ Responsive Design
+ ===================================== */
+/* Mobile and tablet responsive adjustments */
+@media (max-width: 768px) {
+  body {
+      padding: 1rem;
+  }
   
-  /* Typography */
+  .controls {
+      flex-direction: column;
+      align-items: stretch;
+  }
+  
   h1 {
-    color: var(--text-color);
-    text-align: center;
-    font-size: 2.5rem;
-    margin-bottom: 2rem;
-    font-weight: 700;
-    letter-spacing: -0.02em;
+      font-size: 2rem;
   }
   
-  /* Container */
   .container {
-    background: var(--bg-overlay);
-    border-radius: var(--border-radius);
-    padding: 2rem;
-    box-shadow: var(--shadow-md);
-    backdrop-filter: blur(8px);
-    transition: transform var(--transition), box-shadow var(--transition);
-  }
-  
-  /* Table Styles */
-  table {
-    width: 100%;
-    border-collapse: separate;
-    border-spacing: 0;
-    margin-top: 1.5rem;
-    border-radius: var(--border-radius);
-    overflow: hidden;
-    background: var(--table-bg);
-    color: var(--text-color);
+      padding: 1.5rem;
   }
   
   th, td {
-    padding: 1rem;
-    text-align: left;
-  }
-  
-  th {
-    background-color: rgba(0, 0, 0, 0.3);
-    font-weight: 600;
-    font-size: 0.875rem;
-  }
-  
-  tr:not(:last-child) td {
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  }
-  
-  tr:hover td {
-    background-color: var(--table-hover);
-  }
-  
-  /* Feedback States */
-  .loading {
-    text-align: center;
-    margin: 1.5rem 0;
-    font-weight: 500;
-    opacity: 0.8;
-  }
-  
-  .error {
-    color: #ff4d6d;
-    padding: 1rem;
-    background-color: rgba(255, 77, 109, 0.1);
-    border-radius: var(--border-radius);
-    margin: 1.5rem 0;
-    border-left: 4px solid #ff4d6d;
-  }
-  
-  /* Layout Components */
-  .controls {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1.5rem;
-    gap: 1rem;
-    flex-wrap: wrap;
-  }
-  
-  /* Interactive Elements */
-  button {
-    background: var(--primary-color);
-    color: white;
-    border: none;
-    padding: 0.75rem 1.5rem;
-    border-radius: 50px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background var(--transition), transform var(--transition), box-shadow var(--transition);
-    box-shadow: var(--shadow-sm);
-  }
-  
-  button:hover {
-    background: var(--secondary-color);
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
-  }
-  
-  button:active {
-    transform: translateY(0);
-  }
-  
-  button:disabled {
-    background-color: #6c757d;
-    opacity: 0.5;
-    transform: none;
-    box-shadow: none;
-  }
-  
-  select {
-    padding: 0.75rem 1rem;
-    border-radius: 50px;
-    border: none;
-    background: rgba(0, 0, 0, 0.3);
-    color: var(--text-color);
-    transition: box-shadow var(--transition);
-    appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 1rem center;
-    background-size: 1em;
-    padding-right: 2.5rem;
-    font-weight: 500;
-  }
-  
-  select:focus {
-    outline: none;
-    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
-  }
-  
-  /* Pagination */
-  .pagination {
-    display: flex;
-    justify-content: center;
-    gap: 0.5rem;
-    margin: 1.5rem 0;
-  }
-  
-  .pagination button {
-    padding: 0.5rem 1rem;
-    min-width: 2.5rem;
-  }
-  
-  /* Utility Classes */
-  .hidden {
-    display: none;
-  }
-  
-  /* Responsive Design */
-  @media (max-width: 768px) {
-    body {
-      padding: 1rem;
-    }
-    
-    .controls {
-      flex-direction: column;
-      align-items: stretch;
-    }
-    
-    h1 {
-      font-size: 2rem;
-    }
-    
-    .container {
-      padding: 1.5rem;
-    }
-    
-    th, td {
       padding: 0.75rem;
-    }
   }
+}

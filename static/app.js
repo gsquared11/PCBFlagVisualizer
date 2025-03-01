@@ -1,8 +1,9 @@
-// DOM elements
-let currentPage = 1;
-let limit = 50;
-let offset = 0;
-const tableSelect = document.getElementById('tableSelect');
+// Global Variables and DOM Elements
+let currentPage = 1;                // Current page number for pagination
+let limit = 50;                     // Number of rows per page
+let offset = 0;                     // Offset for pagination
+
+// Get refs to DOM elements
 const refreshBtn = document.getElementById('refreshBtn');
 const errorContainer = document.getElementById('errorContainer');
 const loadingContainer = document.getElementById('loadingContainer');
@@ -11,13 +12,18 @@ const tableHeaders = document.getElementById('tableHeaders');
 const tableBody = document.getElementById('tableBody');
 const DateTime = luxon.DateTime;
 
-// Event listeners
-document.addEventListener('DOMContentLoaded', initialize);
-tableSelect.addEventListener('change', loadTableData);
-refreshBtn.addEventListener('click', loadTableData);
+// Pagination controls
 const prevPageBtn = document.getElementById('prevPageBtn');
 const nextPageBtn = document.getElementById('nextPageBtn');
 const currentPageDisplay = document.getElementById('currentPage');
+
+// Event listeners
+document.addEventListener('DOMContentLoaded', initialize);
+
+// Trigger data load when the table is changed or refresh button is clicked
+refreshBtn.addEventListener('click', loadTableData);
+
+// Pagination buttons
 prevPageBtn.addEventListener('click', () => {
     if (offset > 0) {
         offset -= limit;
@@ -34,63 +40,22 @@ nextPageBtn.addEventListener('click', () => {
 // Initialize the application
 async function initialize() {
     try {
-        await loadTables();
-        if (tableSelect.options.length > 0) {
-            await loadTableData();
-        }
+        // Load data for the default table
+        await loadTableData();
     } catch (error) {
         showError('Failed to initialize: ' + error.message);
     }
 }
 
-// Load available tables from the database
-async function loadTables() {
-    showLoading(true);
-    try {
-        const response = await fetch(`${window.location.origin}/api/tables`);
-        if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        console.log('API Response:', data);
-        
-        // Clear existing options
-        tableSelect.innerHTML = '';
-        
-        // Add table options
-        if (data.tables && data.tables.length > 0) {
-            data.tables.forEach(table => {
-                const option = document.createElement('option');
-                option.value = table;
-                option.textContent = table;
-                tableSelect.appendChild(option);
-            });
-        } else {
-            const option = document.createElement('option');
-            option.value = '';
-            option.textContent = 'No tables found';
-            tableSelect.appendChild(option);
-        }
-        
-        hideError();
-    } catch (error) {
-        showError('Failed to load tables: ' + error.message);
-    } finally {
-        showLoading(false);
-    }
-}
-
-// Load data from selected table
+// Load data from flag_data
 async function loadTableData() {
-    const selectedTable = tableSelect.value;
-    if (!selectedTable) return;
+    const selectedTable = 'flag_data'; // Set default table name
     
     showLoading(true);
-    tableContainer.classList.add('hidden');
+    tableContainer.classList.add('hidden');  // Hide table while loading
     
     try {
-        // Include limit and offset in the API request
+        // Fetch table data with pagination
         const response = await fetch(`/api/table-data/${encodeURIComponent(selectedTable)}?limit=${limit}&offset=${offset}`);
         if (!response.ok) {
             throw new Error(`HTTP error! Status: ${response.status}`);
@@ -99,14 +64,17 @@ async function loadTableData() {
         const data = await response.json();
         console.log('API Response:', data);
 
+        // Display the fetched table data
         displayTableData(data);
-        updatePagination(data.pagination);  // Update pagination controls
         
-        hideError();
+        // Update pagination controls
+        updatePagination(data.pagination);
+        
+        hideError();  // Hide error message if any
     } catch (error) {
         showError('Failed to load data: ' + error.message);
     } finally {
-        showLoading(false);
+        showLoading(false);  // Hide loading indicator
     }
 }
 
