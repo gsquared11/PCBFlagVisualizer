@@ -3,17 +3,32 @@
    ===================================== */
 /* Define theme colors, shadows, and transitions for consistent styling */
 :root {
-  --primary-color: #3a86ff;      /* Primary brand color (Blue) */
-  --secondary-color: #8338ec;    /* Secondary accent color (Purple) */
-  --text-color: #ffffff;          /* Text color for better contrast */
-  --bg-overlay: rgba(255, 255, 255, 0.15);  /* Semi-transparent overlay for containers */
-  --table-bg: rgba(0, 0, 0, 0.2);           /* Background color for tables */
-  --table-hover: rgba(255, 255, 255, 0.1);  /* Hover state for table rows */
-  --shadow-sm: 0 4px 6px rgba(0, 0, 0, 0.1);    /* Small shadow */
-  --shadow-md: 0 8px 16px rgba(0, 0, 0, 0.1);   /* Medium shadow */
+  --primary-color: #3a86ff; /* Primary brand color (Blue) */
+  --secondary-color: #8338ec; /* Secondary accent color (Purple) */
+  --text-color: #ffffff; /* Text color for better contrast */
+  --bg-overlay: rgba(
+    255,
+    255,
+    255,
+    0.15
+  ); /* Semi-transparent overlay for containers */
+  --table-bg: rgba(0, 0, 0, 0.2); /* Background color for tables */
+  --table-hover: rgba(255, 255, 255, 0.1); /* Hover state for table rows */
+  --shadow-sm: 0 4px 6px rgba(0, 0, 0, 0.1); /* Small shadow */
+  --shadow-md: 0 8px 16px rgba(0, 0, 0, 0.1); /* Medium shadow */
   --shadow-lg: 0 12px 24px rgba(0, 0, 0, 0.15); /* Large shadow */
-  --border-radius: 12px;          /* Border radius for rounded elements */
-  --transition: 0.25s ease;       /* Smooth transition for hover states */
+  --border-radius: 12px; /* Border radius for rounded elements */
+  --transition: 0.25s ease; /* Smooth transition for hover states */
+
+  /* Chart colors */
+  --chart-color-1: #ff006e;
+  --chart-color-2: #fb5607;
+  --chart-color-3: #ffbe0b;
+  --chart-color-4: #8ac926;
+  --chart-color-5: #1982c4;
+  --chart-color-6: #6a4c93;
+  --chart-color-7: #ff595e;
+  --chart-color-8: #ffca3a;
 }
 
 /* =====================================
@@ -21,9 +36,17 @@
  ===================================== */
 /* Apply global styles for body and typography */
 body {
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  background: -webkit-linear-gradient(135deg, var(--primary-color), var(--secondary-color)); /* Safari Gradient */
-  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));          /* Standard Gradient */
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
+  background: -webkit-linear-gradient(
+    135deg,
+    var(--primary-color),
+    var(--secondary-color)
+  ); /* Safari Gradient */
+  background: linear-gradient(
+    135deg,
+    var(--primary-color),
+    var(--secondary-color)
+  ); /* Standard Gradient */
   color: var(--text-color);
   line-height: 1.6;
   max-width: 1200px;
@@ -45,6 +68,22 @@ h1 {
   letter-spacing: -0.02em;
 }
 
+h2 {
+  color: var(--text-color);
+  font-size: 1.8rem;
+  margin: 1.5rem 0;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+h3 {
+  color: var(--text-color);
+  font-size: 1.2rem;
+  margin: 0.75rem 0;
+  font-weight: 600;
+  text-align: center;
+}
+
 /* =====================================
  Container Styles
  ===================================== */
@@ -54,8 +93,43 @@ h1 {
   border-radius: var(--border-radius);
   padding: 2rem;
   box-shadow: var(--shadow-md);
-  backdrop-filter: blur(8px);      /* Frosted glass effect */
+  backdrop-filter: blur(8px); /* Frosted glass effect */
   transition: transform var(--transition), box-shadow var(--transition);
+}
+
+/* =====================================
+ Chart Styles
+ ===================================== */
+.charts-container {
+  margin: 2rem 0;
+}
+
+.charts-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.chart-card {
+  background: var(--table-bg);
+  border-radius: var(--border-radius);
+  padding: 1rem;
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--transition), box-shadow var(--transition);
+  max-width: 400px; /* Limit the card's width */
+  margin: 0 auto; /* Center the card horizontally */
+  overflow: hidden; /* Prevent child elements from overflowing */
+}
+
+.chart-card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-md);
+}
+
+.chart {
+  height: 250px;
+  position: relative;
 }
 
 /* =====================================
@@ -74,7 +148,8 @@ table {
 }
 
 /* Table headers and cells */
-th, td {
+th,
+td {
   padding: 1rem;
   text-align: left;
 }
@@ -140,7 +215,8 @@ button {
   border-radius: 50px;
   font-weight: 500;
   cursor: pointer;
-  transition: background var(--transition), transform var(--transition), box-shadow var(--transition);
+  transition: background var(--transition), transform var(--transition),
+    box-shadow var(--transition);
   box-shadow: var(--shadow-sm);
 }
 
@@ -215,23 +291,28 @@ select:focus {
 /* Mobile and tablet responsive adjustments */
 @media (max-width: 768px) {
   body {
-      padding: 1rem;
+    padding: 1rem;
   }
-  
+
   .controls {
-      flex-direction: column;
-      align-items: stretch;
+    flex-direction: column;
+    align-items: stretch;
   }
-  
+
   h1 {
-      font-size: 2rem;
+    font-size: 2rem;
   }
-  
+
   .container {
-      padding: 1.5rem;
+    padding: 1.5rem;
   }
-  
-  th, td {
-      padding: 0.75rem;
+
+  th,
+  td {
+    padding: 0.75rem;
+  }
+
+  .charts-grid {
+    grid-template-columns: 1fr;
   }
 }

@@ -1,42 +1,85 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>PCB Flag Data Viewer</title>
-    <link rel="stylesheet" href="/static/styles.css">
-</head>
-<body>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
     <!-- Main Container -->
     <div class="container">
-        <h1>PCB Flag Data Viewer</h1>
-        <!-- Controls For Refresh -->
-        <div class="controls">
-            <!-- Button to Refresh Data -->
-            <button id="refreshBtn">Refresh Data</button>
+      <h1>PCB Flag Data Viewer</h1>
+      <!-- Controls For Refresh -->
+      <div class="controls">
+        <!-- Button to Refresh Data -->
+        <button id="refreshBtn">Refresh Data</button>
+      </div>
+      <!-- Flag Distribution Charts -->
+      <h2>Flag Distribution - Last 3 Months</h2>
+      <div id="chartsContainer" class="charts-container">
+        <div class="charts-grid">
+          <div id="chart1Container" class="chart-card">
+            <h3 id="chart1Title">Loading...</h3>
+            <div id="chart1" class="chart"></div>
+          </div>
+          <div id="chart2Container" class="chart-card">
+            <h3 id="chart2Title">Loading...</h3>
+            <div id="chart2" class="chart"></div>
+          </div>
+          <div id="chart3Container" class="chart-card">
+            <h3 id="chart3Title">Loading...</h3>
+            <div id="chart3" class="chart"></div>
+          </div>
         </div>
-         <!-- Error Message Container (Hidden by Default) -->
-        <div id="errorContainer" class="error hidden"></div>
-        <!-- Loading Indicator (Visible During Data Fetch) -->
-        <div id="loadingContainer" class="loading">Loading...</div>
-        <!-- Data Table Container (Hidden Until Data is Loaded) -->
-        <div id="tableContainer" class="hidden">
-            <table id="dataTable">
-                <thead>
-                    <tr id="tableHeaders"></tr>
-                </thead>
-                <tbody id="tableBody"></tbody>
-            </table>
-        </div>
-         <!-- Pagination Controls -->
-        <div id="paginationContainer" class="pagination">
-            <button id="prevPageBtn" disabled>Previous</button>
-            <span id="currentPage">Page 1</span>
-            <button id="nextPageBtn">Next</button>
-        </div>
+      </div>
+      <!-- All-Time Bar Chart Container (placed below the pie charts) -->
+      <h2>All Time Flag Distribution</h2>
+      <div
+        id="allTimeBarChart"
+        style="width: 100%; height: 300px; margin: 1rem 0"
+      ></div>
+      <!-- Error Message Container (Hidden by Default) -->
+      <div id="errorContainer" class="error hidden"></div>
+      <!-- Loading Indicator (Visible During Data Fetch) -->
+      <div id="loadingContainer" class="loading">Loading...</div>
     </div>
+    <!-- Data Table Container (Hidden Until Data is Loaded) -->
+    <div id="tableContainer" class="hidden">
+      <table id="dataTable">
+        <thead>
+          <tr id="tableHeaders"></tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+    <!-- Pagination Controls -->
+    <div id="paginationContainer" class="pagination">
+      <button id="prevPageBtn" disabled>Previous</button>
+      <span id="currentPage">Page 1</span>
+      <button id="nextPageBtn">Next</button>
+    </div>
+    <!-- Footer -->
+    <footer
+      style="
+        text-align: center;
+        padding: 1rem 0;
+        color: #ffffff;
+        background: rgba(0, 0, 0, 0.2);
+      "
+    >
+      &copy; 2025
+      <a
+        href="https://github.com/gsquared11"
+        target="_blank"
+        style="color: inherit; text-decoration: none"
+        >gsquared11</a
+      >
+    </footer>
     <!-- Include Luxon for Date Manipulation -->
     <script src="https://cdn.jsdelivr.net/npm/luxon@3/build/global/luxon.min.js"></script>
+    <!-- Include Chart.js for Pie Charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
     <script src="/static/app.js" defer></script>
-</body>
+  </body>
 </html>

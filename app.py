@@ -1,8 +1,11 @@
 import os
 import pyodbc
 import json
+import calendar
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
+from datetime import datetime, timedelta
+from dateutil.relativedelta import relativedelta
 
 # Initialize Flask app and enable CORS for all routes (multiple connections)
 app = Flask(__name__, static_folder='static')
@@ -107,6 +110,128 @@ def get_table_data(table_name):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@app.route('/api/flag-distribution', methods=['GET'])
+def get_flag_distribution():
+    """Get the distribution of flags for the last three complete months."""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        today = datetime.now()
+        
+        # Get last full month (month1)
+        last_month = today - relativedelta(months=1)
+        month1_start = last_month.replace(day=1)
+        month1_end = last_month.replace(day=calendar.monthrange(last_month.year, last_month.month)[1])
+        
+        # Get the month before that (month2)
+        two_months_ago = today - relativedelta(months=2)
+        month2_start = two_months_ago.replace(day=1)
+        month2_end = two_months_ago.replace(day=calendar.monthrange(two_months_ago.year, two_months_ago.month)[1])
+        
+        # Get three months ago (month3)
+        three_months_ago = today - relativedelta(months=3)
+        month3_start = three_months_ago.replace(day=1)
+        month3_end = three_months_ago.replace(day=calendar.monthrange(three_months_ago.year, three_months_ago.month)[1])
+        
+        # SQL query: count flags per month based on the computed ranges.
+        query = """
+        SELECT 
+            flag_type,
+            COUNT(CASE WHEN date_time >= ? AND date_time <= ? THEN 1 END) AS month1_count,
+            COUNT(CASE WHEN date_time >= ? AND date_time <= ? THEN 1 END) AS month2_count,
+            COUNT(CASE WHEN date_time >= ? AND date_time <= ? THEN 1 END) AS month3_count
+        FROM flag_data
+        WHERE date_time >= ?
+        GROUP BY flag_type
+        ORDER BY 
+            (COUNT(CASE WHEN date_time >= ? AND date_time <= ? THEN 1 END) +
+             COUNT(CASE WHEN date_time >= ? AND date_time <= ? THEN 1 END) +
+             COUNT(CASE WHEN date_time >= ? AND date_time <= ? THEN 1 END)) DESC
+        """
+        
+        # Use month3_start as the minimum date so that only records in the last three full months are considered.
+        min_date = month3_start
+        
+        cursor.execute(query, (
+            month1_start, month1_end,
+            month2_start, month2_end,
+            month3_start, month3_end,
+            min_date,
+            month1_start, month1_end,
+            month2_start, month2_end,
+            month3_start, month3_end
+        ))
+        
+        rows = cursor.fetchall()
+        
+        # Build the result dictionary with a list for each month.
+        result = {
+            "month1": {
+                "name": month1_start.strftime("%B %Y"),
+                "data": []
+            },
+            "month2": {
+                "name": month2_start.strftime("%B %Y"),
+                "data": []
+            },
+            "month3": {
+                "name": month3_start.strftime("%B %Y"),
+                "data": []
+            }
+        }
+        
+        for row in rows:
+            flag_type, month1_count, month2_count, month3_count = row
+            
+            if month1_count > 0:
+                result["month1"]["data"].append({
+                    "flag_type": flag_type,
+                    "count": month1_count
+                })
+            if month2_count > 0:
+                result["month2"]["data"].append({
+                    "flag_type": flag_type,
+                    "count": month2_count
+                })
+            if month3_count > 0:
+                result["month3"]["data"].append({
+                    "flag_type": flag_type,
+                    "count": month3_count
+                })
+        
+        cursor.close()
+        conn.close()
+        
+        return jsonify(result)
+    
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/all-time-flag-distribution', methods=['GET'])
+def get_all_time_flag_distribution():
+    """Get the all‑time flag distribution."""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        query = """
+        SELECT flag_type, COUNT(*) AS count
+        FROM flag_data
+        GROUP BY flag_type
+        ORDER BY count DESC
+        """
+        cursor.execute(query)
+        rows = cursor.fetchall()
+        result = []
+        for row in rows:
+            flag_type, count = row
+            result.append({"flag_type": flag_type, "count": count})
+        cursor.close()
+        conn.close()
+        return jsonify({"data": result})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
 @app.route('/', methods=['GET'])
 def index():
     """Serve the main HTML page."""
