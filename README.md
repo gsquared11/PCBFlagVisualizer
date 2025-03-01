@@ -3,6 +3,9 @@
 This project is a web-based application that displays PCB (Panama City Beach) flag data using a Flask backend and a responsive frontend. It fetches and displays flag data in a paginated table, updating the data on-demand with a refresh button.
 https://pcb-flag-viewer.azurewebsites.net/
 
+![image](https://github.com/user-attachments/assets/4e5b4d37-08e2-4194-8add-bf046aab887f)
+
+
 ## Features
 
 - **Dynamic Table Display**: Shows flag data in a table format with pagination.
