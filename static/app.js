@@ -379,7 +379,7 @@ async function loadTableData() {
     }
 
     const data = await response.json();
-    console.log("API Response:", data);
+    console.log("Table API Response:", data);
 
     // Display the fetched table data
     displayTableData(data);
