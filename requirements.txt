@@ -3,3 +3,4 @@ Flask-CORS
 pyodbc
 Werkzeug==2.0.3
 python-dateutil
+pytz

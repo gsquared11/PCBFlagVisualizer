@@ -1,6 +1,7 @@
 import os
 import pyodbc
 import json
+import pytz
 import calendar
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
@@ -234,28 +235,38 @@ def get_all_time_flag_distribution():
     
 @app.route('/api/flags-by-day', methods=['GET'])
 def get_flags_by_day():
-    """Return all flags for a specific day (YYYY-MM-DD)."""
+    """Return all flags for a specific day (12:00 AM CST - 11:59 PM CST)."""
     try:
         date_str = request.args.get('date')
         if not date_str:
-            # No date provided, return empty
-            return jsonify([])
+            return jsonify([])  # No date provided, return empty list
 
-        # Convert the date string to a datetime object
-        day_start = datetime.strptime(date_str, '%Y-%m-%d')
-        # End of the day is day_start + 1 day, exclusive
-        day_end = day_start + timedelta(days=1)
+        # Define CST timezone
+        cst = pytz.timezone('America/Chicago')
+        utc = pytz.utc  # Define UTC for conversion
+
+        # Parse input date and set time to 12:00 AM CST
+        day_start_cst = datetime.strptime(date_str, '%Y-%m-%d').replace(hour=0, minute=0, second=0)
+        day_start_cst = cst.localize(day_start_cst)
+
+        # Set end of day to 11:59:59 PM CST
+        day_end_cst = day_start_cst.replace(hour=23, minute=59, second=59)
+
+        # Convert start and end times to UTC for database query
+        day_start_utc = day_start_cst.astimezone(utc)
+        day_end_utc = day_end_cst.astimezone(utc)
 
         conn = get_db_connection()
         cursor = conn.cursor()
-        # Query all records that fall on the specified day
+
+        # Query all records that fall within the CST day (converted to UTC)
         query = """
             SELECT *
             FROM flag_data
-            WHERE date_time >= ? AND date_time < ?
+            WHERE date_time >= ? AND date_time <= ?
             ORDER BY date_time ASC
         """
-        cursor.execute(query, (day_start, day_end))
+        cursor.execute(query, (day_start_utc, day_end_utc))
         rows = cursor.fetchall()
 
         # Gather column names
@@ -264,9 +275,9 @@ def get_flags_by_day():
         for row in rows:
             row_dict = {}
             for i, val in enumerate(row):
-                # Convert datetime objects to ISO strings, etc.
-                if hasattr(val, 'isoformat'):
-                    val = val.isoformat()
+                # Convert datetime objects to CST before returning
+                if isinstance(val, datetime):
+                    val = val.astimezone(cst).isoformat()
                 row_dict[columns[i]] = val
             result.append(row_dict)
 

@@ -331,31 +331,32 @@ function createBarChart(containerId, data) {
   });
 }
 
-// Display the flags for the chosen day
+// Display the flags for the chosen day in CST
 function displayFlagsByDay(data, date) {
   if (!data || data.length === 0) {
-    flagsByDayContainer.innerHTML = `<div class="no-data">No flags for ${date}</div>`;
+    flagsByDayContainer.innerHTML = `<div class="no-data">No flags recorded for ${date}</div>`;
     return;
   }
 
-  // Example: display them in a simple list
-  let html = `<h3>Flags for ${date}</h3>`;
+  // Create the heading for the selected date
+  let html = `<h3>Flags for ${date} (CST)</h3>`;
   html += "<ul>";
+
   data.forEach((row) => {
-    // row.flag_type might be "Yellow Flag", etc.
-    // row.date_time is an ISO string
-    const dateTimeLocal =
-      DateTime.fromISO(row.date_time, { zone: "utc" })
-        .setZone("America/Chicago")
-        .toFormat("MMMM d, yyyy h:mm a") + " CST";
+    // Convert UTC timestamp to CST using Luxon
+    const dateTimeCST = DateTime.fromISO(row.date_time, { zone: "utc" })
+      .setZone("America/Chicago")
+      .toFormat("MMMM d, yyyy h:mm a") + " CST";
 
     html += `<li>
                <strong>${row.flag_type}</strong> 
-               <em>(${dateTimeLocal})</em>
+               <em>(${dateTimeCST})</em>
              </li>`;
   });
+
   html += "</ul>";
 
+  // Display the formatted flag data
   flagsByDayContainer.innerHTML = html;
 }
 
