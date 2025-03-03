@@ -6,12 +6,7 @@
   --primary-color: #3a86ff; /* Primary brand color (Blue) */
   --secondary-color: #8338ec; /* Secondary accent color (Purple) */
   --text-color: #ffffff; /* Text color for better contrast */
-  --bg-overlay: rgba(
-    255,
-    255,
-    255,
-    0.15
-  ); /* Semi-transparent overlay for containers */
+  --bg-overlay: rgba(255, 255, 255, 0.15); /* Semi-transparent overlay for containers */
   --table-bg: rgba(0, 0, 0, 0.2); /* Background color for tables */
   --table-hover: rgba(255, 255, 255, 0.1); /* Hover state for table rows */
   --shadow-sm: 0 4px 6px rgba(0, 0, 0, 0.1); /* Small shadow */
@@ -37,16 +32,8 @@
 /* Apply global styles for body and typography */
 body {
   font-family: "Inter", system-ui, -apple-system, sans-serif;
-  background: -webkit-linear-gradient(
-    135deg,
-    var(--primary-color),
-    var(--secondary-color)
-  ); /* Safari Gradient */
-  background: linear-gradient(
-    135deg,
-    var(--primary-color),
-    var(--secondary-color)
-  ); /* Standard Gradient */
+  background: -webkit-linear-gradient(135deg, var(--primary-color), var(--secondary-color)); /* Safari Gradient */
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); /* Standard Gradient */
   color: var(--text-color);
   line-height: 1.6;
   max-width: 1200px;
@@ -58,7 +45,6 @@ body {
 /* =====================================
  Typography
  ===================================== */
-/* Styles for primary heading */
 h1 {
   color: var(--text-color);
   text-align: center;
@@ -86,7 +72,6 @@ h3 {
 /* =====================================
  Container Styles
  ===================================== */
-/* Main container with background overlay and shadow */
 .container {
   background: var(--bg-overlay);
   border-radius: var(--border-radius);
@@ -116,9 +101,9 @@ h3 {
   padding: 1rem;
   box-shadow: var(--shadow-sm);
   transition: transform var(--transition), box-shadow var(--transition);
-  max-width: 400px; /* Limit the card's width */
-  margin: 0 auto; /* Center the card horizontally */
-  overflow: hidden; /* Prevent child elements from overflowing */
+  max-width: 400px;
+  margin: 0 auto;
+  overflow: hidden;
 }
 
 .chart-card:hover {
@@ -131,10 +116,16 @@ h3 {
   position: relative;
 }
 
+/* All-Time Bar Chart styles */
+#allTimeBarChart {
+  width: 100%;
+  height: 300px;
+  margin: 1rem 0;
+}
+
 /* =====================================
  Table Styles
  ===================================== */
-/* General table styling */
 table {
   width: 100%;
   border-collapse: separate;
@@ -146,7 +137,6 @@ table {
   color: var(--text-color);
 }
 
-/* Table headers and cells */
 th,
 td {
   padding: 1rem;
@@ -159,7 +149,6 @@ th {
   font-size: 0.875rem;
 }
 
-/* Table row separation and hover effect */
 tr:not(:last-child) td {
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
@@ -171,7 +160,6 @@ tr:hover td {
 /* =====================================
  Feedback States
  ===================================== */
-/* Loading message */
 .loading {
   text-align: center;
   margin: 1.5rem 0;
@@ -179,7 +167,6 @@ tr:hover td {
   opacity: 0.8;
 }
 
-/* Error message */
 .error {
   color: #ff4d6d;
   padding: 1rem;
@@ -192,7 +179,6 @@ tr:hover td {
 /* =====================================
  Layout Components
  ===================================== */
-/* Flexbox layout for controls */
 .controls {
   display: flex;
   justify-content: space-between;
@@ -205,7 +191,6 @@ tr:hover td {
 /* =====================================
  Interactive Elements (Buttons and Select)
  ===================================== */
-/* Primary buttons */
 button {
   background: var(--primary-color);
   color: white;
@@ -214,12 +199,10 @@ button {
   border-radius: 50px;
   font-weight: 500;
   cursor: pointer;
-  transition: background var(--transition), transform var(--transition),
-    box-shadow var(--transition);
+  transition: background var(--transition), transform var(--transition), box-shadow var(--transition);
   box-shadow: var(--shadow-sm);
 }
 
-/* Button hover and active states */
 button:hover {
   background: var(--secondary-color);
   transform: translateY(-2px);
@@ -237,7 +220,6 @@ button:disabled {
   box-shadow: none;
 }
 
-/* Custom select styling */
 select {
   padding: 0.75rem 1rem;
   border-radius: 50px;
@@ -262,7 +244,6 @@ select:focus {
 /* =====================================
  Pagination
  ===================================== */
-/* Pagination container */
 .pagination {
   display: flex;
   justify-content: center;
@@ -270,7 +251,6 @@ select:focus {
   margin: 1.5rem 0;
 }
 
-/* Pagination buttons */
 .pagination button {
   padding: 0.5rem 1rem;
   min-width: 2.5rem;
@@ -279,15 +259,28 @@ select:focus {
 /* =====================================
  Utility Classes
  ===================================== */
-/* Hide elements (e.g., for loading states) */
 .hidden {
   display: none;
 }
 
 /* =====================================
+ Additional Styles (Merged from index.html)
+ ===================================== */
+footer {
+  text-align: center;
+  padding: 1rem 0;
+  color: var(--text-color);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+footer a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* =====================================
  Responsive Design
  ===================================== */
-/* Mobile and tablet responsive adjustments */
 @media (max-width: 768px) {
   body {
     padding: 1rem;

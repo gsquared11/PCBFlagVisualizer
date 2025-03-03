@@ -19,41 +19,11 @@ def get_db_connection():
     """Create and return a database connection."""
     return pyodbc.connect(connection_string)
 
-@app.route('/api/tables', methods=['GET'])
-def get_tables():
-    """Get all table names from the database."""
+# Create an API response specifically for the 'flag_data' table
+@app.route('/api/table-data', methods=['GET'])
+def get_flag_data():
+    """Fetch data only from the 'flag_data' table with pagination."""
     try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        
-        # Query to get user tables from the database
-        query = """
-            SELECT TABLE_NAME
-            FROM INFORMATION_SCHEMA.TABLES
-            WHERE TABLE_TYPE = 'BASE TABLE'
-            ORDER BY TABLE_NAME
-        """
-        
-        cursor.execute(query)
-        tables = [row[0] for row in cursor.fetchall()]
-        
-        cursor.close()
-        conn.close()
-        
-        # Returns a list of table names as jsons
-        return jsonify({"tables": tables})
-    
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-@app.route('/api/table-data/<table_name>', methods=['GET'])
-def get_table_data(table_name):
-    """Get data from a specific table with pagination."""
-    try:
-        # Basic validation to prevent SQL injection
-        if not table_name.isalnum() and not all(c.isalnum() or c == '_' for c in table_name):
-            return jsonify({"error": "Invalid table name"}), 400
-        
         # Get limit and offset from query parameters
         limit = request.args.get('limit', default=100, type=int)
         offset = request.args.get('offset', default=0, type=int)
@@ -61,22 +31,22 @@ def get_table_data(table_name):
         conn = get_db_connection()
         cursor = conn.cursor()
         
-        # Get column names for the table
-        cursor.execute(f"SELECT TOP 1 * FROM {table_name}")
+        # Get column names for 'flag_data' table
+        cursor.execute("SELECT TOP 1 * FROM flag_data")
         columns = [column[0] for column in cursor.description]
         
-        # Get data using OFFSET and FETCH NEXT for pagination, sorted by id DESC (most recent)
-        query = f"""
+        # Fetch paginated data from 'flag_data', sorted by id DESC (most recent first)
+        query = """
             SELECT * 
-            FROM {table_name} 
+            FROM flag_data 
             ORDER BY id DESC 
-            OFFSET {offset} ROWS 
-            FETCH NEXT {limit} ROWS ONLY
+            OFFSET ? ROWS 
+            FETCH NEXT ? ROWS ONLY
         """
-        cursor.execute(query)
+        cursor.execute(query, (offset, limit))
         rows = cursor.fetchall()
         
-        # Convert rows to list of dictionaries with column names as keys
+        # Convert rows into a list of dictionaries with column names as keys
         result = []
         for row in rows:
             row_dict = {}
@@ -84,20 +54,20 @@ def get_table_data(table_name):
                 # Convert non-serializable types to strings
                 if isinstance(value, (bytearray, bytes)):
                     value = value.hex()
-                elif hasattr(value, 'isoformat'):  # datetime objects
+                elif hasattr(value, 'isoformat'):  # Handle datetime objects
                     value = value.isoformat()
                 
                 row_dict[columns[i]] = value
             result.append(row_dict)
         
-        # Get the total number of rows for pagination info
-        cursor.execute(f"SELECT COUNT(*) FROM {table_name}")
+        # Get the total number of rows for pagination purposes
+        cursor.execute("SELECT COUNT(*) FROM flag_data")
         total_rows = cursor.fetchone()[0]
         
         cursor.close()
         conn.close()
         
-        # Return data along with pagination info
+        # Return data along with pagination details
         return jsonify({
             "data": result,
             "pagination": {
@@ -111,6 +81,7 @@ def get_table_data(table_name):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+# Create an API response for the last 3 months of flag distribution
 @app.route('/api/flag-distribution', methods=['GET'])
 def get_flag_distribution():
     """Get the distribution of flags for the last three complete months."""
@@ -209,6 +180,7 @@ def get_flag_distribution():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+# Create an API response for the bar chart (all time flag distribution)
 @app.route('/api/all-time-flag-distribution', methods=['GET'])
 def get_all_time_flag_distribution():
     """Get the all‑time flag distribution."""
@@ -233,6 +205,7 @@ def get_all_time_flag_distribution():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     
+# Create an API resposne for flags by day
 @app.route('/api/flags-by-day', methods=['GET'])
 def get_flags_by_day():
     """Return all flags for a specific day (12:00 AM CST - 11:59 PM CST)."""

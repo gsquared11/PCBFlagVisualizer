@@ -1,8 +1,8 @@
 // Global Variables and DOM Elements
-let currentPage = 1; // Current page number for pagination
-let limit = 25; // Number of rows per page
-let offset = 0; // Offset for pagination
-let chartInstances = []; // Store chart instances for cleanup
+let currentPage = 1;      // Current page number for pagination
+let limit = 25;           // Number of rows per page
+let offset = 0;           // Offset for pagination
+let chartInstances = [];  // Store chart instances for cleanup
 
 // Get refs to DOM elements
 const refreshBtn = document.getElementById("refreshBtn");
@@ -21,7 +21,7 @@ const columnNameMap = {
   id: "Entry Number",
 };
 
-// Chart elements
+// Refs to chart elements
 const chart1Title = document.getElementById("chart1Title");
 const chart2Title = document.getElementById("chart2Title");
 const chart3Title = document.getElementById("chart3Title");
@@ -39,13 +39,14 @@ const prevPageBtn = document.getElementById("prevPageBtn");
 const nextPageBtn = document.getElementById("nextPageBtn");
 const currentPageDisplay = document.getElementById("currentPage");
 
-// Event listeners
+// Event listeners (user interactions)
 document.addEventListener("DOMContentLoaded", initialize);
 
 // Trigger data load when the table is changed or refresh button is clicked
 refreshBtn.addEventListener("click", () => {
   loadTableData();
   loadFlagDistribution();
+  loadAllTimeFlagDistribution();
 });
 
 // Pagination buttons
@@ -64,27 +65,13 @@ nextPageBtn.addEventListener("click", () => {
 
 // Listen for a click on "Show Flags"
 loadFlagsByDayBtn.addEventListener("click", () => {
-  const selectedDate = flagDate.value; // e.g. "2025-03-10"
+  const selectedDate = flagDate.value; 
   if (!selectedDate) {
     showError("Please select a date.");
     return;
   }
   loadFlagsByDay(selectedDate);
 });
-
-// Fetch data for the selected day
-async function loadFlagsByDay(date) {
-  try {
-    const response = await fetch(`/api/flags-by-day?date=${date}`);
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
-    }
-    const data = await response.json();
-    displayFlagsByDay(data, date);
-  } catch (error) {
-    showError("Failed to load flags for the selected day: " + error.message);
-  }
-}
 
 // Initialize the application
 async function initialize() {
@@ -100,7 +87,11 @@ async function initialize() {
   }
 }
 
-// Load flag distribution data and create pie charts
+/************
+ * FEATURES RELATING TO FLAG DISTRIBUTION DATA FROM THE LAST 3 MONTHS (3 pie charts)
+ ************/
+
+// Load flag distribution data from the last 3 months and create 3 pie charts
 async function loadFlagDistribution() {
   try {
     // Fetch flag distribution data
@@ -139,6 +130,7 @@ async function loadFlagDistribution() {
   }
 }
 
+// Generate a singular instance of a pie chart using chart.js
 function createPieChart(id, container, monthName, data) {
   // Set the month name as the title
   document.getElementById(`${id}Title`).textContent = monthName;
@@ -216,24 +208,30 @@ function destroyChartInstances() {
   chartInstances = [];
 }
 
+/************
+ * FEATURES RELATING TO ALL-TIME FLAG DISTRIBUTION DATA (bar graph)
+ ************/
+
 // Function to load all‑time flag distribution data and render the bar chart
 async function loadAllTimeFlagDistribution() {
   try {
+    // Fetch all-time flag distro. data
     const response = await fetch("/api/all-time-flag-distribution");
     if (!response.ok) {
       throw new Error(`HTTP error! Status: ${response.status}`);
     }
+    
+    // Parse json from API
     const data = await response.json();
     console.log("All‑Time Flag Distribution Data:", data);
-    // Assume the endpoint returns an object with a "data" property that's an array:
-    // [ { flag_type: "Yellow Flag", count: 123 }, { flag_type: "Red Flag", count: 45 }, ... ]
+
     createBarChart("allTimeBarChart", data.data);
   } catch (error) {
     showError("Failed to load all‑time flag distribution: " + error.message);
   }
 }
 
-// Function to create a bar chart using Chart.js
+// Create a singular bar graph using Chart.js
 function createBarChart(containerId, data) {
   const container = document.getElementById(containerId);
 
@@ -264,7 +262,7 @@ function createBarChart(containerId, data) {
           label: "All‑Time Flag Distribution",
           data: counts,
           backgroundColor: colors,
-          borderColor: "black", // increased contrast for lines
+          borderColor: "black",
           borderWidth: 1,
         },
       ],
@@ -331,8 +329,27 @@ function createBarChart(containerId, data) {
   });
 }
 
+/************
+ * FEATURES RELATING TO FETCHING DATA BY DAY (user-select menu)
+ ************/
+
+// Fetch and display flags for the selected day
+async function loadFlagsByDay(date) {
+  try {
+    const response = await fetch(`/api/flags-by-day?date=${date}`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+    const data = await response.json();
+    displayFlagsByDay(data, date);
+  } catch (error) {
+    showError("Failed to load flags for the selected day: " + error.message);
+  }
+}
+
 // Display the flags for the chosen day in CST
 function displayFlagsByDay(data, date) {
+  // If no data is available for the selected date, show a message
   if (!data || data.length === 0) {
     flagsByDayContainer.innerHTML = `<div class="no-data">No flags recorded for ${date}</div>`;
     return;
@@ -342,12 +359,14 @@ function displayFlagsByDay(data, date) {
   let html = `<h3>Flags for ${date} (CST)</h3>`;
   html += "<ul>";
 
+  // Loop through the data and process each flag record in a list
   data.forEach((row) => {
     // Convert UTC timestamp to CST using Luxon
     const dateTimeCST = DateTime.fromISO(row.date_time, { zone: "utc" })
       .setZone("America/Chicago")
       .toFormat("MMMM d, yyyy h:mm a") + " CST";
 
+    // Append each flag entry as a list item with flag type in bold and timestamp in italics
     html += `<li>
                <strong>${row.flag_type}</strong> 
                <em>(${dateTimeCST})</em>
@@ -356,24 +375,23 @@ function displayFlagsByDay(data, date) {
 
   html += "</ul>";
 
-  // Display the formatted flag data
+  // Display the formatted flag data by injectiing into the DOM
   flagsByDayContainer.innerHTML = html;
 }
 
-// Load data from flag_data
-async function loadTableData() {
-  const selectedTable = "flag_data"; // Set default table name
+/************
+ * FEATURES RELATING TO DISPLAYING ALL OF THE DATA FROM THE DATABASE IN THE TABLE
+ ************/
 
+// Load flag data from table API
+async function loadTableData() {
+  // Show loading indicator before data loaded
   showLoading(true);
-  tableContainer.classList.add("hidden"); // Hide table while loading
+  tableContainer.classList.add("hidden");
 
   try {
-    // Fetch table data with pagination
-    const response = await fetch(
-      `/api/table-data/${encodeURIComponent(
-        selectedTable
-      )}?limit=${limit}&offset=${offset}`
-    );
+    // Fetch table data with pagination from the API
+    const response = await fetch(`/api/table-data?limit=${limit}&offset=${offset}`);
     if (!response.ok) {
       throw new Error(`HTTP error! Status: ${response.status}`);
     }
@@ -384,10 +402,10 @@ async function loadTableData() {
     // Display the fetched table data
     displayTableData(data);
 
-    // Update pagination controls
+    // Update pagination controls based on the response
     updatePagination(data.pagination);
 
-    hideError(); // Hide error message if any
+    hideError();  // Hide error messages if any
   } catch (error) {
     showError("Failed to load data: " + error.message);
   } finally {
@@ -395,41 +413,35 @@ async function loadTableData() {
   }
 }
 
-// Display table data
+// Generate the HTML to display the data & process it to be more readable
 function displayTableData(data) {
+  // Clear existing table headers and rows first
+  tableHeaders.innerHTML = "";
+  tableBody.innerHTML = "";
+
+  // Check if the received data is empty
   if (!data || !data.data || data.data.length === 0) {
     showError("No data available");
     tableContainer.classList.add("hidden");
     return;
   }
 
-  // Clear existing headers and rows
-  tableHeaders.innerHTML = "";
-  tableBody.innerHTML = "";
-
-  // Create headers
+  // Create table headers
   const columns = Object.keys(data.data[0]);
   columns.forEach((column) => {
     const th = document.createElement("th");
-    // If there's a mapped name, use it; otherwise, use the raw column name
     th.textContent = columnNameMap[column] || column;
     tableHeaders.appendChild(th);
   });
 
-  // Create rows
+  // Populate table rows
   data.data.forEach((row) => {
     const tr = document.createElement("tr");
     columns.forEach((column) => {
       const td = document.createElement("td");
-
-      // Check if the column is 'date_time' and convert from UTC to CST
       if (column === "date_time" && row[column]) {
-        // Use Luxon to parse the UTC time and convert to CST
-        const date = DateTime.fromISO(row[column], { zone: "utc" }).setZone(
-          "America/Chicago"
-        );
-
-        // Format the date in CST with a clear timezone indication
+        const date = DateTime.fromISO(row[column], { zone: "utc" })
+          .setZone("America/Chicago");
         td.textContent = date.toFormat("MMMM d, yyyy h:mm a") + " CST";
       } else {
         td.textContent = row[column] !== null ? row[column] : "";
@@ -441,6 +453,10 @@ function displayTableData(data) {
 
   tableContainer.classList.remove("hidden");
 }
+
+/************
+ * HELPER FUNCTIONS
+ ************/
 
 // Show loading indicator
 function showLoading(isLoading) {
