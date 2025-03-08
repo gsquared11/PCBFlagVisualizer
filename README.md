@@ -6,7 +6,7 @@ https://pcb-flag-viewer.azurewebsites.net/
 
 ![image](https://github.com/user-attachments/assets/de14e08a-9e8f-41e5-9898-57adfc3034d4)
 
-This Flask Web Application hosted on Azure visualizes historical and current beach flag status data collected from Panama City Beach (PCB). It provides interactive charts, tables, and date-specific views to enhance public awareness about water safety conditions.
+This Flask Web Application hosted on Azure visualizes historical and current beach flag status data collected from my database of flag data (see https://github.com/gsquared11/PCBFlagScraper/tree/main). It provides interactive charts, tables, and date-specific views to enhance public awareness about water safety conditions.
 
 ## Features
 
