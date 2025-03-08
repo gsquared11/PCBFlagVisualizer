@@ -14,22 +14,14 @@
   --shadow-lg: 0 12px 24px rgba(0, 0, 0, 0.15); /* Large shadow */
   --border-radius: 12px; /* Border radius for rounded elements */
   --transition: 0.25s ease; /* Smooth transition for hover states */
-
-  /* Chart colors */
-  --chart-color-1: #ff006e;
-  --chart-color-2: #fb5607;
-  --chart-color-3: #ffbe0b;
-  --chart-color-4: #8ac926;
-  --chart-color-5: #1982c4;
-  --chart-color-6: #6a4c93;
-  --chart-color-7: #ff595e;
-  --chart-color-8: #ffca3a;
+  --disabled-bg: #6c757d;
+  --select-bg: rgba(0, 0, 0, 0.3);
+  --footer-bg: rgba(0, 0, 0, 0.2);
 }
 
 /* =====================================
  Base Styles
  ===================================== */
-/* Apply global styles for body and typography */
 body {
   font-family: "Inter", system-ui, -apple-system, sans-serif;
   background: -webkit-linear-gradient(135deg, var(--primary-color), var(--secondary-color)); /* Safari Gradient */
@@ -193,7 +185,7 @@ tr:hover td {
  ===================================== */
 button {
   background: var(--primary-color);
-  color: white;
+  color: var(--text-color);
   border: none;
   padding: 0.75rem 1.5rem;
   border-radius: 50px;
@@ -214,7 +206,7 @@ button:active {
 }
 
 button:disabled {
-  background-color: #6c757d;
+  background-color: var(--disabled-bg);
   opacity: 0.5;
   transform: none;
   box-shadow: none;
@@ -224,7 +216,7 @@ select {
   padding: 0.75rem 1rem;
   border-radius: 50px;
   border: none;
-  background: rgba(0, 0, 0, 0.3);
+  background: var(--select-bg);
   color: var(--text-color);
   transition: box-shadow var(--transition);
   appearance: none;
@@ -239,6 +231,29 @@ select {
 select:focus {
   outline: none;
   box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
+}
+
+/* =====================================
+ Current Flag Condition Styles
+ ===================================== */
+.current-flag-condition {
+  font-size: 3rem;                   
+  font-weight: bold;
+  text-align: center;
+  margin-top: 1rem;
+  background: var(--bg-overlay);
+  border-radius: var(--border-radius);
+  padding: 1rem 2rem;
+  width: fit-content;               
+  margin: 0 auto;                    
+  color: var(--text-color);
+}
+
+.flag-value {
+  background: var(--flag-gradient);
+  background-clip: text;
+  color: transparent;
+  transition: background 0.3s ease;
 }
 
 /* =====================================
@@ -270,7 +285,7 @@ footer {
   text-align: center;
   padding: 1rem 0;
   color: var(--text-color);
-  background: rgba(0, 0, 0, 0.2);
+  background: var(--footer-bg);
 }
 
 footer a {

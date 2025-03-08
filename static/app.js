@@ -33,6 +33,11 @@ const flagColorMapping = {
   "red flag": "red",
   "double red flag": "#800000",
 };
+const flagGradientMapping = {
+  "yellow flag": "linear-gradient(45deg, #ffff66, #ffd700)",
+  "red flag": "linear-gradient(45deg, #ff6666, #ff0000)",
+  "double red flag": "linear-gradient(45deg, #ff9999, #cc0000)",
+};
 
 // Pagination controls
 const prevPageBtn = document.getElementById("prevPageBtn");
@@ -47,6 +52,7 @@ refreshBtn.addEventListener("click", () => {
   loadTableData();
   loadFlagDistribution();
   loadAllTimeFlagDistribution();
+  updateCurrentFlag()
 });
 
 // Pagination buttons
@@ -76,14 +82,45 @@ loadFlagsByDayBtn.addEventListener("click", () => {
 // Initialize the application
 async function initialize() {
   try {
-    // Load table data, flag distribution charts, and all‑time bar chart
+    // Load table data, flag distribution charts, all‑time bar chart, and current flag stats.
     await Promise.all([
       loadTableData(),
       loadFlagDistribution(),
       loadAllTimeFlagDistribution(),
+      updateCurrentFlag()
     ]);
   } catch (error) {
     showError("Failed to initialize: " + error.message);
+  }
+}
+
+// Displays the most recent flag (id entry) at the top of the website
+async function updateCurrentFlag() {
+  try {
+    // Request only the most recent record.
+    const response = await fetch('/api/table-data?limit=1&offset=0');
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+    const json = await response.json();
+    if (json.data && json.data.length > 0) {
+      const latestFlagRaw = json.data[0].flag_type || "unknown";
+      const latestFlag = latestFlagRaw.trim().toLowerCase();
+
+      // Update the flag display element
+      const currentFlagConditionElement = document.getElementById("currentFlagCondition");
+      if (currentFlagConditionElement) {
+        // Update only the flag value portion
+        currentFlagConditionElement.querySelector(".flag-value").textContent = latestFlagRaw;
+
+        // Determine the gradient for the current flag; fallback if not mapped
+        const flagGradient = flagGradientMapping[latestFlag] || "linear-gradient(45deg, gray, darkgray)";
+        // Set the CSS variable for the gradient
+        currentFlagConditionElement.style.setProperty('--flag-gradient', flagGradient);
+      }
+    }
+  } catch (error) {
+    console.error("Error fetching the most recent flag:", error);
   }
 }
 
