@@ -53,7 +53,7 @@ This Flask Web Application hosted on Azure visualizes historical and current bea
 - **Flask:** (Python) Serves APIs for retrieving historical and aggregated flag data.
 
 ### Cloud Platform
-- **Microsoft Azure:** Utilized for deploying and hosting the Flask application. 
+- **Microsoft Azure:** Utilized for deploying and hosting the Flask application via Gunicorn
 
 ## Prerequisites
 - **Flask:** Python 3.9 to maintain compatibility with dependencies shown in requirements.txt
