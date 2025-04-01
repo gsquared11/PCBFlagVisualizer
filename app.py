@@ -284,7 +284,7 @@ def get_flags_by_day():
 
 @app.route('/api/current-month-flags', methods=['GET'])
 def get_current_month_flags():
-    """Get all flags for the current month."""
+    """Get all flags for all months."""
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
@@ -293,27 +293,17 @@ def get_current_month_flags():
         cst = pytz.timezone('America/Chicago')
         utc = pytz.utc
         
-        # Get current month's start and end dates in CST
-        today = datetime.now(cst)
-        month_start = today.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-        month_end = today.replace(day=calendar.monthrange(today.year, today.month)[1], 
-                                hour=23, minute=59, second=59, microsecond=999999)
-        
-        # Convert to UTC for database query
-        month_start_utc = month_start.astimezone(utc)
-        month_end_utc = month_end.astimezone(utc)
-        
+        # Get all flags ordered by date
         query = """
         SELECT 
             CONVERT(date, DATEADD(hour, -5, date_time)) as date_cst,
             CONVERT(varchar(5), DATEADD(hour, -5, date_time), 108) as time_cst,
             flag_type
         FROM flag_data
-        WHERE date_time >= ? AND date_time <= ?
         ORDER BY date_time ASC
         """
         
-        cursor.execute(query, (month_start_utc, month_end_utc))
+        cursor.execute(query)
         rows = cursor.fetchall()
         
         # Convert to list of dictionaries with date and flag type
@@ -329,7 +319,7 @@ def get_current_month_flags():
         cursor.close()
         conn.close()
         
-        print(f"Returning {len(result)} flags for current month")
+        print(f"Returning {len(result)} flags for all months")
         print("Sample of flags:", result[:5] if result else "No flags found")
         
         return jsonify(result)

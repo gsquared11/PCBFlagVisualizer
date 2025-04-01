@@ -3,6 +3,9 @@ let currentPage = 1;      // Current page number for pagination
 let limit = 25;           // Number of rows per page
 let offset = 0;           // Offset for pagination
 let chartInstances = [];  // Store chart instances for cleanup
+let currentCalendarMonth = new Date().getMonth();
+let currentCalendarYear = new Date().getFullYear();
+let allFlagData = []; // Store all flag data
 
 // Get refs to DOM elements
 const refreshBtn = document.getElementById("refreshBtn");
@@ -84,15 +87,47 @@ loadFlagsByDayBtn.addEventListener("click", () => {
   loadFlagsByDay(selectedDate);
 });
 
+// Add these event listeners after other event listeners
+document.getElementById('prevMonthBtn').addEventListener('click', () => {
+    if (currentCalendarMonth === 0) {
+        currentCalendarMonth = 11;
+        currentCalendarYear--;
+    } else {
+        currentCalendarMonth--;
+    }
+    createCalendar();
+    loadCurrentMonthFlags();
+});
+
+document.getElementById('nextMonthBtn').addEventListener('click', () => {
+    if (currentCalendarMonth === 11) {
+        currentCalendarMonth = 0;
+        currentCalendarYear++;
+    } else {
+        currentCalendarMonth++;
+    }
+    createCalendar();
+    loadCurrentMonthFlags();
+});
+
 // Initialize the application
 async function initialize() {
   try {
-    // Load table data, flag distribution charts, all‑time bar chart, and current flag stats.
+    // Load all flag data first
+    const response = await fetch('/api/current-month-flags');
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+    allFlagData = await response.json();
+    
+    // Then load everything else
     await Promise.all([
       loadTableData(),
       loadFlagDistribution(),
       loadAllTimeFlagDistribution(),
-      updateCurrentFlag()
+      updateCurrentFlag(),
+      createCalendar(),
+      loadCurrentMonthFlags()
     ]);
   } catch (error) {
     showError("Failed to initialize: " + error.message);
@@ -534,14 +569,11 @@ function updatePagination(pagination) {
 // Calendar functionality
 function createCalendar() {
     const calendarGrid = document.getElementById('calendar-grid');
-    const today = new Date();
-    const currentMonth = today.getMonth();
-    const currentYear = today.getFullYear();
-    
-    // Update calendar title with current month and year
     const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
                        'July', 'August', 'September', 'October', 'November', 'December'];
-    document.querySelector('.calendar-title').textContent = `${monthNames[currentMonth]} ${currentYear}`;
+    
+    // Update calendar title with current month and year
+    document.querySelector('.calendar-title').textContent = `${monthNames[currentCalendarMonth]} ${currentCalendarYear}`;
     
     // Clear existing calendar
     calendarGrid.innerHTML = '';
@@ -556,8 +588,8 @@ function createCalendar() {
     });
     
     // Get first day of month and total days
-    const firstDay = new Date(currentYear, currentMonth, 1);
-    const lastDay = new Date(currentYear, currentMonth + 1, 0);
+    const firstDay = new Date(currentCalendarYear, currentCalendarMonth, 1);
+    const lastDay = new Date(currentCalendarYear, currentCalendarMonth + 1, 0);
     const totalDays = lastDay.getDate();
     const startingDay = firstDay.getDay();
     
@@ -572,7 +604,7 @@ function createCalendar() {
     for (let day = 1; day <= totalDays; day++) {
         const dayCell = document.createElement('div');
         dayCell.className = 'calendar-day';
-        dayCell.dataset.date = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        dayCell.dataset.date = `${currentCalendarYear}-${String(currentCalendarMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
         dayCell.innerHTML = `
             <div class="calendar-day-number">${day}</div>
             <div class="flags-container"></div>
@@ -648,12 +680,21 @@ async function loadCurrentMonthFlags() {
     try {
         const response = await fetch('/api/current-month-flags');
         if (!response.ok) {
-            throw new Error('Failed to fetch flag data');
+            throw new Error(`HTTP error! Status: ${response.status}`);
         }
         const data = await response.json();
-        updateCalendarWithFlags(data);
+        
+        // Filter data for the current calendar month
+        const currentMonthData = data.filter(flag => {
+            const flagDate = new Date(flag.date);
+            return flagDate.getMonth() === currentCalendarMonth && 
+                   flagDate.getFullYear() === currentCalendarYear;
+        });
+        
+        updateCalendarWithFlags(currentMonthData);
     } catch (error) {
         console.error('Error loading current month flags:', error);
+        showError('Failed to load current month flags: ' + error.message);
     }
 }
 
