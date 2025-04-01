@@ -609,6 +609,18 @@ function createCalendar() {
             <div class="calendar-day-number">${day}</div>
             <div class="flags-container"></div>
         `;
+        
+        // Add click event listener to each day cell
+        dayCell.addEventListener('click', () => {
+            const selectedDate = dayCell.dataset.date;
+            // Update the date picker input
+            document.getElementById('flagDate').value = selectedDate;
+            // Load flags for the selected date
+            loadFlagsByDay(selectedDate);
+            // Scroll to the date picker section
+            document.querySelector('.date-picker-container').scrollIntoView({ behavior: 'smooth' });
+        });
+        
         calendarGrid.appendChild(dayCell);
     }
 }
