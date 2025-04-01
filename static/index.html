@@ -55,11 +55,37 @@
         <!-- Button to Refresh Data -->
         <button id="refreshBtn">Refresh Data</button>
       </div>
-      <!-- Current Flag Condition Display -->
-      <div id="currentFlagCondition" class="current-flag-condition">
-        <span class="flag-label">Current Flag: </span>
-        <span class="flag-value">Loading...</span>
+      <!-- Current Flag and Calendar Section -->
+      <div class="current-status-section">
+        <div class="current-flag-box">
+          <h3>Current Flag</h3>
+          <div id="currentFlagCondition" class="current-flag-condition">
+            <span class="flag-label">Current Flag: </span>
+            <span class="flag-value">Loading...</span>
+          </div>
+        </div>
+        
+        <!-- Monthly Calendar -->
+        <div class="calendar-container">
+          <div class="calendar-header">
+            <h3 class="calendar-title">Current Month's Flags</h3>
+          </div>
+          <div class="calendar-grid" id="calendar-grid">
+            <!-- Calendar will be populated by JavaScript -->
+          </div>
+        </div>
       </div>
+
+      <!-- Date Picker Calendar -->
+      <div class="calendar-container date-picker-container">
+        <h2>View Flags on a Specific Date</h2>
+        <h3>Note: Flag entries are inconsistent before 2/28/2025.</h3>
+        <input type="date" id="flagDate" placeholder="mm/dd/yyyy" />
+        <button id="loadFlagsByDayBtn">Show Flags</button>
+        <div id="datepickerError" class="error hidden"></div>
+        <div id="flagsByDayContainer" class="flags-by-day-container"></div>
+      </div>
+
       <!-- Flag Distribution Charts -->
       <h2>Flag Distribution - Last 3 Months</h2>
       <div id="chartsContainer" class="charts-container">
@@ -81,22 +107,16 @@
       <!-- All-Time Bar Chart Container (placed below the pie charts) -->
       <h2>All-Time Flag Distribution</h2>
       <div id="allTimeBarChart"></div>
+
       <!-- Error Message Container (Hidden by Default) -->
       <div id="errorContainer" class="error hidden"></div>
+    </div>
+
+    <!-- Raw Data Table -->
+    <h2>Raw Data</h2>
+    <div id="tableContainer" class="hidden">
       <!-- Loading Indicator (Visible During Data Fetch) -->
       <div id="loadingContainer" class="loading">Loading...</div>
-      <!-- Calendar Container -->
-      <div class="calendar-container">
-        <h2>View Flags on a Specific Date</h2>
-        <h3>Note: Flag entries are inconsistent before 2/28/2025.</h3>
-        <input type="date" id="flagDate" />
-        <button id="loadFlagsByDayBtn">Show Flags</button>
-        <!-- Results for the selected day -->
-        <div id="flagsByDayContainer" class="flags-by-day-container"></div>
-      </div>
-    </div>
-    <!-- Data Table Container (Hidden Until Data is Loaded) -->
-    <div id="tableContainer" class="hidden">
       <table id="dataTable">
         <thead>
           <tr id="tableHeaders"></tr>
@@ -104,12 +124,14 @@
         <tbody id="tableBody"></tbody>
       </table>
     </div>
+
     <!-- Pagination Controls -->
     <div id="paginationContainer" class="pagination">
       <button id="prevPageBtn" disabled>Previous</button>
       <span id="currentPage">Page 1</span>
       <button id="nextPageBtn">Next</button>
     </div>
+
     <!-- Footer -->
     <footer>
       &copy; 2025
@@ -124,6 +146,8 @@
     <script src="https://cdn.jsdelivr.net/npm/luxon@3/build/global/luxon.min.js"></script>
     <!-- Include Chart.js for Pie/Bar Charts -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <!-- Include jQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="/static/app.js" defer></script>
   </body>
 </html>

@@ -7,6 +7,10 @@ from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Initialize Flask app and enable CORS for all routes (multiple connections)
 app = Flask(__name__, static_folder='static')
@@ -90,21 +94,25 @@ def get_flag_distribution():
         cursor = conn.cursor()
         
         today = datetime.now()
+        print(f"Current date: {today}")
         
         # Get last full month (month1)
         last_month = today - relativedelta(months=1)
-        month1_start = last_month.replace(day=1)
-        month1_end = last_month.replace(day=calendar.monthrange(last_month.year, last_month.month)[1])
+        month1_start = last_month.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        month1_end = last_month.replace(day=calendar.monthrange(last_month.year, last_month.month)[1], hour=23, minute=59, second=59, microsecond=999999)
+        print(f"Month 1: {month1_start.strftime('%B %Y')} to {month1_end.strftime('%B %Y')}")
         
         # Get the month before that (month2)
         two_months_ago = today - relativedelta(months=2)
-        month2_start = two_months_ago.replace(day=1)
-        month2_end = two_months_ago.replace(day=calendar.monthrange(two_months_ago.year, two_months_ago.month)[1])
+        month2_start = two_months_ago.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        month2_end = two_months_ago.replace(day=calendar.monthrange(two_months_ago.year, two_months_ago.month)[1], hour=23, minute=59, second=59, microsecond=999999)
+        print(f"Month 2: {month2_start.strftime('%B %Y')} to {month2_end.strftime('%B %Y')}")
         
         # Get three months ago (month3)
         three_months_ago = today - relativedelta(months=3)
-        month3_start = three_months_ago.replace(day=1)
-        month3_end = three_months_ago.replace(day=calendar.monthrange(three_months_ago.year, three_months_ago.month)[1])
+        month3_start = three_months_ago.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        month3_end = three_months_ago.replace(day=calendar.monthrange(three_months_ago.year, three_months_ago.month)[1], hour=23, minute=59, second=59, microsecond=999999)
+        print(f"Month 3: {month3_start.strftime('%B %Y')} to {month3_end.strftime('%B %Y')}")
         
         # SQL query: count flags per month based on the computed ranges.
         query = """
@@ -136,6 +144,15 @@ def get_flag_distribution():
         ))
         
         rows = cursor.fetchall()
+        
+        # Debug: Print the raw counts for each month
+        print("\nRaw counts from database:")
+        for row in rows:
+            flag_type, month1_count, month2_count, month3_count = row
+            print(f"{flag_type}:")
+            print(f"  Month 1 ({month1_start.strftime('%B %Y')}): {month1_count}")
+            print(f"  Month 2 ({month2_start.strftime('%B %Y')}): {month2_count}")
+            print(f"  Month 3 ({month3_start.strftime('%B %Y')}): {month3_count}")
         
         # Build the result dictionary with a list for each month.
         result = {
@@ -175,9 +192,11 @@ def get_flag_distribution():
         cursor.close()
         conn.close()
         
+        print(f"\nReturning result: {result}")
         return jsonify(result)
     
     except Exception as e:
+        print(f"Error in get_flag_distribution: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 # Create an API response for the bar chart (all time flag distribution)
@@ -216,25 +235,26 @@ def get_flags_by_day():
 
         # Define CST timezone
         cst = pytz.timezone('America/Chicago')
-        utc = pytz.utc  # Define UTC for conversion
+        utc = pytz.UTC  # Use UTC constant instead of function
 
         # Parse input date and set time to 12:00 AM CST
-        day_start_cst = datetime.strptime(date_str, '%Y-%m-%d').replace(hour=0, minute=0, second=0)
-        day_start_cst = cst.localize(day_start_cst)
+        day_start_naive = datetime.strptime(date_str, '%Y-%m-%d')
+        day_start_cst = cst.localize(day_start_naive.replace(hour=0, minute=0, second=0, microsecond=0))
+        day_end_cst = cst.localize(day_start_naive.replace(hour=23, minute=59, second=59, microsecond=999999))
 
-        # Set end of day to 11:59:59 PM CST
-        day_end_cst = day_start_cst.replace(hour=23, minute=59, second=59)
-
-        # Convert start and end times to UTC for database query
+        # Convert to UTC for database query
         day_start_utc = day_start_cst.astimezone(utc)
         day_end_utc = day_end_cst.astimezone(utc)
 
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Query all records that fall within the CST day (converted to UTC)
+        # Query all records that fall within the CST day
         query = """
-            SELECT *
+            SELECT 
+                CONVERT(varchar(5), DATEADD(hour, -5, date_time), 108) as time_cst,
+                flag_type,
+                date_time
             FROM flag_data
             WHERE date_time >= ? AND date_time <= ?
             ORDER BY date_time ASC
@@ -242,26 +262,86 @@ def get_flags_by_day():
         cursor.execute(query, (day_start_utc, day_end_utc))
         rows = cursor.fetchall()
 
-        # Gather column names
-        columns = [col[0] for col in cursor.description]
+        # Process results
         result = []
         for row in rows:
-            row_dict = {}
-            for i, val in enumerate(row):
-                # Convert datetime objects to CST before returning
-                if isinstance(val, datetime):
-                    val = val.astimezone(cst).isoformat()
-                row_dict[columns[i]] = val
-            result.append(row_dict)
+            time_cst, flag_type, date_time = row
+            # Convert UTC datetime to CST
+            dt_cst = date_time.astimezone(cst)
+            result.append({
+                'time': time_cst,
+                'flag_type': flag_type.strip() if flag_type else None,
+                'date_time': dt_cst.isoformat()
+            })
 
         cursor.close()
         conn.close()
         return jsonify(result)
 
     except Exception as e:
+        print(f"Error in get_flags_by_day: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/current-month-flags', methods=['GET'])
+def get_current_month_flags():
+    """Get all flags for the current month."""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Define CST timezone
+        cst = pytz.timezone('America/Chicago')
+        utc = pytz.utc
+        
+        # Get current month's start and end dates in CST
+        today = datetime.now(cst)
+        month_start = today.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        month_end = today.replace(day=calendar.monthrange(today.year, today.month)[1], 
+                                hour=23, minute=59, second=59, microsecond=999999)
+        
+        # Convert to UTC for database query
+        month_start_utc = month_start.astimezone(utc)
+        month_end_utc = month_end.astimezone(utc)
+        
+        query = """
+        SELECT 
+            CONVERT(date, DATEADD(hour, -5, date_time)) as date_cst,
+            CONVERT(varchar(5), DATEADD(hour, -5, date_time), 108) as time_cst,
+            flag_type
+        FROM flag_data
+        WHERE date_time >= ? AND date_time <= ?
+        ORDER BY date_time ASC
+        """
+        
+        cursor.execute(query, (month_start_utc, month_end_utc))
+        rows = cursor.fetchall()
+        
+        # Convert to list of dictionaries with date and flag type
+        result = []
+        for row in rows:
+            date_cst, time_cst, flag_type = row
+            result.append({
+                "date": date_cst.strftime("%Y-%m-%d"),
+                "time": time_cst,
+                "flag_type": flag_type.strip() if flag_type else None  # Handle any whitespace in flag_type
+            })
+        
+        cursor.close()
+        conn.close()
+        
+        print(f"Returning {len(result)} flags for current month")
+        print("Sample of flags:", result[:5] if result else "No flags found")
+        
+        return jsonify(result)
+    
+    except Exception as e:
+        print(f"Error in get_current_month_flags: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 @app.route('/', methods=['GET'])
 def index():
     """Serve the main HTML page."""
     return send_from_directory('static', 'index.html')
+
+if __name__ == '__main__':
+    app.run(debug=True, port=3000)

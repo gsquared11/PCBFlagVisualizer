@@ -72,10 +72,15 @@ nextPageBtn.addEventListener("click", () => {
 // Listen for a click on "Show Flags"
 loadFlagsByDayBtn.addEventListener("click", () => {
   const selectedDate = flagDate.value; 
+  const datepickerError = document.getElementById("datepickerError");
+  
   if (!selectedDate) {
-    showError("Please select a date.");
+    datepickerError.textContent = "Please select a date.";
+    datepickerError.classList.remove("hidden");
     return;
   }
+  
+  datepickerError.classList.add("hidden");
   loadFlagsByDay(selectedDate);
 });
 
@@ -162,6 +167,11 @@ async function loadFlagDistribution() {
       data.month3.name,
       data.month3.data
     );
+
+    // Update chart titles
+    chart1Title.textContent = data.month1.name;
+    chart2Title.textContent = data.month2.name;
+    chart3Title.textContent = data.month3.name;
   } catch (error) {
     showError("Failed to load flag distribution: " + error.message);
   }
@@ -169,9 +179,6 @@ async function loadFlagDistribution() {
 
 // Generate a singular instance of a pie chart using chart.js
 function createPieChart(id, container, monthName, data) {
-  // Set the month name as the title
-  document.getElementById(`${id}Title`).textContent = monthName;
-
   // If no data, show message
   if (!data || data.length === 0) {
     container.innerHTML = '<div class="no-data">No data available</div>';
@@ -394,25 +401,27 @@ function displayFlagsByDay(data, date) {
 
   // Create the heading for the selected date
   let html = `<h3>Flags for ${date} (CST)</h3>`;
-  html += "<ul>";
+  html += "<ul class='flags-list'>";
 
   // Loop through the data and process each flag record in a list
   data.forEach((row) => {
-    // Convert UTC timestamp to CST using Luxon
-    const dateTimeCST = DateTime.fromISO(row.date_time, { zone: "utc" })
-      .setZone("America/Chicago")
-      .toFormat("MMMM d, yyyy h:mm a") + " CST";
+    // Format the time from the API response (convert from 24hr to 12hr format)
+    const time24 = row.time;
+    const [hours24, minutes] = time24.split(':');
+    const hours12 = (hours24 % 12) || 12;
+    const ampm = hours24 < 12 ? 'AM' : 'PM';
+    const time12 = `${hours12}:${minutes} ${ampm}`;
+    
+    const flagType = row.flag_type || 'Unknown';
 
-    // Append each flag entry as a list item with flag type in bold and timestamp in italics
-    html += `<li>
-               <strong>${row.flag_type}</strong> 
-               <em>(${dateTimeCST})</em>
+    // Append each flag entry as a list item with flag type in bold and time in italics
+    html += `<li class='flag-entry' data-flag-type="${flagType}">
+               <strong>${flagType}</strong> 
+               <em>(${time12} CST)</em>
              </li>`;
   });
 
   html += "</ul>";
-
-  // Display the formatted flag data by injectiing into the DOM
   flagsByDayContainer.innerHTML = html;
 }
 
@@ -521,3 +530,138 @@ function updatePagination(pagination) {
   // Disable Next button if there's no more data
   nextPageBtn.disabled = !pagination.next_offset;
 }
+
+// Calendar functionality
+function createCalendar() {
+    const calendarGrid = document.getElementById('calendar-grid');
+    const today = new Date();
+    const currentMonth = today.getMonth();
+    const currentYear = today.getFullYear();
+    
+    // Update calendar title with current month and year
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                       'July', 'August', 'September', 'October', 'November', 'December'];
+    document.querySelector('.calendar-title').textContent = `${monthNames[currentMonth]} ${currentYear}`;
+    
+    // Clear existing calendar
+    calendarGrid.innerHTML = '';
+    
+    // Add day headers
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    days.forEach(day => {
+        const dayHeader = document.createElement('div');
+        dayHeader.className = 'calendar-day-header';
+        dayHeader.textContent = day;
+        calendarGrid.appendChild(dayHeader);
+    });
+    
+    // Get first day of month and total days
+    const firstDay = new Date(currentYear, currentMonth, 1);
+    const lastDay = new Date(currentYear, currentMonth + 1, 0);
+    const totalDays = lastDay.getDate();
+    const startingDay = firstDay.getDay();
+    
+    // Add empty cells for days before the first day of the month
+    for (let i = 0; i < startingDay; i++) {
+        const emptyDay = document.createElement('div');
+        emptyDay.className = 'calendar-day empty';
+        calendarGrid.appendChild(emptyDay);
+    }
+    
+    // Add days of the month
+    for (let day = 1; day <= totalDays; day++) {
+        const dayCell = document.createElement('div');
+        dayCell.className = 'calendar-day';
+        dayCell.dataset.date = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        dayCell.innerHTML = `
+            <div class="calendar-day-number">${day}</div>
+            <div class="flags-container"></div>
+        `;
+        calendarGrid.appendChild(dayCell);
+    }
+}
+
+function updateCalendarWithFlags(flagData) {
+    const days = document.querySelectorAll('.calendar-day:not(.empty)');
+    const flagsByDate = {};
+    
+    // Group flags by date
+    flagData.forEach(flag => {
+        const date = flag.date;
+        if (!flagsByDate[date]) {
+            flagsByDate[date] = [];
+        }
+        // Clean up flag type and ensure proper formatting
+        const flagType = flag.flag_type.toLowerCase().trim().replace(/\s+/g, '-');
+        flagsByDate[date].push({
+            type: flagType,
+            time: flag.time,
+            originalType: flag.flag_type
+        });
+    });
+    
+    // Update each day cell
+    days.forEach(day => {
+        const date = day.dataset.date;
+        const flagsContainer = day.querySelector('.flags-container');
+        flagsContainer.innerHTML = '';
+        
+        if (flagsByDate[date]) {
+            day.classList.add('has-flags');
+            
+            // Sort flags by time
+            const sortedFlags = flagsByDate[date].sort((a, b) => {
+                return a.time.localeCompare(b.time);
+            });
+            
+            // Add flag indicators
+            sortedFlags.forEach(flag => {
+                const flagIndicator = document.createElement('div');
+                flagIndicator.className = `calendar-flag ${flag.type}`;
+                flagIndicator.title = `${flag.originalType} at ${flag.time}`;
+                flagsContainer.appendChild(flagIndicator);
+            });
+
+            // Add flag count if there are many flags
+            if (sortedFlags.length > 15) {
+                const countBadge = document.createElement('div');
+                countBadge.style.position = 'absolute';
+                countBadge.style.top = '25px';
+                countBadge.style.right = '5px';
+                countBadge.style.fontSize = '0.7em';
+                countBadge.style.color = 'rgba(255, 255, 255, 0.8)';
+                countBadge.textContent = `${sortedFlags.length} flags`;
+                day.appendChild(countBadge);
+            }
+
+            // Log flag counts for debugging
+            console.log(`${date} has ${sortedFlags.length} flags:`, 
+                sortedFlags.map(f => f.originalType).join(', '));
+        } else {
+            day.classList.remove('has-flags');
+        }
+    });
+}
+
+// Function to load current month's flag data
+async function loadCurrentMonthFlags() {
+    try {
+        const response = await fetch('/api/current-month-flags');
+        if (!response.ok) {
+            throw new Error('Failed to fetch flag data');
+        }
+        const data = await response.json();
+        updateCalendarWithFlags(data);
+    } catch (error) {
+        console.error('Error loading current month flags:', error);
+    }
+}
+
+// Initialize calendar when the page loads
+document.addEventListener('DOMContentLoaded', () => {
+    createCalendar();
+    loadCurrentMonthFlags();
+    
+    // Refresh calendar data every minute
+    setInterval(loadCurrentMonthFlags, 60000);
+});

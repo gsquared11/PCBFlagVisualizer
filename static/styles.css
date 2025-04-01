@@ -6,7 +6,6 @@
   --primary-color: #3a86ff; /* Primary brand color (Blue) */
   --secondary-color: #8338ec; /* Secondary accent color (Purple) */
   --text-color: #ffffff; /* Text color for better contrast */
-  --bg-overlay: rgba(255, 255, 255, 0.15); /* Semi-transparent overlay for containers */
   --table-bg: rgba(0, 0, 0, 0.2); /* Background color for tables */
   --table-hover: rgba(255, 255, 255, 0.1); /* Hover state for table rows */
   --shadow-sm: 0 4px 6px rgba(0, 0, 0, 0.1); /* Small shadow */
@@ -237,23 +236,25 @@ select:focus {
  Current Flag Condition Styles
  ===================================== */
 .current-flag-condition {
-  font-size: 3rem;                   
+  font-size: 2.5rem;
   font-weight: bold;
   text-align: center;
-  margin-top: 1rem;
-  background: var(--bg-overlay);
+  margin: 20px 0;
+  padding: 20px;
   border-radius: var(--border-radius);
-  padding: 1rem 2rem;
-  width: fit-content;               
-  margin: 0 auto;                    
-  color: var(--text-color);
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .flag-value {
-  background: var(--flag-gradient);
-  background-clip: text;
-  color: transparent;
-  transition: background 0.3s ease;
+  color: #ff4444;
+  margin-left: 10px;
+}
+
+.flag-info {
+  margin-top: 20px;
+  font-size: 0.9em;
+  opacity: 0.8;
 }
 
 /* =====================================
@@ -322,4 +323,276 @@ footer a {
   .charts-grid {
     grid-template-columns: 1fr;
   }
+}
+
+/* Calendar Styles */
+.calendar-container {
+    background: var(--table-bg);
+    border-radius: var(--border-radius);
+    padding: 20px;
+    box-shadow: var(--shadow-md);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    margin-bottom: 20px;
+}
+
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.calendar-title {
+    font-size: 1.5em;
+    font-weight: 600;
+    color: var(--text-color);
+    margin: 0;
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
+}
+
+.calendar-day-header {
+    text-align: center;
+    font-weight: 600;
+    color: var(--text-color);
+    padding: 5px;
+    font-size: 0.9em;
+}
+
+.calendar-day {
+    aspect-ratio: 1;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 5px;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: var(--table-bg);
+    min-height: 60px;
+    display: flex;
+    flex-direction: column;
+}
+
+.calendar-day:hover {
+    background-color: var(--table-hover);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+}
+
+.calendar-day.has-flags {
+    background: rgba(58, 134, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.calendar-day-number {
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    font-size: 0.9em;
+    color: var(--text-color);
+}
+
+.flags-container {
+    position: absolute;
+    bottom: 5px;
+    left: 5px;
+    right: 5px;
+    display: flex;
+    gap: 2px;
+    justify-content: center;
+    flex-wrap: wrap;
+    padding: 2px;
+    max-height: 45px;
+    overflow-y: auto;
+}
+
+.flags-container::-webkit-scrollbar {
+    width: 4px;
+}
+
+.flags-container::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 2px;
+}
+
+.flags-container::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 2px;
+}
+
+.calendar-flag {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    margin: 1px;
+    flex-shrink: 0;
+}
+
+.calendar-flag.yellow-flag {
+    background: #ffd700;
+    box-shadow: 0 0 4px rgba(255, 215, 0, 0.6);
+}
+
+.calendar-flag.red-flag {
+    background: #ff4444;
+    box-shadow: 0 0 4px rgba(255, 68, 68, 0.6);
+}
+
+.calendar-flag.double-red-flag {
+    background: #cc0000;
+    box-shadow: 0 0 4px rgba(204, 0, 0, 0.6);
+}
+
+.calendar-day.empty {
+    background: var(--table-bg);
+    border: none;
+    cursor: default;
+    opacity: 0.5;
+}
+
+.calendar-day.empty:hover {
+    transform: none;
+    box-shadow: none;
+    background: var(--table-bg);
+}
+
+/* Current Status Section */
+.current-status-section {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 20px;
+    margin: 20px 0;
+}
+
+.current-flag-box {
+    background: var(--table-bg);
+    border-radius: var(--border-radius);
+    padding: 20px;
+    box-shadow: var(--shadow-md);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-color);
+}
+
+.date-picker-container {
+    background: var(--table-bg);
+    border-radius: var(--border-radius);
+    padding: 20px;
+    box-shadow: var(--shadow-md);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    margin-top: 40px;
+}
+
+.date-picker-container h2 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    font-size: 1.5em;
+}
+
+.date-picker-container h3 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-size: 1em;
+    opacity: 0.8;
+}
+
+.date-picker-container input[type="date"] {
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: var(--border-radius);
+    padding: 8px 12px;
+    color: var(--text-color);
+    margin-right: 10px;
+    font-size: 1em;
+}
+
+.date-picker-container input[type="date"]::-webkit-datetime-edit-text,
+.date-picker-container input[type="date"]::-webkit-datetime-edit-month-field,
+.date-picker-container input[type="date"]::-webkit-datetime-edit-day-field,
+.date-picker-container input[type="date"]::-webkit-datetime-edit-year-field {
+    color: var(--text-color);
+}
+
+.date-picker-container input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+}
+
+.date-picker-container input[type="date"]::placeholder {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.flags-by-day-container {
+    margin-top: 20px;
+    padding: 15px;
+    background: var(--table-bg);
+    border-radius: var(--border-radius);
+}
+
+@media (max-width: 768px) {
+    .current-status-section {
+        grid-template-columns: 1fr;
+    }
+}
+
+.flags-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    max-height: 300px;
+    overflow-y: auto;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: var(--border-radius);
+}
+
+.flag-entry {
+    padding: 10px 15px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.3s ease;
+}
+
+.flag-entry:last-child {
+    border-bottom: none;
+}
+
+/* Flag type specific styles */
+.flag-entry[data-flag-type="Red Flag"] {
+    background: linear-gradient(45deg, rgba(255, 0, 0, 0.2), rgba(255, 0, 0, 0.1));
+}
+
+.flag-entry[data-flag-type="Yellow Flag"] {
+    background: linear-gradient(45deg, rgba(255, 215, 0, 0.2), rgba(255, 215, 0, 0.1));
+}
+
+.flag-entry[data-flag-type="Double Red Flag"] {
+    background: linear-gradient(45deg, rgba(139, 0, 0, 0.3), rgba(139, 0, 0, 0.2));
+}
+
+.flag-entry:hover {
+    transform: translateX(5px);
+}
+
+.flag-entry strong {
+    color: var(--text-color);
+    font-size: 1.1em;
+}
+
+.flag-entry em {
+    color: rgba(255, 255, 255, 0.7);
+    font-style: italic;
+}
+
+.no-data {
+    padding: 20px;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.7);
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: var(--border-radius);
 }
