@@ -59,14 +59,16 @@ refreshBtn.addEventListener("click", () => {
 });
 
 // Pagination buttons
-prevPageBtn.addEventListener("click", () => {
+prevPageBtn.addEventListener("click", (e) => {
+  e.preventDefault();
   if (offset > 0) {
     offset -= limit;
     currentPage--;
     loadTableData();
   }
 });
-nextPageBtn.addEventListener("click", () => {
+nextPageBtn.addEventListener("click", (e) => {
+  e.preventDefault();
   offset += limit;
   currentPage++;
   loadTableData();
@@ -153,10 +155,18 @@ async function updateCurrentFlag() {
         // Update only the flag value portion
         currentFlagConditionElement.querySelector(".flag-value").textContent = latestFlagRaw;
 
-        // Determine the gradient for the current flag; fallback if not mapped
-        const flagGradient = flagGradientMapping[latestFlag] || "linear-gradient(45deg, gray, darkgray)";
-        // Set the CSS variable for the gradient
-        currentFlagConditionElement.style.setProperty('--flag-gradient', flagGradient);
+        // Remove any existing flag type classes
+        currentFlagConditionElement.classList.remove(
+          'yellow-flag',
+          'red-flag',
+          'double-red-flag',
+          'purple-flag',
+          'green-flag'
+        );
+
+        // Add the appropriate flag type class
+        const flagClass = latestFlag.replace(/\s+/g, '-');
+        currentFlagConditionElement.classList.add(flagClass);
       }
     }
   } catch (error) {
@@ -613,6 +623,12 @@ function createCalendar() {
         // Add click event listener to each day cell
         dayCell.addEventListener('click', () => {
             const selectedDate = dayCell.dataset.date;
+            // Remove selected class from any previously selected day
+            document.querySelectorAll('.calendar-day').forEach(day => {
+                day.classList.remove('selected');
+            });
+            // Add selected class to clicked day
+            dayCell.classList.add('selected');
             // Update the date picker input
             document.getElementById('flagDate').value = selectedDate;
             // Load flags for the selected date
