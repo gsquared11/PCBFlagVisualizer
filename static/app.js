@@ -648,6 +648,7 @@ function updateCalendarWithFlags(flagData) {
     days.forEach(day => {
         const date = day.dataset.date;
         const flagsContainer = day.querySelector('.flags-container');
+        
         flagsContainer.innerHTML = '';
         
         if (flagsByDate[date]) {
@@ -696,11 +697,12 @@ async function loadCurrentMonthFlags() {
         }
         const data = await response.json();
         
-        // Filter data for the current calendar month
+        // Filter data for the current calendar month using string comparison
         const currentMonthData = data.filter(flag => {
-            const flagDate = new Date(flag.date);
-            return flagDate.getMonth() === currentCalendarMonth && 
-                   flagDate.getFullYear() === currentCalendarYear;
+            // The date from the API is already in YYYY-MM-DD format
+            const [year, month] = flag.date.split('-').map(Number);
+            return month === currentCalendarMonth + 1 && // API month is 1-based, JS month is 0-based
+                   year === currentCalendarYear;
         });
         
         updateCalendarWithFlags(currentMonthData);
@@ -715,6 +717,6 @@ document.addEventListener('DOMContentLoaded', () => {
     createCalendar();
     loadCurrentMonthFlags();
     
-    // Refresh calendar data every minute
-    setInterval(loadCurrentMonthFlags, 60000);
+    // Refresh calendar data every hour
+    setInterval(loadCurrentMonthFlags, 3600000);
 });
