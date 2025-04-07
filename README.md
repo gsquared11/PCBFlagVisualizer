@@ -1,66 +1,66 @@
+# PCB Flag Data Visualizer
 
+A Flask web application that visualizes historical and current beach flag status data for Panama City Beach, Florida. The application provides interactive visualizations and real-time updates of water safety conditions.
 
-
-# PCB Flag Data Visualizer - Flask Web Application
-https://pcb-flag-viewer.azurewebsites.net/
+This application serves as a public safety tool, helping beachgoers and residents stay informed about water conditions through an intuitive interface. By aggregating and visualizing flag data collected from the PCB Flag Scraper project, it provides valuable insights into historical water safety patterns and current conditions. The interactive features allow users to:
+- Review historical flag patterns to plan beach visits
+- Analyze seasonal trends in water safety
+- Make informed decisions about beach activities based on historical data
 
 <img width="937" alt="Screenshot 2025-04-07 at 7 08 34 PM" src="https://github.com/user-attachments/assets/5c0d7e20-60f6-4871-8b1c-0a4649d0a15d" />
 
-
-This Flask Web Application hosted on Azure visualizes historical and current beach flag status data collected from my database of flag data (see https://github.com/gsquared11/PCBFlagScraper/tree/main). The web app provides interactive charts, tables, and date-specific views to enhance public awareness about water safety conditions.
-
 ## Features
 
-### 1. Current Flag Condition Display
-- **Function Name:** `updateCurrentFlag()`
-- **Purpose:** Displays the most recent beach flag status.
-- **Approach:**
-  - Fetches the latest flag status from the backend API.
-  - Dynamically updates the UI with the current flag color and description.
-
-### 2. Historical Flag Data Table
-- **Purpose:** Displays historical flag data with pagination.
-- **Functionality:**
-  - Fetches paginated data (25 entries per page) from the backend API.
-  - Converts timestamps from UTC to CST for improved readability.
-  - Provides controls for navigating between pages of data.
-
-### 3. Monthly Flag Distribution (Pie Charts)
-- **Purpose:** Visualizes the flag distribution for the last three months.
-- **Approach:**
-  - Retrieves monthly aggregated data via API.
-  - Displays data in three interactive pie charts generated using Chart.js.
-
-### 4. All-Time Flag Distribution (Bar Chart)
-- **Purpose:** Provides a bar chart overview of historical flag distribution data.
-- **Approach:**
-  - Fetches all-time aggregated flag data from the backend.
-  - Visualizes data in an interactive bar chart using Chart.js.
-
-### 5. Flag Data by Date
-- **Purpose:** Allows users to view flag records for a specific date.
-- **Approach:**
-  - Accepts user-selected date inputs.
-  - Fetches and displays corresponding flag entries, including timestamps converted to Central Standard Time (CST).
+- **Current Flag Status**: Real-time display of the most recent beach flag condition
+- **Historical Data Table**: Paginated view of historical flag data with timezone conversion
+- **Monthly Distribution**: Interactive pie charts showing flag distribution for the last three months
+- **All-Time Statistics**: Bar chart visualization of historical flag distribution
+- **Date-Specific Views**: Search and view flag records for specific dates
+- **Interactive Calendar**: Visual calendar interface to browse and select dates with flag status indicators
 
 ## Technology Stack
 
 ### Frontend
-- **HTML/CSS/JavaScript:** For interactive UI and responsive design.
-- **Chart.js:** For creating responsive pie and bar charts.
-- **Luxon:** Manages timezone conversions and date manipulations.
+- HTML/CSS/JavaScript
+- Chart.js for data visualization
+- Luxon for timezone management
 
 ### Backend
-- **Flask:** (Python) Serves APIs for retrieving historical and aggregated flag data.
+- Flask (Python)
+- SQL Server database connection via pyodbc
+- RESTful API endpoints
 
-### Cloud Platform
-- **Microsoft Azure:** Utilized for deploying and hosting the Flask application via Gunicorn
+### Deployment
+- Microsoft Azure App Service
+- Gunicorn WSGI server
 
 ## Prerequisites
-- **Flask:** Python 3.9 to maintain compatibility with dependencies shown in requirements.txt
-- **Chart.js:** Included via CDN.
-- **Luxon:** Included via CDN.
+- Python 3.9+
+- Dependencies listed in requirements.txt:
+  - Flask
+  - Flask-CORS
+  - pyodbc
+  - Werkzeug==2.0.3
+  - python-dateutil
+  - pytz
+  - python-dotenv
 
-Ensure the Flask backend API endpoints (`/api/table-data`, `/api/flag-distribution`, and `/api/all-time-flag-distribution`) are properly configured and accessible in your Azure service.
+## Setup
+1. Clone the repository
+2. Create a virtual environment: `python -m venv venv`
+3. Activate the virtual environment
+4. Install dependencies: `pip install -r requirements.txt`
+5. Configure environment variables in `.env`
+6. Run the application: `flask run`
+
+## API Endpoints (from https://github.com/gsquared11/PCBFlagScraper)
+- `/api/table-data`: Historical flag data with pagination
+- `/api/flag-distribution`: Monthly flag distribution data
+- `/api/all-time-flag-distribution`: All-time flag statistics
+- `/api/flags-by-day`: Get flag data for a specific date
+- `/api/current-month-flags`: Get flag data for the current month
+
+## License
+MIT License
 
 
