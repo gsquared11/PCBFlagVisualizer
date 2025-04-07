@@ -4,7 +4,8 @@
 # PCB Flag Data Visualizer - Flask Web Application
 https://pcb-flag-viewer.azurewebsites.net/
 
-![image](https://github.com/user-attachments/assets/de14e08a-9e8f-41e5-9898-57adfc3034d4)
+<img width="937" alt="Screenshot 2025-04-07 at 7 08 34 PM" src="https://github.com/user-attachments/assets/5c0d7e20-60f6-4871-8b1c-0a4649d0a15d" />
+
 
 This Flask Web Application hosted on Azure visualizes historical and current beach flag status data collected from my database of flag data (see https://github.com/gsquared11/PCBFlagScraper/tree/main). The web app provides interactive charts, tables, and date-specific views to enhance public awareness about water safety conditions.
 
