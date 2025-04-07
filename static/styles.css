@@ -656,7 +656,7 @@ footer a {
 }
 
 .calendar-flag.double-red-flag {
-  background: linear-gradient(45deg, #ff9999, #cc0000);
+  background: linear-gradient(45deg, #d90505, #6c0202);
   box-shadow: 0 0 5px rgba(204, 0, 0, 0.5);
 }
 
