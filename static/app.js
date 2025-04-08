@@ -35,11 +35,13 @@ const flagColorMapping = {
   "yellow flag": "yellow",
   "red flag": "red",
   "double red flag": "#800000",
+  "red over purple flag": "#800080"
 };
 const flagGradientMapping = {
   "yellow flag": "linear-gradient(45deg, #ffff66, #ffd700)",
   "red flag": "linear-gradient(45deg, #ff6666, #ff0000)",
   "double red flag": "linear-gradient(45deg, #ff9999, #cc0000)",
+  "red over purple flag": "linear-gradient(45deg, #ff0000, #800080)"
 };
 
 // Pagination controls
@@ -161,7 +163,8 @@ async function updateCurrentFlag() {
           'red-flag',
           'double-red-flag',
           'purple-flag',
-          'green-flag'
+          'green-flag',
+          'red-over-purple-flag'
         );
 
         // Add the appropriate flag type class
