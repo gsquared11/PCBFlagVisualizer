@@ -28,6 +28,7 @@ This application serves as a public safety tool, helping beachgoers and resident
 ### Backend
 - Flask (Python)
 - SQL Server database connection via pyodbc
+  - SQL Server hosted on Azure
 - RESTful API endpoints
 
 ### Deployment
