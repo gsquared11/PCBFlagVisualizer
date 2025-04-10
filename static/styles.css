@@ -279,14 +279,7 @@ select:focus {
 }
 
 .current-flag-condition.yellow-over-purple-flag {
-  background: repeating-linear-gradient(
-    45deg,
-    #ffd700,
-    #ffd700 50%,
-    #800080 50%,
-    #800080 100%
-  );
-  box-shadow: 0 0 15px rgba(128, 0, 128, 0.5);
+  background: linear-gradient(45deg,#ffd700,#800080);
 }
 
 .flag-label {
@@ -904,13 +897,7 @@ footer a {
 }
 
 .flag-entry[data-flag-type="Yellow Over Purple Flag"] {
-  background: repeating-linear-gradient(
-    45deg,
-    #ffd700,
-    #ffd700 50%,
-    #800080 50%,
-    #800080 100%
-  );
+  background: linear-gradient(45deg,#ffd700,#800080);
 }
 
 .flag-entry:hover {
