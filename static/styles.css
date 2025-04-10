@@ -260,7 +260,8 @@ select:focus {
 }
 
 .current-flag-condition.double-red-flag {
-  background: linear-gradient(45deg, #ff9999, #cc0000);
+  background: linear-gradient(45deg, #8B0000, #4B0000);
+  box-shadow: 0 0 15px rgba(139, 0, 0, 0.5);
 }
 
 .current-flag-condition.red-over-purple-flag {
@@ -275,6 +276,17 @@ select:focus {
 .current-flag-condition.green-flag {
   background: linear-gradient(45deg, #99ff99, #00cc00);
   box-shadow: 0 0 15px rgba(0, 204, 0, 0.5);
+}
+
+.current-flag-condition.yellow-over-purple-flag {
+  background: repeating-linear-gradient(
+    45deg,
+    #ffd700,
+    #ffd700 50%,
+    #800080 50%,
+    #800080 100%
+  );
+  box-shadow: 0 0 15px rgba(128, 0, 128, 0.5);
 }
 
 .flag-label {
@@ -659,11 +671,19 @@ footer a {
 }
 
 .calendar-flag.double-red-flag {
-  background: linear-gradient(45deg, #ff9999, #cc0000);
+  background: linear-gradient(45deg, #8B0000, #4B0000);
+  box-shadow: 0 0 5px rgba(139, 0, 0, 0.5);
 }
 
 .calendar-flag.red-over-purple-flag {
-  background: linear-gradient(45deg, #ff0000, #800080);
+  background: repeating-linear-gradient(
+    45deg,
+    #ff0000,
+    #ff0000 50%,
+    #800080 50%,
+    #800080 100%
+  );
+  box-shadow: 0 0 5px rgba(128, 0, 128, 0.5);
 }
 
 .calendar-flag.purple-flag {
@@ -674,6 +694,17 @@ footer a {
 .calendar-flag.green-flag {
   background: linear-gradient(45deg, #99ff99, #00cc00);
   box-shadow: 0 0 5px rgba(0, 204, 0, 0.5);
+}
+
+.calendar-flag.yellow-over-purple-flag {
+  background: repeating-linear-gradient(
+    45deg,
+    #ffd700,
+    #ffd700 50%,
+    #800080 50%,
+    #800080 100%
+  );
+  box-shadow: 0 0 5px rgba(128, 0, 128, 0.5);
 }
 
 .calendar-day.empty {
@@ -865,11 +896,21 @@ footer a {
 }
 
 .flag-entry[data-flag-type="Double Red Flag"] {
-  background: linear-gradient(45deg, #ff9999, #cc0000);
+  background: linear-gradient(45deg, #8B0000, #4B0000);
 }
 
 .flag-entry[data-flag-type="Red Over Purple Flag"] {
   background: linear-gradient(45deg, #ff0000, #800080);
+}
+
+.flag-entry[data-flag-type="Yellow Over Purple Flag"] {
+  background: repeating-linear-gradient(
+    45deg,
+    #ffd700,
+    #ffd700 50%,
+    #800080 50%,
+    #800080 100%
+  );
 }
 
 .flag-entry:hover {
