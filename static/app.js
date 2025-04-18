@@ -39,8 +39,8 @@ const flagColorMapping = {
   "yellow over purple flag": "#800080"
 };
 const flagGradientMapping = {
-  "yellow flag": "linear-gradient(45deg, #ffff66, #ffd700)",
-  "red flag": "linear-gradient(45deg, #ff6666, #ff0000)",
+  "yellow flag": "linear-gradient(45deg, #ffd700,rgb(202, 202, 23))",
+  "red flag": "linear-gradient(45deg, #ff0000, #ff6666)",
   "double red flag": "linear-gradient(45deg, #8B0000, #4B0000)",
   "red over purple flag": "linear-gradient(45deg, #ff0000, #800080)",
   "yellow over purple flag": "linear-gradient(45deg, #ffd700, #800080)"
@@ -742,3 +742,17 @@ document.addEventListener('DOMContentLoaded', () => {
     // Refresh calendar data every hour
     setInterval(loadCurrentMonthFlags, 3600000);
 });
+
+// Function to create a canvas gradient for flags
+function createFlagGradient(color1, color2) {
+  const ctx = document.getElementById('canvas').getContext('2d');
+  
+  const gradient = ctx.createLinearGradient(0, 0, 100, 100);
+  gradient.addColorStop(0, color1);
+  gradient.addColorStop(1, color2);
+  
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, 100, 100);
+  
+  return gradient;
+}

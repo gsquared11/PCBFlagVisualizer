@@ -16,6 +16,22 @@
   --disabled-bg: #6c757d;
   --select-bg: rgba(0, 0, 0, 0.3);
   --footer-bg: rgba(0, 0, 0, 0.2);
+  
+  /* Flag gradients */
+  --gradient-yellow-flag: linear-gradient(45deg, #ffd700, rgb(202, 202, 23));
+  --gradient-red-flag: linear-gradient(45deg, #ff0000, #ff6666);
+  --gradient-double-red-flag: linear-gradient(45deg, #8B0000, #4B0000);
+  --gradient-red-over-purple-flag: linear-gradient(45deg, #ff0000, #800080);
+  --gradient-purple-flag: linear-gradient(45deg, #cc99ff, #9933ff);
+  --gradient-green-flag: linear-gradient(45deg, #99ff99, #00cc00);
+  --gradient-yellow-over-purple-flag: linear-gradient(45deg, #ffd700, #800080);
+  
+  /* Flag shadows */
+  --shadow-yellow-flag: 0 0 15px rgba(255, 215, 0, 0.5);
+  --shadow-red-flag: 0 0 15px rgba(255, 0, 0, 0.5);
+  --shadow-double-red-flag: 0 0 15px rgba(139, 0, 0, 0.5);
+  --shadow-purple-flag: 0 0 15px rgba(153, 51, 255, 0.5);
+  --shadow-green-flag: 0 0 15px rgba(0, 204, 0, 0.5);
 }
 
 /* =====================================
@@ -250,36 +266,35 @@ select:focus {
 }
 
 .current-flag-condition.yellow-flag {
-  background: linear-gradient(45deg, #ffff66, #ffd700);
-  box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+  background: var(--gradient-yellow-flag);
 }
 
 .current-flag-condition.red-flag {
-  background: linear-gradient(45deg, #ff6666, #ff0000);
-  box-shadow: 0 0 15px rgba(255, 0, 0, 0.5);
+  background: var(--gradient-red-flag);
+  box-shadow: var(--shadow-red-flag);
 }
 
 .current-flag-condition.double-red-flag {
-  background: linear-gradient(45deg, #8B0000, #4B0000);
-  box-shadow: 0 0 15px rgba(139, 0, 0, 0.5);
+  background: var(--gradient-double-red-flag);
+  box-shadow: var(--shadow-double-red-flag);
 }
 
 .current-flag-condition.red-over-purple-flag {
-  background: linear-gradient(45deg, #ff0000, #800080);
+  background: var(--gradient-red-over-purple-flag);
 }
 
 .current-flag-condition.purple-flag {
-  background: linear-gradient(45deg, #cc99ff, #9933ff);
-  box-shadow: 0 0 15px rgba(153, 51, 255, 0.5);
+  background: var(--gradient-purple-flag);
+  box-shadow: var(--shadow-purple-flag);
 }
 
 .current-flag-condition.green-flag {
-  background: linear-gradient(45deg, #99ff99, #00cc00);
-  box-shadow: 0 0 15px rgba(0, 204, 0, 0.5);
+  background: var(--gradient-green-flag);
+  box-shadow: var(--shadow-green-flag);
 }
 
 .current-flag-condition.yellow-over-purple-flag {
-  background: linear-gradient(45deg,#ffd700,#800080);
+  background: var(--gradient-yellow-over-purple-flag);
 }
 
 .flag-label {
@@ -654,17 +669,17 @@ footer a {
 }
 
 .calendar-flag.yellow-flag {
-  background: linear-gradient(45deg, #ffff66, #ffd700);
+  background: var(--gradient-yellow-flag);
   box-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
 }
 
 .calendar-flag.red-flag {
-  background: linear-gradient(45deg, #ff6666, #ff0000);
+  background: var(--gradient-red-flag);
   box-shadow: 0 0 5px rgba(255, 0, 0, 0.5);
 }
 
 .calendar-flag.double-red-flag {
-  background: linear-gradient(45deg, #8B0000, #4B0000);
+  background: var(--gradient-double-red-flag);
   box-shadow: 0 0 5px rgba(139, 0, 0, 0.5);
 }
 
@@ -680,12 +695,12 @@ footer a {
 }
 
 .calendar-flag.purple-flag {
-  background: linear-gradient(45deg, #cc99ff, #9933ff);
+  background: var(--gradient-purple-flag);
   box-shadow: 0 0 5px rgba(153, 51, 255, 0.5);
 }
 
 .calendar-flag.green-flag {
-  background: linear-gradient(45deg, #99ff99, #00cc00);
+  background: var(--gradient-green-flag);
   box-shadow: 0 0 5px rgba(0, 204, 0, 0.5);
 }
 
@@ -879,25 +894,23 @@ footer a {
 
 /* Flag type specific styles */
 .flag-entry[data-flag-type="Red Flag"] {
-  background: linear-gradient(45deg, rgba(255, 0, 0, 0.2), rgba(255, 0, 0, 0.1));
+  background: var(--gradient-red-flag);
 }
 
 .flag-entry[data-flag-type="Yellow Flag"] {
-  background: linear-gradient(45deg, rgba(255, 215, 0, 0.4), rgba(255, 215, 0, 0.2));
-  border-left: 3px solid #ffd700;
-  box-shadow: 0 0 10px rgba(255, 215, 0, 0.2);
+  background: var(--gradient-yellow-flag);
 }
 
 .flag-entry[data-flag-type="Double Red Flag"] {
-  background: linear-gradient(45deg, #8B0000, #4B0000);
+  background: var(--gradient-double-red-flag);
 }
 
 .flag-entry[data-flag-type="Red Over Purple Flag"] {
-  background: linear-gradient(45deg, #ff0000, #800080);
+  background: var(--gradient-red-over-purple-flag);
 }
 
 .flag-entry[data-flag-type="Yellow Over Purple Flag"] {
-  background: linear-gradient(45deg,#ffd700,#800080);
+  background: var(--gradient-yellow-over-purple-flag);
 }
 
 .flag-entry:hover {
