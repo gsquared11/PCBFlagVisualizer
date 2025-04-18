@@ -1,16 +1,15 @@
 /* =====================================
    Root Variables
    ===================================== */
-/* Define theme colors, shadows, and transitions for consistent styling */
 :root {
-  --primary-color: #3a86ff; /* Primary brand color (Blue) */
-  --secondary-color: #8338ec; /* Secondary accent color (Purple) */
-  --text-color: #ffffff; /* Text color for better contrast */
-  --table-bg: rgba(0, 0, 0, 0.2); /* Background color for tables */
+  --primary-color: #3a86ff; 
+  --secondary-color: #8338ec; 
+  --text-color: #ffffff; 
+  --table-bg: rgba(0, 0, 0, 0.2); 
   --table-hover: rgba(255, 255, 255, 0.1); /* Hover state for table rows */
-  --shadow-sm: 0 4px 6px rgba(0, 0, 0, 0.1); /* Small shadow */
-  --shadow-md: 0 8px 16px rgba(0, 0, 0, 0.1); /* Medium shadow */
-  --shadow-lg: 0 12px 24px rgba(0, 0, 0, 0.15); /* Large shadow */
+  --shadow-sm: 0 4px 6px rgba(0, 0, 0, 0.1); 
+  --shadow-md: 0 8px 16px rgba(0, 0, 0, 0.1); 
+  --shadow-lg: 0 12px 24px rgba(0, 0, 0, 0.15); 
   --border-radius: 12px; /* Border radius for rounded elements */
   --transition: 0.25s ease; /* Smooth transition for hover states */
   --disabled-bg: #6c757d;
@@ -18,20 +17,13 @@
   --footer-bg: rgba(0, 0, 0, 0.2);
   
   /* Flag gradients */
-  --gradient-yellow-flag: linear-gradient(45deg, #ffd700, rgb(202, 202, 23));
+  --gradient-yellow-flag: linear-gradient(45deg, #c9aa04, rgb(202, 202, 23));
   --gradient-red-flag: linear-gradient(45deg, #ff0000, #ff6666);
   --gradient-double-red-flag: linear-gradient(45deg, #8B0000, #4B0000);
   --gradient-red-over-purple-flag: linear-gradient(45deg, #ff0000, #800080);
   --gradient-purple-flag: linear-gradient(45deg, #cc99ff, #9933ff);
   --gradient-green-flag: linear-gradient(45deg, #99ff99, #00cc00);
-  --gradient-yellow-over-purple-flag: linear-gradient(45deg, #ffd700, #800080);
-  
-  /* Flag shadows */
-  --shadow-yellow-flag: 0 0 15px rgba(255, 215, 0, 0.5);
-  --shadow-red-flag: 0 0 15px rgba(255, 0, 0, 0.5);
-  --shadow-double-red-flag: 0 0 15px rgba(139, 0, 0, 0.5);
-  --shadow-purple-flag: 0 0 15px rgba(153, 51, 255, 0.5);
-  --shadow-green-flag: 0 0 15px rgba(0, 204, 0, 0.5);
+  --gradient-yellow-over-purple-flag: linear-gradient(45deg, #c9aa04, #800080);
 }
 
 /* =====================================
@@ -39,52 +31,22 @@
  ===================================== */
 body {
   font-family: "Inter", system-ui, -apple-system, sans-serif;
-  background: -webkit-linear-gradient(135deg, var(--primary-color), var(--secondary-color)); /* Safari Gradient */
-  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); /* Standard Gradient */
+  background: linear-gradient(135deg, #1a3a8f, #0d1f4d); 
   color: var(--text-color);
   line-height: 1.6;
   max-width: 1200px;
   margin: 0 auto;
   padding: 2rem;
-  min-height: 100vh;
-}
-
-/* =====================================
- Typography
- ===================================== */
-h1 {
-  color: var(--text-color);
-  text-align: center;
-  font-size: 2.5rem;
-  margin-bottom: 2rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-}
-
-h2 {
-  color: var(--text-color);
-  font-size: 1.8rem;
-  margin: 1.5rem 0;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-}
-
-h3 {
-  color: var(--text-color);
-  font-size: 1.2rem;
-  margin: 0.75rem 0;
-  font-weight: 600;
 }
 
 /* =====================================
  Container Styles
  ===================================== */
 .container {
-  background: var(--bg-overlay);
+  background: rgba(255, 255, 255, 0.1); 
   border-radius: var(--border-radius);
   padding: 2rem;
   box-shadow: var(--shadow-md);
-  backdrop-filter: blur(8px); /* Frosted glass effect */
   transition: transform var(--transition), box-shadow var(--transition);
 }
 
@@ -108,8 +70,6 @@ h3 {
   padding: 1rem;
   box-shadow: var(--shadow-sm);
   transition: transform var(--transition), box-shadow var(--transition);
-  max-width: 400px;
-  margin: 0 auto;
   overflow: hidden;
 }
 
@@ -123,21 +83,12 @@ h3 {
   position: relative;
 }
 
-/* All-Time Bar Chart styles */
-#allTimeBarChart {
-  width: 100%;
-  height: 300px;
-  margin: 1rem 0;
-}
-
 /* =====================================
  Table Styles
  ===================================== */
 table {
   width: 100%;
-  border-collapse: separate;
   border-spacing: 0;
-  margin-top: 1.5rem;
   border-radius: var(--border-radius);
   overflow: hidden;
   background: var(--table-bg);
@@ -152,8 +103,6 @@ td {
 
 th {
   background-color: rgba(0, 0, 0, 0.3);
-  font-weight: 600;
-  font-size: 0.875rem;
 }
 
 tr:not(:last-child) td {
@@ -171,7 +120,6 @@ tr:hover td {
   text-align: center;
   margin: 1.5rem 0;
   font-weight: 500;
-  opacity: 0.8;
 }
 
 .error {
@@ -227,27 +175,6 @@ button:disabled {
   box-shadow: none;
 }
 
-select {
-  padding: 0.75rem 1rem;
-  border-radius: 50px;
-  border: none;
-  background: var(--select-bg);
-  color: var(--text-color);
-  transition: box-shadow var(--transition);
-  appearance: none;
-  background-image: url("data:image/svg+xml,...");
-  background-repeat: no-repeat;
-  background-position: right 1rem center;
-  background-size: 1em;
-  padding-right: 2.5rem;
-  font-weight: 500;
-}
-
-select:focus {
-  outline: none;
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
-}
-
 /* =====================================
  Current Flag Condition Styles
  ===================================== */
@@ -271,12 +198,10 @@ select:focus {
 
 .current-flag-condition.red-flag {
   background: var(--gradient-red-flag);
-  box-shadow: var(--shadow-red-flag);
 }
 
 .current-flag-condition.double-red-flag {
   background: var(--gradient-double-red-flag);
-  box-shadow: var(--shadow-double-red-flag);
 }
 
 .current-flag-condition.red-over-purple-flag {
@@ -285,36 +210,14 @@ select:focus {
 
 .current-flag-condition.purple-flag {
   background: var(--gradient-purple-flag);
-  box-shadow: var(--shadow-purple-flag);
 }
 
 .current-flag-condition.green-flag {
   background: var(--gradient-green-flag);
-  box-shadow: var(--shadow-green-flag);
 }
 
 .current-flag-condition.yellow-over-purple-flag {
   background: var(--gradient-yellow-over-purple-flag);
-}
-
-.flag-label {
-  color: #ffffff;
-  opacity: 0.9;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-}
-
-.flag-value {
-  color: #ffffff;
-  margin-left: 0.5rem;
-  text-transform: capitalize;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-  font-weight: 600;
-}
-
-.flag-info {
-  margin-top: 20px;
-  font-size: 0.9em;
-  opacity: 0.8;
 }
 
 /* =====================================
@@ -349,7 +252,7 @@ footer {
   background: var(--footer-bg);
 }
 
-footer a {
+a {
   color: inherit;
   text-decoration: none;
 }
@@ -548,7 +451,9 @@ footer a {
   }
 }
 
-/* Calendar Styles */
+/* =====================================
+Calendar Styles
+ ===================================== */
 .calendar-container {
   background: var(--table-bg);
   border-radius: var(--border-radius);
@@ -561,8 +466,6 @@ footer a {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
-  padding: 0 0.5rem;
 }
 
 .calendar-title {
@@ -728,7 +631,9 @@ footer a {
   background: var(--table-bg);
 }
 
-/* Current Status Section */
+/* =====================================
+Current Status
+ ===================================== */
 .current-status-section {
   display: grid;
   grid-template-columns: 1fr 2fr;
@@ -771,12 +676,14 @@ footer a {
   font-weight: 600;
 }
 
+/* =====================================
+Date Picker
+ ===================================== */
 .date-picker-container {
   background: rgba(0, 0, 0, 0.2);
   border-radius: var(--border-radius);
   padding: 1.5rem;
   box-shadow: var(--shadow-md);
-  backdrop-filter: blur(8px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   margin-top: 1.5rem;
 }
@@ -869,6 +776,9 @@ footer a {
   }
 }
 
+/* =====================================
+Flags List in Date Picker
+ ===================================== */
 .flags-list {
   list-style: none;
   padding: 0;
@@ -892,7 +802,6 @@ footer a {
   border-bottom: none;
 }
 
-/* Flag type specific styles */
 .flag-entry[data-flag-type="Red Flag"] {
   background: var(--gradient-red-flag);
 }

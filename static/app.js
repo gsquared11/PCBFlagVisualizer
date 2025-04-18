@@ -364,7 +364,7 @@ function createBarChart(containerId, data) {
     },
     options: {
       responsive: true,
-      maintainAspectRatio: false,
+      maintainAspectRatio: true,
       scales: {
         y: {
           beginAtZero: true,
@@ -374,7 +374,6 @@ function createBarChart(containerId, data) {
             color: "white",
           },
           ticks: {
-            stepSize: 1,
             color: "white",
           },
           // Light grid lines for contrast
@@ -399,7 +398,7 @@ function createBarChart(containerId, data) {
       plugins: {
         // White chart title
         title: {
-          display: true,
+          display: false,
           text: "All-Time Flag Distribution",
           color: "white",
           font: {
