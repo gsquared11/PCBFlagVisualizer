@@ -6,6 +6,7 @@ let chartInstances = [];  // Store chart instances for cleanup
 let currentCalendarMonth = new Date().getMonth();
 let currentCalendarYear = new Date().getFullYear();
 let allFlagData = []; // Store all flag data
+let currentTab = 'calendar'; // Track current active tab
 
 // Get refs to DOM elements
 const refreshBtn = document.getElementById("refreshBtn");
@@ -23,6 +24,14 @@ const columnNameMap = {
   flag_type: "Flag Type",
   id: "Entry Number",
 };
+
+// Refs to tab elements
+const calendarTabBtn = document.getElementById("calendarTabBtn");
+const chartsTabBtn = document.getElementById("chartsTabBtn");
+const aboutTabBtn = document.getElementById("aboutTabBtn");
+const calendarSection = document.getElementById("calendarSection");
+const chartsSection = document.getElementById("chartsSection");
+const aboutSection = document.getElementById("aboutSection");
 
 // Refs to chart elements
 const chart1Title = document.getElementById("chart1Title");
@@ -54,12 +63,66 @@ const currentPageDisplay = document.getElementById("currentPage");
 // Event listeners (user interactions)
 document.addEventListener("DOMContentLoaded", initialize);
 
+// Tab navigation event listeners
+calendarTabBtn.addEventListener("click", () => switchTab('calendar'));
+chartsTabBtn.addEventListener("click", () => switchTab('charts'));
+aboutTabBtn.addEventListener("click", () => switchTab('about'));
+
+// Function to switch between tabs
+function switchTab(tabName) {
+  // Update currentTab
+  currentTab = tabName;
+  
+  // Remove active class from all tabs and content
+  calendarTabBtn.classList.remove('active');
+  chartsTabBtn.classList.remove('active');
+  aboutTabBtn.classList.remove('active');
+  calendarTabBtn.setAttribute('aria-selected', 'false');
+  chartsTabBtn.setAttribute('aria-selected', 'false');
+  aboutTabBtn.setAttribute('aria-selected', 'false');
+  
+  calendarSection.classList.remove('active');
+  chartsSection.classList.remove('active');
+  aboutSection.classList.remove('active');
+  
+  // Add active class to selected tab and content
+  if (tabName === 'calendar') {
+    calendarTabBtn.classList.add('active');
+    calendarTabBtn.setAttribute('aria-selected', 'true');
+    calendarSection.classList.add('active');
+    // Refresh calendar view
+    if (chart1Container) createCalendar();
+    if (allFlagData.length > 0) loadCurrentMonthFlags();
+  } else if (tabName === 'charts') {
+    chartsTabBtn.classList.add('active');
+    chartsTabBtn.setAttribute('aria-selected', 'true');
+    chartsSection.classList.add('active');
+    // Refresh charts if needed
+    if (chartInstances.length === 0) {
+      loadFlagDistribution();
+      loadAllTimeFlagDistribution();
+    }
+  } else if (tabName === 'about') {
+    aboutTabBtn.classList.add('active');
+    aboutTabBtn.setAttribute('aria-selected', 'true');
+    aboutSection.classList.add('active');
+  }
+}
+
 // Trigger data load when the table is changed or refresh button is clicked
 refreshBtn.addEventListener("click", () => {
+  // Always refresh table data and current flag
   loadTableData();
-  loadFlagDistribution();
-  loadAllTimeFlagDistribution();
-  updateCurrentFlag()
+  updateCurrentFlag();
+  
+  // Refresh data based on current tab
+  if (currentTab === 'calendar') {
+    createCalendar();
+    loadCurrentMonthFlags();
+  } else if (currentTab === 'charts') {
+    loadFlagDistribution();
+    loadAllTimeFlagDistribution();
+  }
 });
 
 // Pagination buttons
@@ -135,6 +198,9 @@ async function initialize() {
       createCalendar(),
       loadCurrentMonthFlags()
     ]);
+
+    // Initialize the tabs - make sure calendar tab is active by default
+    switchTab('calendar');
   } catch (error) {
     showError("Failed to initialize: " + error.message);
   }
