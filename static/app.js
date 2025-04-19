@@ -242,7 +242,7 @@ async function updateCurrentFlag() {
       }
     }
   } catch (error) {
-    console.error("Error fetching the most recent flag:", error);
+    // Remove console.error
   }
 }
 
@@ -260,7 +260,6 @@ async function loadFlagDistribution() {
     }
 
     const data = await response.json();
-    console.log("Flag Distribution Data:", data);
 
     // Clear existing chart instances
     destroyChartInstances();
@@ -384,7 +383,6 @@ async function loadAllTimeFlagDistribution() {
     
     // Parse json from API
     const data = await response.json();
-    console.log("All‑Time Flag Distribution Data:", data);
 
     createBarChart("allTimeBarChart", data.data);
   } catch (error) {
@@ -559,7 +557,6 @@ async function loadTableData() {
     }
 
     const data = await response.json();
-    console.log("Table API Response:", data);
 
     // Display the fetched table data
     displayTableData(data);
@@ -765,10 +762,6 @@ function updateCalendarWithFlags(flagData) {
                 countBadge.textContent = `${sortedFlags.length} flags`;
                 day.appendChild(countBadge);
             }
-
-            // Log flag counts for debugging
-            console.log(`${date} has ${sortedFlags.length} flags:`, 
-                sortedFlags.map(f => f.originalType).join(', '));
         } else {
             day.classList.remove('has-flags');
         }
@@ -794,7 +787,6 @@ async function loadCurrentMonthFlags() {
         
         updateCalendarWithFlags(currentMonthData);
     } catch (error) {
-        console.error('Error loading current month flags:', error);
         showError('Failed to load current month flags: ' + error.message);
     }
 }
