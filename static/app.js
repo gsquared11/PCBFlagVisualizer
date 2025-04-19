@@ -44,8 +44,8 @@ const flagColorMapping = {
   "yellow flag": "yellow",
   "red flag": "red",
   "double red flag": "#800000",
-  "red over purple flag": "#800080",
-  "yellow over purple flag": "#800080"
+  "red over purple flag": "#9b525a",
+  "yellow over purple flag": "#9da04b"
 };
 const flagGradientMapping = {
   "yellow flag": "linear-gradient(45deg, #ffd700,rgb(202, 202, 23))",
