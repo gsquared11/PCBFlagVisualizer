@@ -113,8 +113,9 @@
                 <input type="date" id="reportDate" name="date" required aria-required="true">
               </div>
               <div class="form-group">
-                <label for="reportTime">Time of Incorrect Data</label>
+                <label for="reportTime">Time of Incorrect Data (CST)</label>
                 <input type="time" id="reportTime" name="time" required aria-required="true">
+                <small class="timezone-note">All times should be entered in Central Standard Time (CST)</small>
               </div>
               <div class="form-group">
                 <label for="reportFlagType">Correct Flag Type</label>
@@ -134,8 +135,8 @@
                 <textarea id="reportDescription" name="description" rows="4" required aria-required="true" placeholder="Please provide any additional details about the incorrect data..."></textarea>
               </div>
               <div class="form-group">
-                <label for="reportEmail">Your Email (optional)</label>
-                <input type="email" id="reportEmail" name="email" placeholder="Enter your email if you'd like to be contacted">
+                <label for="reportEmail">Your Email (required for verification)</label>
+                <input type="email" id="reportEmail" name="email" required aria-required="true" placeholder="Enter your email for verification">
               </div>
               <button type="submit" class="submit-btn">Submit Report</button>
             </form>
@@ -147,6 +148,9 @@
               <ul id="recentReportsList" class="report-list">
                 <!-- Reports will be populated by JavaScript -->
               </ul>
+              <div class="delete-note">
+                <p>Note: You can delete your reports by clicking the delete button and entering the same email address used when submitting the report.</p>
+              </div>
             </div>
           </div>
 
