@@ -423,7 +423,6 @@ def get_recent_reports():
         
         query = """
         SELECT TOP 5
-            id,
             report_date,
             report_time,
             flag_type,
@@ -438,9 +437,8 @@ def get_recent_reports():
         # Convert to list of dictionaries
         reports = []
         for row in rows:
-            report_id, report_date, report_time, flag_type, submission_date = row
+            report_date, report_time, flag_type, submission_date = row
             reports.append({
-                'id': report_id,
                 'date': report_date.strftime('%Y-%m-%d'),
                 'time': report_time.strftime('%H:%M'),
                 'flag_type': flag_type,
@@ -454,44 +452,6 @@ def get_recent_reports():
     
     except Exception as e:
         print(f"Error fetching recent reports: {str(e)}")
-        return jsonify({"error": str(e)}), 500
-
-@app.route('/api/delete-report/<int:report_id>', methods=['DELETE'])
-def delete_report(report_id):
-    """Delete a report if the provided email matches the original submission."""
-    try:
-        data = request.json
-        if not data or 'email' not in data:
-            return jsonify({"error": "Email is required"}), 400
-
-        conn = get_db_connection()
-        cursor = conn.cursor()
-
-        # First verify the email matches
-        cursor.execute("""
-            SELECT email FROM flag_reports 
-            WHERE id = ? AND email = ?
-        """, (report_id, data['email']))
-        
-        if not cursor.fetchone():
-            cursor.close()
-            conn.close()
-            return jsonify({"error": "Email does not match the original submission"}), 403
-
-        # Delete the report
-        cursor.execute("""
-            DELETE FROM flag_reports 
-            WHERE id = ? AND email = ?
-        """, (report_id, data['email']))
-        
-        conn.commit()
-        cursor.close()
-        conn.close()
-        
-        return jsonify({"message": "Report deleted successfully"}), 200
-        
-    except Exception as e:
-        print(f"Error deleting report: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 @app.route('/', methods=['GET'])

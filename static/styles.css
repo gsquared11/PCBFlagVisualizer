@@ -1150,44 +1150,15 @@ Flags List in Date Picker
   background: rgba(0, 0, 0, 0.3);
   border-radius: var(--border-radius);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
 }
 
 .report-item:last-child {
   margin-bottom: 0;
 }
 
-.report-item .delete-btn {
-  position: absolute;
-  top: 0.5rem;
-  right: 0.5rem;
-  background: rgba(255, 77, 109, 0.2);
-  color: #ff4d6d;
-  border: 1px solid #ff4d6d;
-  border-radius: 4px;
-  padding: 0.25rem 0.5rem;
-  font-size: 0.8rem;
-  cursor: pointer;
-  transition: all var(--transition);
-  width: auto;
-  min-width: unset;
-  max-width: 80px;
-  white-space: nowrap;
-  margin: 0;
-}
-
-.report-item .delete-btn:hover {
-  background: rgba(255, 77, 109, 0.3);
-  transform: translateY(-1px);
-}
-
 .report-date {
   font-weight: 600;
   color: var(--primary-color);
-  padding-right: 4rem; /* Make room for the delete button */
 }
 
 .report-flag {
@@ -1226,25 +1197,20 @@ Flags List in Date Picker
 }
 
 @media (max-width: 768px) {
-  .report-item {
-    padding: 0.75rem;
+  .report-form,
+  .recent-reports {
+    padding: 1.5rem;
+    margin: 1rem;
   }
 
-  .report-item .delete-btn {
-    top: 0.25rem;
-    right: 0.25rem;
-    padding: 0.2rem 0.4rem;
-    font-size: 0.75rem;
-    max-width: 60px;
+  .form-group {
+    margin-bottom: 1rem;
   }
 
-  .report-date {
-    padding-right: 3rem;
-    font-size: 0.9rem;
-  }
-
-  .report-flag {
-    font-size: 0.9rem;
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    padding: 0.6rem;
   }
 }
 

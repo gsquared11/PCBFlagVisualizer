@@ -835,21 +835,13 @@ async function loadRecentReports() {
   try {
     const response = await fetch('/api/recent-reports');
     if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
-    }
-    
-    const contentType = response.headers.get('content-type');
-    if (!contentType || !contentType.includes('application/json')) {
-      throw new Error('Response was not JSON');
+      throw new Error('Failed to fetch recent reports');
     }
     
     const reports = await response.json();
     displayRecentReports(reports);
   } catch (error) {
     console.error('Error loading recent reports:', error);
-    reportStatus.textContent = `Error: ${error.message}`;
-    reportStatus.classList.add('error');
-    reportStatus.classList.remove('success', 'hidden');
   }
 }
 
@@ -859,17 +851,12 @@ function displayRecentReports(reports) {
   
   recentReportsList.innerHTML = '';
   
-  if (!reports || reports.length === 0) {
+  if (reports.length === 0) {
     recentReportsList.innerHTML = '<li class="report-item">No reports submitted yet.</li>';
     return;
   }
   
   reports.forEach(report => {
-    if (!report || !report.id) {
-      console.error('Invalid report data:', report);
-      return;
-    }
-    
     // Parse the date in local timezone
     const [year, month, day] = report.date.split('-').map(Number);
     const reportDate = new Date(year, month - 1, day);  // months are 0-based in JS
@@ -890,54 +877,12 @@ function displayRecentReports(reports) {
     
     const li = document.createElement('li');
     li.className = 'report-item';
-    li.dataset.reportId = report.id;
     li.innerHTML = `
       <div class="report-date">${formattedDate} at ${time12hr} CST</div>
       <div class="report-flag">Reported Flag: ${report.flag_type}</div>
-      <button class="delete-btn" onclick="deleteReport(${report.id})">Delete</button>
     `;
     recentReportsList.appendChild(li);
   });
-}
-
-async function deleteReport(reportId) {
-  if (!reportId) {
-    console.error('No report ID provided');
-    return;
-  }
-
-  const email = prompt('Please enter the email address you used to submit this report:');
-  if (!email) return;
-
-  try {
-    const response = await fetch(`/api/delete-report/${reportId}`, {
-      method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ email })
-    });
-
-    const data = await response.json();
-
-    if (response.ok) {
-      // Reload recent reports
-      loadRecentReports();
-      // Show success message
-      reportStatus.textContent = 'Report deleted successfully.';
-      reportStatus.classList.add('success');
-      reportStatus.classList.remove('error', 'hidden');
-      setTimeout(() => {
-        reportStatus.classList.add('hidden');
-      }, 5000);
-    } else {
-      throw new Error(data.error || 'Failed to delete report');
-    }
-  } catch (error) {
-    reportStatus.textContent = `Error: ${error.message}`;
-    reportStatus.classList.add('error');
-    reportStatus.classList.remove('success', 'hidden');
-  }
 }
 
 // Set max date to today for the date input
