@@ -828,55 +828,35 @@ function createFlagGradient(color1, color2) {
 const reportForm = document.getElementById('reportForm');
 const reportStatus = document.getElementById('reportStatus');
 const recentReportsList = document.getElementById('recentReportsList');
+const reportDate = document.getElementById('reportDate');
 
-// Function to load recent reports
-async function loadRecentReports() {
-  try {
-    const response = await fetch('/api/recent-reports');
-    if (!response.ok) {
-      throw new Error('Failed to fetch recent reports');
-    }
-    
-    const reports = await response.json();
-    displayRecentReports(reports);
-  } catch (error) {
-    console.error('Error loading recent reports:', error);
-  }
-}
-
-// Function to display recent reports
-function displayRecentReports(reports) {
-  if (!recentReportsList) return;
-  
-  recentReportsList.innerHTML = '';
-  
-  if (reports.length === 0) {
-    recentReportsList.innerHTML = '<li class="report-item">No reports submitted yet.</li>';
-    return;
-  }
-  
-  reports.forEach(report => {
-    const reportDate = new Date(report.date);
-    const formattedDate = reportDate.toLocaleDateString('en-US', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-    
-    const li = document.createElement('li');
-    li.className = 'report-item';
-    li.innerHTML = `
-      <div class="report-date">${formattedDate} at ${report.time}</div>
-      <div class="report-flag">Reported Flag: ${report.flag_type}</div>
-    `;
-    recentReportsList.appendChild(li);
-  });
+// Set max date to today for the date input
+if (reportDate) {
+  const today = new Date();
+  const yyyy = today.getFullYear();
+  const mm = String(today.getMonth() + 1).padStart(2, '0');
+  const dd = String(today.getDate()).padStart(2, '0');
+  reportDate.max = `${yyyy}-${mm}-${dd}`;
 }
 
 if (reportForm) {
   reportForm.addEventListener('submit', async (e) => {
     e.preventDefault();
+    
+    // Additional date validation
+    const selectedDate = new Date(document.getElementById('reportDate').value);
+    const now = new Date();
+    
+    // Reset hours to compare just the dates
+    selectedDate.setHours(0, 0, 0, 0);
+    now.setHours(0, 0, 0, 0);
+    
+    if (selectedDate > now) {
+      reportStatus.textContent = 'Error: Cannot submit reports for future dates';
+      reportStatus.classList.remove('hidden', 'success');
+      reportStatus.classList.add('error');
+      return;
+    }
     
     // Get form data
     const formData = {
@@ -907,6 +887,7 @@ if (reportForm) {
         // Show success message
         reportStatus.textContent = 'Report submitted successfully! Thank you for your feedback.';
         reportStatus.classList.add('success');
+        reportStatus.classList.remove('error');
         
         // Reset form
         reportForm.reset();
@@ -925,6 +906,7 @@ if (reportForm) {
       // Show error message
       reportStatus.textContent = `Error: ${error.message}`;
       reportStatus.classList.add('error');
+      reportStatus.classList.remove('success');
     }
   });
 }

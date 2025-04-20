@@ -372,6 +372,13 @@ def submit_report():
             if field not in data or not data[field]:
                 return jsonify({"error": f"Missing required field: {field}"}), 400
 
+        # Validate date is not in the future
+        report_date = datetime.strptime(data['date'], '%Y-%m-%d').date()
+        current_date = datetime.now().date()
+        
+        if report_date > current_date:
+            return jsonify({"error": "Cannot submit reports for future dates"}), 400
+
         conn = get_db_connection()
         cursor = conn.cursor()
 
