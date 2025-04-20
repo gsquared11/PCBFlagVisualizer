@@ -48,7 +48,7 @@ This application serves as a public safety tool, helping beachgoers and resident
 5. Configure environment variables in `.env`
 6. Run the application: `flask run`
 
-## API Endpoints (from https://github.com/gsquared11/PCBFlagScraper)
+## API Endpoints
 - `/api/table-data`: Historical flag data with pagination
 - `/api/flag-distribution`: Monthly flag distribution data
 - `/api/all-time-flag-distribution`: All-time flag statistics
