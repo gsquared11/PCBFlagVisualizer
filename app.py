@@ -1,6 +1,5 @@
 import os
 import pyodbc
-import json
 import pytz
 import calendar
 from flask import Flask, request, jsonify, send_from_directory
@@ -8,6 +7,10 @@ from flask_cors import CORS
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 from dotenv import load_dotenv
+import requests
+import openmeteo_requests
+import pandas as pd
+from retry_requests import retry
 
 # Load environment variables from .env file
 load_dotenv()
@@ -452,6 +455,104 @@ def get_recent_reports():
     
     except Exception as e:
         print(f"Error fetching recent reports: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+# Setup the Open-Meteo API client with retry on error
+retry_session = retry(requests.Session(), retries=5, backoff_factor=0.2)
+openmeteo = openmeteo_requests.Client(session=retry_session)
+
+@app.route('/api/weather-data', methods=['GET'])
+def get_weather_data():
+    """Get historical weather data for Panama City Beach using Open-Meteo API."""
+    try:
+        date_str = request.args.get('date')
+        if not date_str:
+            return jsonify({"error": "No date provided"}), 400
+
+        # Parse the requested date
+        requested_date = datetime.strptime(date_str, '%Y-%m-%d')
+        current_date = datetime.now()
+        date_diff = (current_date - requested_date).days
+
+        # Choose API endpoint based on date difference
+        if date_diff > 2:
+            # Use historical forecast API for dates more than 2 days in the past
+            url = "https://historical-forecast-api.open-meteo.com/v1/forecast"
+        else:
+            # Use regular forecast API for recent dates
+            url = "https://api.open-meteo.com/v1/forecast"
+        
+        # Panama City Beach coordinates and parameters
+        params = {
+            "latitude": 30.1766,
+            "longitude": -85.8055,
+            "start_date": date_str,
+            "end_date": date_str,
+            "hourly": [
+                "temperature_2m",
+                "surface_pressure",
+                "precipitation",
+                "wind_speed_10m"
+            ],
+            "timezone": "America/Chicago",
+            "wind_speed_unit": "mph",
+            "temperature_unit": "fahrenheit",
+            "precipitation_unit": "inch"
+        }
+        
+        # Get weather data
+        responses = openmeteo.weather_api(url, params=params)
+        response = responses[0]
+        
+        # Process hourly data
+        hourly = response.Hourly()
+        hourly_temperature_2m = hourly.Variables(0).ValuesAsNumpy()
+        hourly_surface_pressure = hourly.Variables(1).ValuesAsNumpy()
+        hourly_precipitation = hourly.Variables(2).ValuesAsNumpy()
+        hourly_wind_speed_10m = hourly.Variables(3).ValuesAsNumpy()
+        
+        # Create time range
+        hourly_data = {"date": pd.date_range(
+            start=pd.to_datetime(hourly.Time(), unit="s"),
+            end=pd.to_datetime(hourly.TimeEnd(), unit="s"),
+            freq=pd.Timedelta(seconds=hourly.Interval()),
+            inclusive="left"
+        )}
+        
+        # Add data to dictionary
+        hourly_data["temperature_2m"] = hourly_temperature_2m.tolist()
+        hourly_data["surface_pressure"] = hourly_surface_pressure.tolist()
+        hourly_data["precipitation"] = hourly_precipitation.tolist()
+        hourly_data["wind_speed_10m"] = hourly_wind_speed_10m.tolist()
+        
+        # Convert to DataFrame for easier processing
+        df = pd.DataFrame(data=hourly_data)
+        
+        # Filter for the specific day (2:00 AM to 1:59 AM next day to get full day in CST)
+        start_time = pd.Timestamp(date_str + ' 02:00:00')
+        end_time = pd.Timestamp(date_str + ' 01:59:59') + pd.Timedelta(days=1)
+        df = df[(df['date'] >= start_time) & (df['date'] <= end_time)]
+        
+        # Convert to list of dictionaries for JSON response
+        result = []
+        for _, row in df.iterrows():
+            # Adjust the time display to show from 12am to 11:59pm
+            display_time = row["date"] - pd.Timedelta(hours=2)
+            result.append({
+                "time": display_time.strftime("%Y-%m-%dT%H:%M:%S"),
+                "temperature": row["temperature_2m"],
+                "pressure": row["surface_pressure"],
+                "precipitation": row["precipitation"],
+                "wind_speed": row["wind_speed_10m"]
+            })
+            
+        return jsonify({
+            'date': date_str,
+            'hourly_data': result
+        })
+        
+    except Exception as e:
+        print(f"Error fetching weather data: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 @app.route('/', methods=['GET'])

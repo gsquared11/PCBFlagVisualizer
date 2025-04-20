@@ -28,11 +28,9 @@ const columnNameMap = {
 // Refs to tab elements
 const calendarTabBtn = document.getElementById("calendarTabBtn");
 const chartsTabBtn = document.getElementById("chartsTabBtn");
-const reportTabBtn = document.getElementById("reportTabBtn");
 const aboutTabBtn = document.getElementById("aboutTabBtn");
 const calendarSection = document.getElementById("calendarSection");
 const chartsSection = document.getElementById("chartsSection");
-const reportSection = document.getElementById("reportSection");
 const aboutSection = document.getElementById("aboutSection");
 
 // Refs to chart elements
@@ -62,19 +60,12 @@ const prevPageBtn = document.getElementById("prevPageBtn");
 const nextPageBtn = document.getElementById("nextPageBtn");
 const currentPageDisplay = document.getElementById("currentPage");
 
-// Report form handling
-const reportForm = document.getElementById('reportForm');
-const reportStatus = document.getElementById('reportStatus');
-const recentReportsList = document.getElementById('recentReportsList');
-const reportDate = document.getElementById('reportDate');
-
 // Event listeners (user interactions)
 document.addEventListener("DOMContentLoaded", initialize);
 
 // Tab navigation event listeners
 calendarTabBtn.addEventListener("click", () => switchTab('calendar'));
 chartsTabBtn.addEventListener("click", () => switchTab('charts'));
-reportTabBtn.addEventListener("click", () => switchTab('report'));
 aboutTabBtn.addEventListener("click", () => switchTab('about'));
 
 // Function to switch between tabs
@@ -85,16 +76,13 @@ function switchTab(tabName) {
   // Remove active class from all tabs and content
   calendarTabBtn.classList.remove('active');
   chartsTabBtn.classList.remove('active');
-  reportTabBtn.classList.remove('active');
   aboutTabBtn.classList.remove('active');
   calendarTabBtn.setAttribute('aria-selected', 'false');
   chartsTabBtn.setAttribute('aria-selected', 'false');
-  reportTabBtn.setAttribute('aria-selected', 'false');
   aboutTabBtn.setAttribute('aria-selected', 'false');
   
   calendarSection.classList.remove('active');
   chartsSection.classList.remove('active');
-  reportSection.classList.remove('active');
   aboutSection.classList.remove('active');
   
   // Add active class to selected tab and content
@@ -114,11 +102,7 @@ function switchTab(tabName) {
       loadFlagDistribution();
       loadAllTimeFlagDistribution();
     }
-  } else if (tabName === 'report') {
-    reportTabBtn.classList.add('active');
-    reportTabBtn.setAttribute('aria-selected', 'true');
-    reportSection.classList.add('active');
-  } else if (tabName === 'about') {
+  }  else if (tabName === 'about') {
     aboutTabBtn.classList.add('active');
     aboutTabBtn.setAttribute('aria-selected', 'true');
     aboutSection.classList.add('active');
@@ -516,8 +500,13 @@ async function loadFlagsByDay(date) {
     }
     const data = await response.json();
     displayFlagsByDay(data, date);
+    
+    // Load weather data
+    loadWeatherData(date);
   } catch (error) {
     showError("Failed to load flags for the selected day: " + error.message);
+    // Hide the weather container if there's an error
+    document.getElementById('weatherChartContainer').classList.add('hidden');
   }
 }
 
@@ -816,164 +805,382 @@ document.addEventListener('DOMContentLoaded', () => {
     setInterval(loadCurrentMonthFlags, 3600000);
 });
 
-// Function to create a canvas gradient for flags
-function createFlagGradient(color1, color2) {
-  const ctx = document.getElementById('canvas').getContext('2d');
+// Function to load weather data and create chart
+async function loadWeatherData(date) {
+  // Check if the date is in the future
+  const selectedDate = new Date(date);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // Reset time to compare just dates
   
-  const gradient = ctx.createLinearGradient(0, 0, 100, 100);
-  gradient.addColorStop(0, color1);
-  gradient.addColorStop(1, color2);
-  
-  ctx.fillStyle = gradient;
-  ctx.fillRect(0, 0, 100, 100);
-  
-  return gradient;
-}
-
-// Function to load recent reports
-async function loadRecentReports() {
-  try {
-    const response = await fetch('/api/recent-reports');
-    if (!response.ok) {
-      throw new Error('Failed to fetch recent reports');
-    }
-    
-    const reports = await response.json();
-    displayRecentReports(reports);
-  } catch (error) {
-    console.error('Error loading recent reports:', error);
-  }
-}
-
-// Function to display recent reports
-function displayRecentReports(reports) {
-  if (!recentReportsList) return;
-  
-  recentReportsList.innerHTML = '';
-  
-  if (reports.length === 0) {
-    recentReportsList.innerHTML = '<li class="report-item">No reports submitted yet.</li>';
+  if (selectedDate > today) {
+    // Hide the weather container for future dates
+    document.getElementById('weatherChartContainer').classList.add('hidden');
     return;
   }
+
+  try {
+    const response = await fetch(`/api/weather-data?date=${date}`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+    const data = await response.json();
+    createWeatherChart(data);
+    // Show the weather container after data is loaded
+    document.getElementById('weatherChartContainer').classList.remove('hidden');
+  } catch (error) {
+    console.error('Error loading weather data:', error);
+    const weatherChart = document.getElementById('weatherChart');
+    weatherChart.innerHTML = '<div class="no-data">Weather data unavailable for this date</div>';
+    // Show the weather container even if there's an error
+    document.getElementById('weatherChartContainer').classList.remove('hidden');
+  }
+}
+
+// Function to create the weather chart
+function createWeatherChart(data) {
+  const weatherChart = document.getElementById('weatherChart');
+  weatherChart.innerHTML = ''; // Clear previous chart
   
-  reports.forEach(report => {
-    // Parse the date in local timezone
-    const [year, month, day] = report.date.split('-').map(Number);
-    const reportDate = new Date(year, month - 1, day);  // months are 0-based in JS
-    
-    const formattedDate = reportDate.toLocaleDateString('en-US', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
+  // Create canvas element
+  const canvas = document.createElement('canvas');
+  weatherChart.appendChild(canvas);
+  
+  // Prepare data for chart
+  const times = data.hourly_data.map(item => {
+    const time = new Date(item.time);
+    // Convert to CST and format as 12-hour time
+    return time.toLocaleTimeString('en-US', { 
+      hour: 'numeric', 
+      hour12: true,
+      timeZone: 'America/Chicago'
     });
-    
-    // Format time in CST
-    const [hours, minutes] = report.time.split(':');
-    const time12hr = DateTime.fromObject({
-      hour: parseInt(hours),
-      minute: parseInt(minutes)
-    }, { zone: 'America/Chicago' }).toFormat('h:mm a');
-    
-    const li = document.createElement('li');
-    li.className = 'report-item';
-    li.innerHTML = `
-      <div class="report-date">${formattedDate} at ${time12hr} CST</div>
-      <div class="report-flag">Reported Flag: ${report.flag_type}</div>
-    `;
-    recentReportsList.appendChild(li);
   });
-}
-
-// Set max date to today for the date input
-if (reportDate) {
-  const today = new Date();
-  const yyyy = today.getFullYear();
-  const mm = String(today.getMonth() + 1).padStart(2, '0');
-  const dd = String(today.getDate()).padStart(2, '0');
-  reportDate.max = `${yyyy}-${mm}-${dd}`;
-}
-
-if (reportForm) {
-  reportForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    // Additional date validation using local timezone
-    const dateInput = document.getElementById('reportDate').value;
-    const [year, month, day] = dateInput.split('-').map(Number);
-    const selectedDate = new Date(year, month - 1, day); 
-    const now = new Date();
-    
-    // Reset hours to compare just the dates
-    selectedDate.setHours(0, 0, 0, 0);
-    now.setHours(0, 0, 0, 0);
-    
-    if (selectedDate > now) {
-      reportStatus.textContent = 'Error: Cannot submit reports for future dates';
-      reportStatus.classList.remove('hidden', 'success');
-      reportStatus.classList.add('error');
-      return;
-    }
-    
-    // Get form data
-    const formData = {
-      date: dateInput,  // Use the original input value
-      time: document.getElementById('reportTime').value,
-      flag_type: document.getElementById('reportFlagType').value,
-      description: document.getElementById('reportDescription').value,
-      email: document.getElementById('reportEmail').value
-    };
-    
-    try {
-      // Show loading state
-      reportStatus.textContent = 'Submitting report...';
-      reportStatus.classList.remove('hidden', 'success', 'error');
-      
-      // Submit the report
-      const response = await fetch('/api/submit-report', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
+  
+  const temperatures = data.hourly_data.map(item => item.temperature);
+  const pressures = data.hourly_data.map(item => item.pressure);
+  const windSpeeds = data.hourly_data.map(item => item.wind_speed);
+  const precipitation = data.hourly_data.map(item => item.precipitation);
+  
+  // Create the chart
+  new Chart(canvas, {
+    type: 'line',
+    data: {
+      labels: times,
+      datasets: [
+        {
+          label: 'Surface Temperature (°F)',
+          data: temperatures,
+          borderColor: '#ff6b6b',
+          backgroundColor: 'rgba(255, 107, 107, 0.1)',
+          yAxisID: 'y',
+          tension: 0.4
         },
-        body: JSON.stringify(formData)
-      });
-      
-      const data = await response.json();
-      
-      if (response.ok) {
-        // Show success message
-        reportStatus.textContent = 'Report submitted successfully! Thank you for your feedback.';
-        reportStatus.classList.add('success');
-        reportStatus.classList.remove('error');
-        
-        // Reset form
-        reportForm.reset();
-        
-        // Reload recent reports
-        loadRecentReports();
-        
-        // Hide success message after 5 seconds
-        setTimeout(() => {
-          reportStatus.classList.add('hidden');
-        }, 5000);
-      } else {
-        throw new Error(data.error || 'Failed to submit report');
+        {
+          label: 'Pressure (hPa)',
+          data: pressures,
+          borderColor: '#4ecdc4',
+          backgroundColor: 'rgba(78, 205, 196, 0.1)',
+          yAxisID: 'y1',
+          tension: 0.4
+        },
+        {
+          label: 'Wind Speed (mph)',
+          data: windSpeeds,
+          borderColor: '#ffd166',
+          backgroundColor: 'rgba(255, 209, 102, 0.1)',
+          yAxisID: 'y2',
+          tension: 0.4
+        },
+        {
+          label: 'Precipitation (in)',
+          data: precipitation,
+          borderColor: '#06d6a0',
+          backgroundColor: 'rgba(6, 214, 160, 0.1)',
+          yAxisID: 'y3',
+          tension: 0.4
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: {
+        mode: 'index',
+        intersect: false,
+      },
+      scales: {
+        y: {
+          type: 'linear',
+          display: true,
+          position: 'left',
+          title: {
+            display: true,
+            text: 'Temperature (°F)',
+            color: '#ffffff'
+          },
+          ticks: {
+            color: '#ffffff'
+          },
+          grid: {
+            color: 'rgba(255, 255, 255, 0.1)'
+          }
+        },
+        y1: {
+          type: 'linear',
+          display: true,
+          position: 'right',
+          title: {
+            display: true,
+            text: 'Pressure (hPa)',
+            color: '#ffffff'
+          },
+          ticks: {
+            color: '#ffffff'
+          },
+          grid: {
+            drawOnChartArea: false
+          }
+        },
+        y2: {
+          type: 'linear',
+          display: true,
+          position: 'right',
+          title: {
+            display: true,
+            text: 'Wind Speed (mph)',
+            color: '#ffffff'
+          },
+          ticks: {
+            color: '#ffffff'
+          },
+          grid: {
+            drawOnChartArea: false
+          }
+        },
+        y3: {
+          type: 'linear',
+          display: true,
+          position: 'right',
+          title: {
+            display: true,
+            text: 'Precipitation (in)',
+            color: '#ffffff'
+          },
+          ticks: {
+            color: '#ffffff'
+          },
+          grid: {
+            drawOnChartArea: false
+          }
+        },
+        x: {
+          ticks: {
+            color: '#ffffff',
+            maxRotation: 45,
+            minRotation: 45
+          },
+          grid: {
+            color: 'rgba(255, 255, 255, 0.1)'
+          }
+        }
+      },
+      plugins: {
+        legend: {
+          labels: {
+            color: '#ffffff'
+          }
+        },
+        tooltip: {
+          mode: 'index',
+          intersect: false,
+          callbacks: {
+            label: function(context) {
+              let label = context.dataset.label || '';
+              if (label) {
+                label += ': ';
+              }
+              if (context.parsed.y !== null) {
+                label += context.parsed.y.toFixed(2);
+              }
+              return label;
+            }
+          }
+        }
       }
-    } catch (error) {
-      // Show error message
-      reportStatus.textContent = `Error: ${error.message}`;
-      reportStatus.classList.add('error');
-      reportStatus.classList.remove('success');
     }
   });
 }
 
-// Load recent reports when switching to the report tab
-reportTabBtn.addEventListener('click', () => {
-  loadRecentReports();
+// Add event listener to hide weather container when date is cleared
+document.getElementById('flagDate').addEventListener('input', function(e) {
+  if (!e.target.value) {
+    document.getElementById('weatherChartContainer').classList.add('hidden');
+  }
 });
 
-// Initial load of recent reports if we're on the report tab
-if (currentTab === 'report') {
-  loadRecentReports();
+// Tab switching functionality
+document.addEventListener('DOMContentLoaded', function() {
+  const tabButtons = document.querySelectorAll('.tab-button');
+  const tabContents = document.querySelectorAll('.tab-content');
+
+  tabButtons.forEach(button => {
+    button.addEventListener('click', () => {
+      // Remove active class from all buttons and contents
+      tabButtons.forEach(btn => btn.classList.remove('active'));
+      tabContents.forEach(content => content.classList.remove('active'));
+
+      // Add active class to clicked button
+      button.classList.add('active');
+
+      // Show corresponding content
+      const targetId = button.getAttribute('aria-controls');
+      const targetContent = document.getElementById(targetId);
+      targetContent.classList.add('active');
+    });
+  });
+
+  // Initialize first tab as active
+  if (tabButtons.length > 0) {
+    tabButtons[0].classList.add('active');
+    const firstTabId = tabButtons[0].getAttribute('aria-controls');
+    document.getElementById(firstTabId).classList.add('active');
+  }
+});
+
+// Weather data handling
+async function fetchWeatherData(date) {
+  try {
+    const response = await fetch(`/api/weather-data?date=${date}`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch weather data');
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching weather data:', error);
+    throw error;
+  }
+}
+
+function formatTime(timeString) {
+  return new Date(timeString).toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+    timeZone: 'America/Chicago'
+  });
+}
+
+function updateWeatherChart(data) {
+  const ctx = document.getElementById('weatherChart').getContext('2d');
+  
+  // Filter data for the selected day (12:01 AM to 11:59 PM CST)
+  const filteredData = data.filter(entry => {
+    const time = new Date(entry.time);
+    return time.getHours() >= 0 && time.getHours() <= 23;
+  });
+
+  const chartData = {
+    labels: filteredData.map(entry => formatTime(entry.time)),
+    datasets: [
+      {
+        label: 'Temperature (°F)',
+        data: filteredData.map(entry => entry.temperature),
+        borderColor: 'rgb(255, 99, 132)',
+        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+        yAxisID: 'y',
+        tension: 0.4
+      },
+      {
+        label: 'Wind Speed (mph)',
+        data: filteredData.map(entry => entry.wind_speed),
+        borderColor: 'rgb(54, 162, 235)',
+        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+        yAxisID: 'y1',
+        tension: 0.4
+      },
+      {
+        label: 'Precipitation (in)',
+        data: filteredData.map(entry => entry.precipitation),
+        borderColor: 'rgb(75, 192, 192)',
+        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+        yAxisID: 'y2',
+        tension: 0.4
+      }
+    ]
+  };
+
+  const config = {
+    type: 'line',
+    data: chartData,
+    options: {
+      responsive: true,
+      interaction: {
+        mode: 'index',
+        intersect: false,
+      },
+      plugins: {
+        title: {
+          display: true,
+          text: 'Weather Conditions'
+        },
+        tooltip: {
+          mode: 'index',
+          intersect: false
+        }
+      },
+      scales: {
+        x: {
+          title: {
+            display: true,
+            text: 'Time (CST)'
+          },
+          ticks: {
+            maxRotation: 45,
+            minRotation: 45
+          }
+        },
+        y: {
+          type: 'linear',
+          display: true,
+          position: 'left',
+          title: {
+            display: true,
+            text: 'Temperature (°F)'
+          }
+        },
+        y1: {
+          type: 'linear',
+          display: true,
+          position: 'right',
+          title: {
+            display: true,
+            text: 'Wind Speed (mph)'
+          },
+          grid: {
+            drawOnChartArea: false
+          }
+        },
+        y2: {
+          type: 'linear',
+          display: true,
+          position: 'right',
+          title: {
+            display: true,
+            text: 'Precipitation (in)'
+          },
+          grid: {
+            drawOnChartArea: false
+          }
+        }
+      }
+    }
+  };
+
+  // Destroy existing chart if it exists
+  if (window.weatherChart) {
+    window.weatherChart.destroy();
+  }
+
+  // Create new chart
+  window.weatherChart = new Chart(ctx, config);
 }
