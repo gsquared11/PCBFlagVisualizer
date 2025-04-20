@@ -494,6 +494,17 @@ function createBarChart(containerId, data) {
 // Fetch and display flags for the selected day
 async function loadFlagsByDay(date) {
   try {
+    // Parse the date string to check the year
+    const selectedDate = new Date(date);
+    const year = selectedDate.getFullYear();
+    
+    if (year <= 1940) {
+      const datepickerError = document.getElementById("datepickerError");
+      datepickerError.textContent = "Weather data is only available for dates from 01/02/1941 onward.";
+      datepickerError.classList.remove("hidden");
+      return;
+    }
+
     const response = await fetch(`/api/flags-by-day?date=${date}`);
     if (!response.ok) {
       throw new Error(`HTTP error! Status: ${response.status}`);
