@@ -39,14 +39,7 @@ This application serves as a public safety tool, helping beachgoers and resident
 ## Prerequisites
 - Python 3.9+
 - Dependencies listed in requirements.txt:
-  - Flask
-  - Flask-CORS
-  - pyodbc
-  - Werkzeug==2.0.3
-  - python-dateutil
-  - pytz
-  - python-dotenv
-
+  
 ## Setup (on local device)
 1. Clone the repository
 2. Create a virtual environment: `python -m venv venv`
