@@ -477,7 +477,7 @@ def get_weather_data():
         # Choose API endpoint based on date difference
         if date_diff > 2:
             # Use historical forecast API for dates more than 2 days in the past
-            url = "https://historical-forecast-api.open-meteo.com/v1/forecast"
+            url = "https://archive-api.open-meteo.com/v1/archive"
         else:
             # Use regular forecast API for recent dates
             url = "https://api.open-meteo.com/v1/forecast"
