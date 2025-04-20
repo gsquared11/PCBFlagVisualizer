@@ -28,9 +28,11 @@ const columnNameMap = {
 // Refs to tab elements
 const calendarTabBtn = document.getElementById("calendarTabBtn");
 const chartsTabBtn = document.getElementById("chartsTabBtn");
+const reportTabBtn = document.getElementById("reportTabBtn");
 const aboutTabBtn = document.getElementById("aboutTabBtn");
 const calendarSection = document.getElementById("calendarSection");
 const chartsSection = document.getElementById("chartsSection");
+const reportSection = document.getElementById("reportSection");
 const aboutSection = document.getElementById("aboutSection");
 
 // Refs to chart elements
@@ -66,6 +68,7 @@ document.addEventListener("DOMContentLoaded", initialize);
 // Tab navigation event listeners
 calendarTabBtn.addEventListener("click", () => switchTab('calendar'));
 chartsTabBtn.addEventListener("click", () => switchTab('charts'));
+reportTabBtn.addEventListener("click", () => switchTab('report'));
 aboutTabBtn.addEventListener("click", () => switchTab('about'));
 
 // Function to switch between tabs
@@ -76,13 +79,16 @@ function switchTab(tabName) {
   // Remove active class from all tabs and content
   calendarTabBtn.classList.remove('active');
   chartsTabBtn.classList.remove('active');
+  reportTabBtn.classList.remove('active');
   aboutTabBtn.classList.remove('active');
   calendarTabBtn.setAttribute('aria-selected', 'false');
   chartsTabBtn.setAttribute('aria-selected', 'false');
+  reportTabBtn.setAttribute('aria-selected', 'false');
   aboutTabBtn.setAttribute('aria-selected', 'false');
   
   calendarSection.classList.remove('active');
   chartsSection.classList.remove('active');
+  reportSection.classList.remove('active');
   aboutSection.classList.remove('active');
   
   // Add active class to selected tab and content
@@ -102,6 +108,10 @@ function switchTab(tabName) {
       loadFlagDistribution();
       loadAllTimeFlagDistribution();
     }
+  } else if (tabName === 'report') {
+    reportTabBtn.classList.add('active');
+    reportTabBtn.setAttribute('aria-selected', 'true');
+    reportSection.classList.add('active');
   } else if (tabName === 'about') {
     aboutTabBtn.classList.add('active');
     aboutTabBtn.setAttribute('aria-selected', 'true');
@@ -812,4 +822,119 @@ function createFlagGradient(color1, color2) {
   ctx.fillRect(0, 0, 100, 100);
   
   return gradient;
+}
+
+// Report form handling
+const reportForm = document.getElementById('reportForm');
+const reportStatus = document.getElementById('reportStatus');
+const recentReportsList = document.getElementById('recentReportsList');
+
+// Function to load recent reports
+async function loadRecentReports() {
+  try {
+    const response = await fetch('/api/recent-reports');
+    if (!response.ok) {
+      throw new Error('Failed to fetch recent reports');
+    }
+    
+    const reports = await response.json();
+    displayRecentReports(reports);
+  } catch (error) {
+    console.error('Error loading recent reports:', error);
+  }
+}
+
+// Function to display recent reports
+function displayRecentReports(reports) {
+  if (!recentReportsList) return;
+  
+  recentReportsList.innerHTML = '';
+  
+  if (reports.length === 0) {
+    recentReportsList.innerHTML = '<li class="report-item">No reports submitted yet.</li>';
+    return;
+  }
+  
+  reports.forEach(report => {
+    const reportDate = new Date(report.date);
+    const formattedDate = reportDate.toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+    
+    const li = document.createElement('li');
+    li.className = 'report-item';
+    li.innerHTML = `
+      <div class="report-date">${formattedDate} at ${report.time}</div>
+      <div class="report-flag">Reported Flag: ${report.flag_type}</div>
+    `;
+    recentReportsList.appendChild(li);
+  });
+}
+
+if (reportForm) {
+  reportForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    // Get form data
+    const formData = {
+      date: document.getElementById('reportDate').value,
+      time: document.getElementById('reportTime').value,
+      flag_type: document.getElementById('reportFlagType').value,
+      description: document.getElementById('reportDescription').value,
+      email: document.getElementById('reportEmail').value
+    };
+    
+    try {
+      // Show loading state
+      reportStatus.textContent = 'Submitting report...';
+      reportStatus.classList.remove('hidden', 'success', 'error');
+      
+      // Submit the report
+      const response = await fetch('/api/submit-report', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        // Show success message
+        reportStatus.textContent = 'Report submitted successfully! Thank you for your feedback.';
+        reportStatus.classList.add('success');
+        
+        // Reset form
+        reportForm.reset();
+        
+        // Reload recent reports
+        loadRecentReports();
+        
+        // Hide success message after 5 seconds
+        setTimeout(() => {
+          reportStatus.classList.add('hidden');
+        }, 5000);
+      } else {
+        throw new Error(data.error || 'Failed to submit report');
+      }
+    } catch (error) {
+      // Show error message
+      reportStatus.textContent = `Error: ${error.message}`;
+      reportStatus.classList.add('error');
+    }
+  });
+}
+
+// Load recent reports when switching to the report tab
+reportTabBtn.addEventListener('click', () => {
+  loadRecentReports();
+});
+
+// Initial load of recent reports if we're on the report tab
+if (currentTab === 'report') {
+  loadRecentReports();
 }

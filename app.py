@@ -23,6 +23,36 @@ def get_db_connection():
     """Create and return a database connection."""
     return pyodbc.connect(connection_string)
 
+def init_db():
+    """Initialize the database with required tables."""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Create reports table if it doesn't exist
+        cursor.execute("""
+        IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'flag_reports')
+        CREATE TABLE flag_reports (
+            id INT IDENTITY(1,1) PRIMARY KEY,
+            report_date DATE NOT NULL,
+            report_time TIME NOT NULL,
+            flag_type NVARCHAR(50) NOT NULL,
+            description NVARCHAR(MAX) NOT NULL,
+            email NVARCHAR(255),
+            submission_date DATETIME DEFAULT GETDATE(),
+            status NVARCHAR(20) DEFAULT 'pending'
+        )
+        """)
+        
+        conn.commit()
+        cursor.close()
+        conn.close()
+    except Exception as e:
+        print(f"Error initializing database: {str(e)}")
+
+# Initialize database on startup
+init_db()
+
 # Create an API response specifically for the 'flag_data' table
 @app.route('/api/table-data', methods=['GET'])
 def get_flag_data():
@@ -326,6 +356,92 @@ def get_current_month_flags():
     
     except Exception as e:
         print(f"Error in get_current_month_flags: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/submit-report', methods=['POST'])
+def submit_report():
+    """Handle submission of flag data reports."""
+    try:
+        data = request.json
+        if not data:
+            return jsonify({"error": "No data provided"}), 400
+
+        # Validate required fields
+        required_fields = ['date', 'time', 'flag_type', 'description']
+        for field in required_fields:
+            if field not in data or not data[field]:
+                return jsonify({"error": f"Missing required field: {field}"}), 400
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # Insert the report into the database
+        query = """
+        INSERT INTO flag_reports (
+            report_date,
+            report_time,
+            flag_type,
+            description,
+            email
+        ) VALUES (?, ?, ?, ?, ?)
+        """
+        
+        cursor.execute(query, (
+            data['date'],
+            data['time'],
+            data['flag_type'],
+            data['description'],
+            data.get('email')  # Optional field
+        ))
+        
+        conn.commit()
+        cursor.close()
+        conn.close()
+        
+        return jsonify({"message": "Report submitted successfully"}), 201
+        
+    except Exception as e:
+        print(f"Error submitting report: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/recent-reports', methods=['GET'])
+def get_recent_reports():
+    """Get the 5 most recent flag reports."""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        query = """
+        SELECT TOP 5
+            report_date,
+            report_time,
+            flag_type,
+            submission_date
+        FROM flag_reports
+        ORDER BY submission_date DESC
+        """
+        
+        cursor.execute(query)
+        rows = cursor.fetchall()
+        
+        # Convert to list of dictionaries
+        reports = []
+        for row in rows:
+            report_date, report_time, flag_type, submission_date = row
+            reports.append({
+                'date': report_date.strftime('%Y-%m-%d'),
+                'time': report_time.strftime('%H:%M'),
+                'flag_type': flag_type,
+                'submitted': submission_date.isoformat()
+            })
+        
+        cursor.close()
+        conn.close()
+        
+        return jsonify(reports)
+    
+    except Exception as e:
+        print(f"Error fetching recent reports: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 @app.route('/', methods=['GET'])

@@ -31,6 +31,7 @@
       <div class="nav-tabs" role="tablist">
         <button id="calendarTabBtn" class="tab-button active" role="tab" aria-selected="true" aria-controls="calendarSection">Calendar</button>
         <button id="chartsTabBtn" class="tab-button" role="tab" aria-selected="false" aria-controls="chartsSection">Charts</button>
+        <button id="reportTabBtn" class="tab-button" role="tab" aria-selected="false" aria-controls="reportSection">Report Error</button>
         <button id="aboutTabBtn" class="tab-button" role="tab" aria-selected="false" aria-controls="aboutSection">About App</button>
       </div>
 
@@ -98,6 +99,58 @@
           <!-- All-Time Bar Chart Container -->
           <h2>All-Time Flag Distribution</h2>
           <div id="allTimeBarChart" role="img"></div>
+        </div>
+
+        <!-- Report Section -->
+        <div id="reportSection" class="tab-content">
+          <h2>Report Incorrect Data</h2>
+          <p>If you notice any incorrect flag data, please report it below. Your feedback helps improve the accuracy of our records.</p>
+          
+          <div class="report-section-container">
+            <form id="reportForm" class="report-form">
+              <div class="form-group">
+                <label for="reportDate">Date of Incorrect Data</label>
+                <input type="date" id="reportDate" name="date" required aria-required="true">
+              </div>
+              <div class="form-group">
+                <label for="reportTime">Time of Incorrect Data</label>
+                <input type="time" id="reportTime" name="time" required aria-required="true">
+              </div>
+              <div class="form-group">
+                <label for="reportFlagType">Correct Flag Type</label>
+                <select id="reportFlagType" name="flag_type" required aria-required="true">
+                  <option value="">Select a flag type</option>
+                  <option value="Green Flag">Green Flag</option>
+                  <option value="Yellow Flag">Yellow Flag</option>
+                  <option value="Red Flag">Red Flag</option>
+                  <option value="Double Red Flag">Double Red Flag</option>
+                  <option value="Purple Flag">Purple Flag</option>
+                  <option value="Red Over Purple Flag">Red Over Purple Flag</option>
+                  <option value="Yellow Over Purple Flag">Yellow Over Purple Flag</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="reportDescription">Description of the Issue</label>
+                <textarea id="reportDescription" name="description" rows="4" required aria-required="true" placeholder="Please provide any additional details about the incorrect data..."></textarea>
+              </div>
+              <div class="form-group">
+                <label for="reportEmail">Your Email (optional)</label>
+                <input type="email" id="reportEmail" name="email" placeholder="Enter your email if you'd like to be contacted">
+              </div>
+              <button type="submit" class="submit-btn">Submit Report</button>
+            </form>
+
+            <!-- Recent Reports Section -->
+            <div class="recent-reports">
+              <h3>Recently Reported Errors</h3>
+              <p class="pending-notice">These reports are pending review and have not been verified yet.</p>
+              <ul id="recentReportsList" class="report-list">
+                <!-- Reports will be populated by JavaScript -->
+              </ul>
+            </div>
+          </div>
+
+          <div id="reportStatus" class="report-status hidden" role="alert"></div>
         </div>
 
         <!-- About Section -->
