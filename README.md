@@ -7,7 +7,8 @@ A Flask web application that visualizes historical and current beach flag status
 
 This application serves as a public safety tool, helping beachgoers and residents stay informed about water conditions through an intuitive interface. By aggregating and visualizing flag data collected from the PCB Flag Scraper project, it provides valuable insights into historical water safety patterns and current conditions.
 
-<img width="937" alt="Screenshot 2025-04-07 at 7 08 34 PM" src="https://github.com/user-attachments/assets/5c0d7e20-60f6-4871-8b1c-0a4649d0a15d" />
+![image](https://github.com/user-attachments/assets/7778d9b0-b892-423a-ab80-c8e37e4d5094)
+
 
 ## Features
 
