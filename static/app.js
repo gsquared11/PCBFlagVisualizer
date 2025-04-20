@@ -62,6 +62,12 @@ const prevPageBtn = document.getElementById("prevPageBtn");
 const nextPageBtn = document.getElementById("nextPageBtn");
 const currentPageDisplay = document.getElementById("currentPage");
 
+// Report form handling
+const reportForm = document.getElementById('reportForm');
+const reportStatus = document.getElementById('reportStatus');
+const recentReportsList = document.getElementById('recentReportsList');
+const reportDate = document.getElementById('reportDate');
+
 // Event listeners (user interactions)
 document.addEventListener("DOMContentLoaded", initialize);
 
@@ -824,11 +830,50 @@ function createFlagGradient(color1, color2) {
   return gradient;
 }
 
-// Report form handling
-const reportForm = document.getElementById('reportForm');
-const reportStatus = document.getElementById('reportStatus');
-const recentReportsList = document.getElementById('recentReportsList');
-const reportDate = document.getElementById('reportDate');
+// Function to load recent reports
+async function loadRecentReports() {
+  try {
+    const response = await fetch('/api/recent-reports');
+    if (!response.ok) {
+      throw new Error('Failed to fetch recent reports');
+    }
+    
+    const reports = await response.json();
+    displayRecentReports(reports);
+  } catch (error) {
+    console.error('Error loading recent reports:', error);
+  }
+}
+
+// Function to display recent reports
+function displayRecentReports(reports) {
+  if (!recentReportsList) return;
+  
+  recentReportsList.innerHTML = '';
+  
+  if (reports.length === 0) {
+    recentReportsList.innerHTML = '<li class="report-item">No reports submitted yet.</li>';
+    return;
+  }
+  
+  reports.forEach(report => {
+    const reportDate = new Date(report.date);
+    const formattedDate = reportDate.toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+    
+    const li = document.createElement('li');
+    li.className = 'report-item';
+    li.innerHTML = `
+      <div class="report-date">${formattedDate} at ${report.time}</div>
+      <div class="report-flag">Reported Flag: ${report.flag_type}</div>
+    `;
+    recentReportsList.appendChild(li);
+  });
+}
 
 // Set max date to today for the date input
 if (reportDate) {
