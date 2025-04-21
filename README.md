@@ -16,7 +16,7 @@ This application serves as a public safety tool, helping beachgoers and resident
 - **Historical Data Table**: Paginated view of historical flag data with timezone conversion
 - **Monthly Distribution**: Interactive pie charts showing flag distribution for the last three months
 - **All-Time Statistics**: Bar chart visualization of historical flag distribution
-- **Date-Specific Views**: Search and view flag records for specific dates
+- **Date-Specific Views**: Search and view flag records and hourly weather data for specific dates to see trends
 - **Interactive Calendar**: Visual calendar interface to browse and select dates with flag status indicators
 
 ## Technology Stack
