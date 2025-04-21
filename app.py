@@ -481,20 +481,24 @@ def get_weather_data():
         else:
             # Use regular forecast API for recent dates
             url = "https://api.open-meteo.com/v1/forecast"
+            
+        # Calculate start and end dates to ensure we get a full 24-hour period
+        start_date = requested_date
+        end_date = requested_date + timedelta(days=1)  
         
         # Panama City Beach coordinates and parameters
         params = {
             "latitude": 30.1766,
             "longitude": -85.8055,
-            "start_date": date_str,
-            "end_date": date_str,
+            "start_date": start_date.strftime('%Y-%m-%d'),
+            "end_date": end_date.strftime('%Y-%m-%d'),
             "hourly": [
                 "temperature_2m",
                 "surface_pressure",
                 "precipitation",
                 "wind_speed_10m"
             ],
-            "timezone": "America/Chicago",
+            "timezone": "UTC",
             "wind_speed_unit": "mph",
             "temperature_unit": "fahrenheit",
             "precipitation_unit": "inch"
@@ -528,18 +532,19 @@ def get_weather_data():
         # Convert to DataFrame for easier processing
         df = pd.DataFrame(data=hourly_data)
         
-        # Filter for the specific day (2:00 AM to 1:59 AM next day to get full day in CST)
-        start_time = pd.Timestamp(date_str + ' 02:00:00')
-        end_time = pd.Timestamp(date_str + ' 01:59:59') + pd.Timedelta(days=1)
+        # Convert UTC times to CST
+        df['date'] = df['date'].dt.tz_localize('UTC').dt.tz_convert('America/Chicago')
+        
+        # Filter for the specific day (12:01 AM to 11:59 PM CST)
+        start_time = pd.Timestamp(date_str + ' 00:00:00').tz_localize('America/Chicago')
+        end_time = pd.Timestamp(date_str + ' 23:59:59').tz_localize('America/Chicago')
         df = df[(df['date'] >= start_time) & (df['date'] <= end_time)]
         
-        # Convert to list of dictionaries for JSON response
+ # Convert to list of dictionaries for JSON response
         result = []
         for _, row in df.iterrows():
-            # Adjust the time display to show from 12am to 11:59pm
-            display_time = row["date"] - pd.Timedelta(hours=2)
             result.append({
-                "time": display_time.strftime("%Y-%m-%dT%H:%M:%S"),
+                "time": row["date"].isoformat(),
                 "temperature": row["temperature_2m"],
                 "pressure": row["surface_pressure"],
                 "precipitation": row["precipitation"],
