@@ -2,8 +2,10 @@
 
 A Flask web application that visualizes historical and current beach flag status data for Panama City Beach, Florida. The application provides interactive visualizations and real-time updates of water safety conditions.
 
-[https://pcb-flag-viewer.azurewebsites.net/
+See the website here: [https://pcb-flag-viewer.azurewebsites.net/
 ](url)
+
+Data from https://github.com/gsquared11/PCBFlagScraper
 
 This application serves as a public safety tool, helping beachgoers and residents stay informed about water conditions through an intuitive interface. By aggregating and visualizing flag data collected from the PCB Flag Scraper project, it provides valuable insights into historical water safety patterns and current conditions.
 
