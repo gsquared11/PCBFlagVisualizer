@@ -22,7 +22,6 @@ const DateTime = luxon.DateTime;
 const columnNameMap = {
   date_time: "Time and Date (recorded every 4 hours)",
   flag_type: "Flag Type",
-  id: "Entry Number",
 };
 
 // Refs to tab elements
@@ -601,15 +600,15 @@ function displayTableData(data) {
     return;
   }
 
-  // Create table headers
-  const columns = Object.keys(data.data[0]);
+  // Create table headers (exclude id column from public view)
+  const columns = Object.keys(data.data[0]).filter(column => column !== 'id');
   columns.forEach((column) => {
     const th = document.createElement("th");
     th.textContent = columnNameMap[column] || column;
     tableHeaders.appendChild(th);
   });
 
-  // Populate table rows
+  // Populate table rows (exclude id column from public view)
   data.data.forEach((row) => {
     const tr = document.createElement("tr");
     columns.forEach((column) => {

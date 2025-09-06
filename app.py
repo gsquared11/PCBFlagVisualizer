@@ -72,11 +72,11 @@ def get_flag_data():
         cursor.execute("SELECT TOP 1 * FROM flag_data")
         columns = [column[0] for column in cursor.description]
         
-        # Fetch paginated data from 'flag_data', sorted by id DESC (most recent first)
+        # Fetch paginated data from 'flag_data', sorted by date_time DESC (most recent first)
         query = """
             SELECT * 
             FROM flag_data 
-            ORDER BY id DESC 
+            ORDER BY date_time DESC 
             OFFSET ? ROWS 
             FETCH NEXT ? ROWS ONLY
         """
