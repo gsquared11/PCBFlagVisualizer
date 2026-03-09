@@ -12,7 +12,6 @@ import openmeteo_requests
 import pandas as pd
 from retry_requests import retry
 
-# Load environment variables
 load_dotenv()
 
 app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
@@ -21,32 +20,6 @@ connection_string = os.environ.get('SQL_CONNECTION_STRING')
 
 def get_db_connection():
     return pyodbc.connect(connection_string)
-
-def init_db():
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute("""
-        IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'flag_reports')
-        CREATE TABLE flag_reports (
-            id INT IDENTITY(1,1) PRIMARY KEY,
-            report_date DATE NOT NULL,
-            report_time TIME NOT NULL,
-            flag_type NVARCHAR(50) NOT NULL,
-            description NVARCHAR(MAX) NOT NULL,
-            email NVARCHAR(255),
-            submission_date DATETIME DEFAULT GETDATE(),
-            status NVARCHAR(20) DEFAULT 'pending'
-        )
-        """)
-        conn.commit()
-        cursor.close()
-        conn.close()
-    except Exception as e:
-        print(f"Error initializing database: {str(e)}")
-
-# Initialize DB
-init_db()
 
 def make_json_response(data, status_code=200):
     return func.HttpResponse(
@@ -262,68 +235,6 @@ def get_current_month_flags(req: func.HttpRequest) -> func.HttpResponse:
         cursor.close()
         conn.close()
         return make_json_response(result)
-    except Exception as e:
-        return make_json_response({"error": str(e)}, 500)
-
-@app.route(route="submit-report", methods=["POST"])
-def submit_report(req: func.HttpRequest) -> func.HttpResponse:
-    try:
-        data = req.get_json()
-        if not data:
-            return make_json_response({"error": "No data provided"}, 400)
-            
-        required_fields = ['date', 'time', 'flag_type', 'description']
-        for field in required_fields:
-            if field not in data or not data[field]:
-                return make_json_response({"error": f"Missing required field: {field}"}, 400)
-
-        cst = pytz.timezone('America/Chicago')
-        current_date = datetime.now(cst).date()
-        report_date = datetime.strptime(data['date'], '%Y-%m-%d').date()
-        
-        if report_date > current_date:
-            return make_json_response({"error": "Cannot submit reports for future dates"}, 400)
-            
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        query = """
-        INSERT INTO flag_reports (
-            report_date, report_time, flag_type, description, email
-        ) VALUES (?, ?, ?, ?, ?)
-        """
-        cursor.execute(query, (
-            data['date'], data['time'], data['flag_type'], data['description'], data.get('email')
-        ))
-        conn.commit()
-        cursor.close()
-        conn.close()
-        return make_json_response({"message": "Report submitted successfully"}, 201)
-    except Exception as e:
-        return make_json_response({"error": str(e)}, 500)
-
-@app.route(route="recent-reports", methods=["GET"])
-def get_recent_reports(req: func.HttpRequest) -> func.HttpResponse:
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        query = """
-        SELECT TOP 5 report_date, report_time, flag_type, submission_date 
-        FROM flag_reports ORDER BY submission_date DESC
-        """
-        cursor.execute(query)
-        rows = cursor.fetchall()
-        reports = []
-        for row in rows:
-            report_date, report_time, flag_type, submission_date = row
-            reports.append({
-                'date': report_date.strftime('%Y-%m-%d'),
-                'time': report_time.strftime('%H:%M'),
-                'flag_type': flag_type,
-                'submitted': submission_date.isoformat()
-            })
-        cursor.close()
-        conn.close()
-        return make_json_response(reports)
     except Exception as e:
         return make_json_response({"error": str(e)}, 500)
 
