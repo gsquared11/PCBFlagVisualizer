@@ -1,9 +1,9 @@
+import azure.functions as func
 import os
+import json
 import pyodbc
 import pytz
 import calendar
-from flask import Flask, request, jsonify, send_from_directory
-from flask_cors import CORS
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 from dotenv import load_dotenv
@@ -12,27 +12,20 @@ import openmeteo_requests
 import pandas as pd
 from retry_requests import retry
 
-# Load environment variables from .env file
+# Load environment variables
 load_dotenv()
 
-# Initialize Flask app and enable CORS for all routes (multiple connections)
-app = Flask(__name__, static_folder='static')
-CORS(app)
+app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
 
-# Get connection string from environment variable on Azure
 connection_string = os.environ.get('SQL_CONNECTION_STRING')
 
 def get_db_connection():
-    """Create and return a database connection."""
     return pyodbc.connect(connection_string)
 
 def init_db():
-    """Initialize the database with required tables."""
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        
-        # Create reports table if it doesn't exist
         cursor.execute("""
         IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'flag_reports')
         CREATE TABLE flag_reports (
@@ -46,33 +39,36 @@ def init_db():
             status NVARCHAR(20) DEFAULT 'pending'
         )
         """)
-        
         conn.commit()
         cursor.close()
         conn.close()
     except Exception as e:
         print(f"Error initializing database: {str(e)}")
 
-# Initialize database on startup
+# Initialize DB
 init_db()
 
-# Create an API response specifically for the 'flag_data' table
-@app.route('/api/table-data', methods=['GET'])
-def get_flag_data():
-    """Fetch data only from the 'flag_data' table with pagination."""
+def make_json_response(data, status_code=200):
+    return func.HttpResponse(
+        body=json.dumps(data), 
+        mimetype="application/json", 
+        status_code=status_code
+    )
+
+@app.route(route="table-data", methods=["GET"])
+def get_flag_data(req: func.HttpRequest) -> func.HttpResponse:
     try:
-        # Get limit and offset from query parameters
-        limit = request.args.get('limit', default=100, type=int)
-        offset = request.args.get('offset', default=0, type=int)
+        limit = req.params.get('limit')
+        offset = req.params.get('offset')
+        limit = int(limit) if limit else 100
+        offset = int(offset) if offset else 0
         
         conn = get_db_connection()
         cursor = conn.cursor()
         
-        # Get column names for 'flag_data' table
         cursor.execute("SELECT TOP 1 * FROM flag_data")
         columns = [column[0] for column in cursor.description]
         
-        # Fetch paginated data from 'flag_data', sorted by date_time DESC (most recent first)
         query = """
             SELECT * 
             FROM flag_data 
@@ -83,29 +79,24 @@ def get_flag_data():
         cursor.execute(query, (offset, limit))
         rows = cursor.fetchall()
         
-        # Convert rows into a list of dictionaries with column names as keys
         result = []
         for row in rows:
             row_dict = {}
             for i, value in enumerate(row):
-                # Convert non-serializable types to strings
                 if isinstance(value, (bytearray, bytes)):
                     value = value.hex()
-                elif hasattr(value, 'isoformat'):  # Handle datetime objects
+                elif hasattr(value, 'isoformat'):
                     value = value.isoformat()
-                
                 row_dict[columns[i]] = value
             result.append(row_dict)
-        
-        # Get the total number of rows for pagination purposes
+            
         cursor.execute("SELECT COUNT(*) FROM flag_data")
         total_rows = cursor.fetchone()[0]
         
         cursor.close()
         conn.close()
         
-        # Return data along with pagination details
-        return jsonify({
+        return make_json_response({
             "data": result,
             "pagination": {
                 "total_rows": total_rows,
@@ -114,40 +105,28 @@ def get_flag_data():
                 "next_offset": offset + limit if offset + limit < total_rows else None
             }
         })
-    
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return make_json_response({"error": str(e)}, 500)
 
-# Create an API response for the last 3 months of flag distribution
-@app.route('/api/flag-distribution', methods=['GET'])
-def get_flag_distribution():
-    """Get the distribution of flags for the last three complete months."""
+@app.route(route="flag-distribution", methods=["GET"])
+def get_flag_distribution(req: func.HttpRequest) -> func.HttpResponse:
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
         
         today = datetime.now()
-        print(f"Current date: {today}")
-        
-        # Get last full month (month1)
         last_month = today - relativedelta(months=1)
         month1_start = last_month.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
         month1_end = last_month.replace(day=calendar.monthrange(last_month.year, last_month.month)[1], hour=23, minute=59, second=59, microsecond=999999)
-        print(f"Month 1: {month1_start.strftime('%B %Y')} to {month1_end.strftime('%B %Y')}")
         
-        # Get the month before that (month2)
         two_months_ago = today - relativedelta(months=2)
         month2_start = two_months_ago.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
         month2_end = two_months_ago.replace(day=calendar.monthrange(two_months_ago.year, two_months_ago.month)[1], hour=23, minute=59, second=59, microsecond=999999)
-        print(f"Month 2: {month2_start.strftime('%B %Y')} to {month2_end.strftime('%B %Y')}")
         
-        # Get three months ago (month3)
         three_months_ago = today - relativedelta(months=3)
         month3_start = three_months_ago.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
         month3_end = three_months_ago.replace(day=calendar.monthrange(three_months_ago.year, three_months_ago.month)[1], hour=23, minute=59, second=59, microsecond=999999)
-        print(f"Month 3: {month3_start.strftime('%B %Y')} to {month3_end.strftime('%B %Y')}")
         
-        # SQL query: count flags per month based on the computed ranges.
         query = """
         SELECT 
             flag_type,
@@ -162,10 +141,7 @@ def get_flag_distribution():
              COUNT(CASE WHEN date_time >= ? AND date_time <= ? THEN 1 END) +
              COUNT(CASE WHEN date_time >= ? AND date_time <= ? THEN 1 END)) DESC
         """
-        
-        # Use month3_start as the minimum date so that only records in the last three full months are considered.
         min_date = month3_start
-        
         cursor.execute(query, (
             month1_start, month1_end,
             month2_start, month2_end,
@@ -175,114 +151,63 @@ def get_flag_distribution():
             month2_start, month2_end,
             month3_start, month3_end
         ))
-        
         rows = cursor.fetchall()
         
-        # Debug: Print the raw counts for each month
-        print("\nRaw counts from database:")
-        for row in rows:
-            flag_type, month1_count, month2_count, month3_count = row
-            print(f"{flag_type}:")
-            print(f"  Month 1 ({month1_start.strftime('%B %Y')}): {month1_count}")
-            print(f"  Month 2 ({month2_start.strftime('%B %Y')}): {month2_count}")
-            print(f"  Month 3 ({month3_start.strftime('%B %Y')}): {month3_count}")
-        
-        # Build the result dictionary with a list for each month.
         result = {
-            "month1": {
-                "name": month1_start.strftime("%B %Y"),
-                "data": []
-            },
-            "month2": {
-                "name": month2_start.strftime("%B %Y"),
-                "data": []
-            },
-            "month3": {
-                "name": month3_start.strftime("%B %Y"),
-                "data": []
-            }
+            "month1": {"name": month1_start.strftime("%B %Y"), "data": []},
+            "month2": {"name": month2_start.strftime("%B %Y"), "data": []},
+            "month3": {"name": month3_start.strftime("%B %Y"), "data": []}
         }
         
         for row in rows:
             flag_type, month1_count, month2_count, month3_count = row
-            
             if month1_count > 0:
-                result["month1"]["data"].append({
-                    "flag_type": flag_type,
-                    "count": month1_count
-                })
+                result["month1"]["data"].append({"flag_type": flag_type, "count": month1_count})
             if month2_count > 0:
-                result["month2"]["data"].append({
-                    "flag_type": flag_type,
-                    "count": month2_count
-                })
+                result["month2"]["data"].append({"flag_type": flag_type, "count": month2_count})
             if month3_count > 0:
-                result["month3"]["data"].append({
-                    "flag_type": flag_type,
-                    "count": month3_count
-                })
-        
+                result["month3"]["data"].append({"flag_type": flag_type, "count": month3_count})
+                
         cursor.close()
         conn.close()
-        
-        print(f"\nReturning result: {result}")
-        return jsonify(result)
-    
+        return make_json_response(result)
     except Exception as e:
-        print(f"Error in get_flag_distribution: {str(e)}")
-        return jsonify({"error": str(e)}), 500
+        return make_json_response({"error": str(e)}, 500)
 
-# Create an API response for the bar chart (all time flag distribution)
-@app.route('/api/all-time-flag-distribution', methods=['GET'])
-def get_all_time_flag_distribution():
-    """Get the all‑time flag distribution."""
+@app.route(route="all-time-flag-distribution", methods=["GET"])
+def get_all_time_flag_distribution(req: func.HttpRequest) -> func.HttpResponse:
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        query = """
-        SELECT flag_type, COUNT(*) AS count
-        FROM flag_data
-        GROUP BY flag_type
-        ORDER BY count DESC
-        """
+        query = "SELECT flag_type, COUNT(*) AS count FROM flag_data GROUP BY flag_type ORDER BY count DESC"
         cursor.execute(query)
         rows = cursor.fetchall()
-        result = []
-        for row in rows:
-            flag_type, count = row
-            result.append({"flag_type": flag_type, "count": count})
+        result = [{"flag_type": row[0], "count": row[1]} for row in rows]
         cursor.close()
         conn.close()
-        return jsonify({"data": result})
+        return make_json_response({"data": result})
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
-    
-# Create an API resposne for flags by day
-@app.route('/api/flags-by-day', methods=['GET'])
-def get_flags_by_day():
-    """Return all flags for a specific day (12:00 AM CST - 11:59 PM CST)."""
+        return make_json_response({"error": str(e)}, 500)
+
+@app.route(route="flags-by-day", methods=["GET"])
+def get_flags_by_day(req: func.HttpRequest) -> func.HttpResponse:
     try:
-        date_str = request.args.get('date')
+        date_str = req.params.get('date')
         if not date_str:
-            return jsonify([])  # No date provided, return empty list
+            return make_json_response([])
 
-        # Define CST timezone
         cst = pytz.timezone('America/Chicago')
-        utc = pytz.UTC  # Use UTC constant instead of function
-
-        # Parse input date and set time to 12:00 AM CST
+        utc = pytz.UTC
+        
         day_start_naive = datetime.strptime(date_str, '%Y-%m-%d')
         day_start_cst = cst.localize(day_start_naive.replace(hour=0, minute=0, second=0, microsecond=0))
         day_end_cst = cst.localize(day_start_naive.replace(hour=23, minute=59, second=59, microsecond=999999))
-
-        # Convert to UTC for database query
+        
         day_start_utc = day_start_cst.astimezone(utc)
         day_end_utc = day_end_cst.astimezone(utc)
-
+        
         conn = get_db_connection()
         cursor = conn.cursor()
-
-        # Query all records that fall within the CST day
         query = """
             SELECT 
                 CONVERT(varchar(5), DATEADD(hour, -5, date_time), 108) as time_cst,
@@ -294,39 +219,28 @@ def get_flags_by_day():
         """
         cursor.execute(query, (day_start_utc, day_end_utc))
         rows = cursor.fetchall()
-
-        # Process results
+        
         result = []
         for row in rows:
             time_cst, flag_type, date_time = row
-            # Convert UTC datetime to CST
             dt_cst = date_time.astimezone(cst)
             result.append({
                 'time': time_cst,
                 'flag_type': flag_type.strip() if flag_type else None,
                 'date_time': dt_cst.isoformat()
             })
-
+            
         cursor.close()
         conn.close()
-        return jsonify(result)
-
+        return make_json_response(result)
     except Exception as e:
-        print(f"Error in get_flags_by_day: {str(e)}")
-        return jsonify({"error": str(e)}), 500
+        return make_json_response({"error": str(e)}, 500)
 
-@app.route('/api/current-month-flags', methods=['GET'])
-def get_current_month_flags():
-    """Get all flags for all months."""
+@app.route(route="current-month-flags", methods=["GET"])
+def get_current_month_flags(req: func.HttpRequest) -> func.HttpResponse:
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        
-        # Define CST timezone
-        cst = pytz.timezone('America/Chicago')
-        utc = pytz.utc
-        
-        # Get all flags ordered by date
         query = """
         SELECT 
             CONVERT(date, DATEADD(hour, -5, date_time)) as date_cst,
@@ -335,109 +249,69 @@ def get_current_month_flags():
         FROM flag_data
         ORDER BY date_time ASC
         """
-        
         cursor.execute(query)
         rows = cursor.fetchall()
-        
-        # Convert to list of dictionaries with date and flag type
         result = []
         for row in rows:
             date_cst, time_cst, flag_type = row
             result.append({
                 "date": date_cst.strftime("%Y-%m-%d"),
                 "time": time_cst,
-                "flag_type": flag_type.strip() if flag_type else None  # Handle any whitespace in flag_type
+                "flag_type": flag_type.strip() if flag_type else None
             })
-        
         cursor.close()
         conn.close()
-        
-        print(f"Returning {len(result)} flags for all months")
-        print("Sample of flags:", result[:5] if result else "No flags found")
-        
-        return jsonify(result)
-    
+        return make_json_response(result)
     except Exception as e:
-        print(f"Error in get_current_month_flags: {str(e)}")
-        return jsonify({"error": str(e)}), 500
+        return make_json_response({"error": str(e)}, 500)
 
-@app.route('/api/submit-report', methods=['POST'])
-def submit_report():
-    """Handle submission of flag data reports."""
+@app.route(route="submit-report", methods=["POST"])
+def submit_report(req: func.HttpRequest) -> func.HttpResponse:
     try:
-        data = request.json
+        data = req.get_json()
         if not data:
-            return jsonify({"error": "No data provided"}), 400
-
-        # Validate required fields
+            return make_json_response({"error": "No data provided"}, 400)
+            
         required_fields = ['date', 'time', 'flag_type', 'description']
         for field in required_fields:
             if field not in data or not data[field]:
-                return jsonify({"error": f"Missing required field: {field}"}), 400
+                return make_json_response({"error": f"Missing required field: {field}"}, 400)
 
-        # Parse date in America/Chicago timezone
         cst = pytz.timezone('America/Chicago')
         current_date = datetime.now(cst).date()
-        
-        # Parse the input date (which is in YYYY-MM-DD format)
         report_date = datetime.strptime(data['date'], '%Y-%m-%d').date()
         
         if report_date > current_date:
-            return jsonify({"error": "Cannot submit reports for future dates"}), 400
-
+            return make_json_response({"error": "Cannot submit reports for future dates"}, 400)
+            
         conn = get_db_connection()
         cursor = conn.cursor()
-
-        # Insert the report into the database
         query = """
         INSERT INTO flag_reports (
-            report_date,
-            report_time,
-            flag_type,
-            description,
-            email
+            report_date, report_time, flag_type, description, email
         ) VALUES (?, ?, ?, ?, ?)
         """
-        
         cursor.execute(query, (
-            data['date'],  # Keep the original date string
-            data['time'],
-            data['flag_type'],
-            data['description'],
-            data.get('email')  # Optional field
+            data['date'], data['time'], data['flag_type'], data['description'], data.get('email')
         ))
-        
         conn.commit()
         cursor.close()
         conn.close()
-        
-        return jsonify({"message": "Report submitted successfully"}), 201
-        
+        return make_json_response({"message": "Report submitted successfully"}, 201)
     except Exception as e:
-        print(f"Error submitting report: {str(e)}")
-        return jsonify({"error": str(e)}), 500
+        return make_json_response({"error": str(e)}, 500)
 
-@app.route('/api/recent-reports', methods=['GET'])
-def get_recent_reports():
-    """Get the 5 most recent flag reports."""
+@app.route(route="recent-reports", methods=["GET"])
+def get_recent_reports(req: func.HttpRequest) -> func.HttpResponse:
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        
         query = """
-        SELECT TOP 5
-            report_date,
-            report_time,
-            flag_type,
-            submission_date
-        FROM flag_reports
-        ORDER BY submission_date DESC
+        SELECT TOP 5 report_date, report_time, flag_type, submission_date 
+        FROM flag_reports ORDER BY submission_date DESC
         """
-        
         cursor.execute(query)
         rows = cursor.fetchall()
-        
-        # Convert to list of dictionaries
         reports = []
         for row in rows:
             report_date, report_time, flag_type, submission_date = row
@@ -447,100 +321,73 @@ def get_recent_reports():
                 'flag_type': flag_type,
                 'submitted': submission_date.isoformat()
             })
-        
         cursor.close()
         conn.close()
-        
-        return jsonify(reports)
-    
+        return make_json_response(reports)
     except Exception as e:
-        print(f"Error fetching recent reports: {str(e)}")
-        return jsonify({"error": str(e)}), 500
+        return make_json_response({"error": str(e)}, 500)
 
-# Setup the Open-Meteo API client with retry on error
 retry_session = retry(requests.Session(), retries=5, backoff_factor=0.2)
 openmeteo = openmeteo_requests.Client(session=retry_session)
 
-@app.route('/api/weather-data', methods=['GET'])
-def get_weather_data():
-    """Get historical weather data for Panama City Beach using Open-Meteo API."""
+@app.route(route="weather-data", methods=["GET"])
+def get_weather_data(req: func.HttpRequest) -> func.HttpResponse:
     try:
-        date_str = request.args.get('date')
+        date_str = req.params.get('date')
         if not date_str:
-            return jsonify({"error": "No date provided"}), 400
+            return make_json_response({"error": "No date provided"}, 400)
 
-        # Parse the requested date
         requested_date = datetime.strptime(date_str, '%Y-%m-%d')
         current_date = datetime.now()
         date_diff = (current_date - requested_date).days
 
-        # Choose API endpoint based on date difference
         if date_diff > 2:
-            # Use historical forecast API for dates more than 2 days in the past
             url = "https://archive-api.open-meteo.com/v1/archive"
         else:
-            # Use regular forecast API for recent dates
             url = "https://api.open-meteo.com/v1/forecast"
             
-        # Calculate start and end dates to ensure we get a full 24-hour period
         start_date = requested_date
         end_date = requested_date + timedelta(days=1)  
         
-        # Panama City Beach coordinates and parameters
         params = {
             "latitude": 30.1766,
             "longitude": -85.8055,
             "start_date": start_date.strftime('%Y-%m-%d'),
             "end_date": end_date.strftime('%Y-%m-%d'),
-            "hourly": [
-                "temperature_2m",
-                "surface_pressure",
-                "precipitation",
-                "wind_speed_10m"
-            ],
+            "hourly": ["temperature_2m", "surface_pressure", "precipitation", "wind_speed_10m"],
             "timezone": "UTC",
             "wind_speed_unit": "mph",
             "temperature_unit": "fahrenheit",
             "precipitation_unit": "inch"
         }
         
-        # Get weather data
         responses = openmeteo.weather_api(url, params=params)
         response = responses[0]
         
-        # Process hourly data
         hourly = response.Hourly()
         hourly_temperature_2m = hourly.Variables(0).ValuesAsNumpy()
         hourly_surface_pressure = hourly.Variables(1).ValuesAsNumpy()
         hourly_precipitation = hourly.Variables(2).ValuesAsNumpy()
         hourly_wind_speed_10m = hourly.Variables(3).ValuesAsNumpy()
         
-        # Create time range
         hourly_data = {"date": pd.date_range(
             start=pd.to_datetime(hourly.Time(), unit="s"),
             end=pd.to_datetime(hourly.TimeEnd(), unit="s"),
             freq=pd.Timedelta(seconds=hourly.Interval()),
             inclusive="left"
         )}
-        
-        # Add data to dictionary
         hourly_data["temperature_2m"] = hourly_temperature_2m.tolist()
         hourly_data["surface_pressure"] = hourly_surface_pressure.tolist()
         hourly_data["precipitation"] = hourly_precipitation.tolist()
         hourly_data["wind_speed_10m"] = hourly_wind_speed_10m.tolist()
         
-        # Convert to DataFrame for easier processing
         df = pd.DataFrame(data=hourly_data)
-        
-        # Convert UTC times to CST
         df['date'] = df['date'].dt.tz_localize('UTC').dt.tz_convert('America/Chicago')
         
-        # Filter for the specific day (12:01 AM to 11:59 PM CST)
         start_time = pd.Timestamp(date_str + ' 00:00:00').tz_localize('America/Chicago')
         end_time = pd.Timestamp(date_str + ' 23:59:59').tz_localize('America/Chicago')
         df = df[(df['date'] >= start_time) & (df['date'] <= end_time)]
         
- # Convert to list of dictionaries for JSON response
         result = []
         for _, row in df.iterrows():
             result.append({
@@ -551,19 +398,9 @@ def get_weather_data():
                 "wind_speed": row["wind_speed_10m"]
             })
             
-        return jsonify({
+        return make_json_response({
             'date': date_str,
             'hourly_data': result
         })
-        
     except Exception as e:
-        print(f"Error fetching weather data: {str(e)}")
-        return jsonify({"error": str(e)}), 500
-
-@app.route('/', methods=['GET'])
-def index():
-    """Serve the main HTML page."""
-    return send_from_directory('static', 'index.html')
-
-if __name__ == '__main__':
-    app.run(debug=True, port=3000)
+        return make_json_response({"error": str(e)}, 500)
