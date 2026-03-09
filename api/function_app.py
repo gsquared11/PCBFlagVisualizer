@@ -141,6 +141,7 @@ def get_flag_distribution(req: func.HttpRequest) -> func.HttpResponse:
              COUNT(CASE WHEN date_time >= ? AND date_time <= ? THEN 1 END) +
              COUNT(CASE WHEN date_time >= ? AND date_time <= ? THEN 1 END)) DESC
         """
+        min_date = month3_start
         cursor.execute(query, (
             month1_start.isoformat(), month1_end.isoformat(),
             month2_start.isoformat(), month2_end.isoformat(),
