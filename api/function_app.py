@@ -58,10 +58,10 @@ def make_json_response(data, status_code=200):
 @app.route(route="table-data", methods=["GET"])
 def get_flag_data(req: func.HttpRequest) -> func.HttpResponse:
     try:
-        limit = req.params.get('limit')
-        offset = req.params.get('offset')
-        limit = int(limit) if limit else 100
-        offset = int(offset) if offset else 0
+        limit_str = req.params.get('limit')
+        offset_str = req.params.get('offset')
+        limit = int(limit_str) if limit_str else 100
+        offset = int(offset_str) if offset_str else 0
         
         conn = get_db_connection()
         cursor = conn.cursor()
@@ -141,15 +141,14 @@ def get_flag_distribution(req: func.HttpRequest) -> func.HttpResponse:
              COUNT(CASE WHEN date_time >= ? AND date_time <= ? THEN 1 END) +
              COUNT(CASE WHEN date_time >= ? AND date_time <= ? THEN 1 END)) DESC
         """
-        min_date = month3_start
         cursor.execute(query, (
-            month1_start, month1_end,
-            month2_start, month2_end,
-            month3_start, month3_end,
-            min_date,
-            month1_start, month1_end,
-            month2_start, month2_end,
-            month3_start, month3_end
+            month1_start.isoformat(), month1_end.isoformat(),
+            month2_start.isoformat(), month2_end.isoformat(),
+            month3_start.isoformat(), month3_end.isoformat(),
+            min_date.isoformat(),
+            month1_start.isoformat(), month1_end.isoformat(),
+            month2_start.isoformat(), month2_end.isoformat(),
+            month3_start.isoformat(), month3_end.isoformat()
         ))
         rows = cursor.fetchall()
         
@@ -217,7 +216,7 @@ def get_flags_by_day(req: func.HttpRequest) -> func.HttpResponse:
             WHERE date_time >= ? AND date_time <= ?
             ORDER BY date_time ASC
         """
-        cursor.execute(query, (day_start_utc, day_end_utc))
+        cursor.execute(query, (day_start_utc.isoformat(), day_end_utc.isoformat()))
         rows = cursor.fetchall()
         
         result = []
