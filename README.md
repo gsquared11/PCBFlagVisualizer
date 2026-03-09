@@ -2,7 +2,7 @@
 
 A web application that displays current and historical beach flag data for Panama City Beach, Florida.
 
-See the website here: https://pcb-flag-viewer.azurewebsites.net/
+See the website here: https://pcbflags.gsquared.dev
 
 Data from https://github.com/gsquared11/PCBFlagScraper
 
