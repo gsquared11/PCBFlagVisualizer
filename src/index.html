@@ -1,193 +1,195 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="mobile-web-app-status-bar-style" content="black-translucent" />
-    <title>PCB Flag Data Visualizer</title>
-    <link
-      rel="icon"
-      href="https://cdn-icons-png.flaticon.com/512/119/119596.png"
-      type="image/x-icon"
-    />
-    <link rel="stylesheet" href="./styles.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  </head>
-  <body>
-    <!-- Main Container -->
-    <div class="container">
-      <h1 style="text-align: center;">PCB Flag Data Visualizer</h1>
-      
-      <!-- Current Flag Display -->
-      <div class="current-flag-box">
-        <div id="currentFlagCondition" class="current-flag-condition" role="status" aria-live="polite">
-          <span class="flag-label">Current Flag: </span>
-          <span class="flag-value">Loading...</span>
-        </div>
-      </div>
 
-      <!-- Navigation Tabs -->
-      <div class="nav-tabs" role="tablist">
-        <button id="calendarTabBtn" class="tab-button active" role="tab" aria-selected="true" aria-controls="calendarSection">Calendar</button>
-        <button id="chartsTabBtn" class="tab-button" role="tab" aria-selected="false" aria-controls="chartsSection">Charts</button>
-        <button id="aboutTabBtn" class="tab-button" role="tab" aria-selected="false" aria-controls="aboutSection">About App</button>
-      </div>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>PCB Flag Data Visualizer</title>
+  <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/119/119596.png" type="image/x-icon" />
+  <link rel="stylesheet" href="./styles.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
 
-      <!-- Controls For Refresh -->
-      <div class="controls">
-        <button id="refreshBtn" aria-label="Refresh Data">Refresh Data</button>
-      </div>
+<body>
+  <!-- Main Container -->
+  <div class="container">
+    <h1 style="text-align: center;">PCB Flag Data Visualizer</h1>
 
-      <!-- Content Sections -->
-      <div class="tab-content-container">
-        <!-- Calendar Section -->
-        <div id="calendarSection" class="tab-content active">
-          <!-- Monthly Calendar -->
-          <div class="calendar-container">
-            <div class="calendar-header">
-              <button id="prevMonthBtn" class="calendar-nav-btn" aria-label="Previous month">
-                <span class="nav-icon">←</span>
-              </button>
-              <h3 class="calendar-title">Current Month's Flags</h3>
-              <button id="nextMonthBtn" class="calendar-nav-btn" aria-label="Next month">
-                <span class="nav-icon">→</span>
-              </button>
-            </div>
-            <p class="calendar-description">Click a date to view the flags and weather conditions for that day.</p>
-            <h3 class="calendar-description">Note: Flag entries are inconsistent before 2/28/2025.</h3>
-            <div class="calendar-grid" id="calendar-grid" role="grid" aria-label="Monthly flag calendar">
-              <!-- Calendar will be populated by JavaScript -->
-            </div>
+    <!-- Current Flag Display -->
+    <div class="current-flag-box">
+      <div id="currentFlagCondition" class="current-flag-condition" role="status" aria-live="polite">
+        <span class="flag-label">Current Flag: </span>
+        <span class="flag-value">Loading...</span>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="nav-tabs" role="tablist">
+      <button id="calendarTabBtn" class="tab-button active" role="tab" aria-selected="true"
+        aria-controls="calendarSection">Calendar</button>
+      <button id="chartsTabBtn" class="tab-button" role="tab" aria-selected="false"
+        aria-controls="chartsSection">Charts</button>
+      <button id="aboutTabBtn" class="tab-button" role="tab" aria-selected="false" aria-controls="aboutSection">About
+        App</button>
+    </div>
+
+    <!-- Controls For Refresh -->
+    <div class="controls">
+      <button id="refreshBtn" aria-label="Refresh Data">Refresh Data</button>
+    </div>
+
+    <!-- Content Sections -->
+    <div class="tab-content-container">
+      <!-- Calendar Section -->
+      <div id="calendarSection" class="tab-content active">
+        <!-- Monthly Calendar -->
+        <div class="calendar-container">
+          <div class="calendar-header">
+            <button id="prevMonthBtn" class="calendar-nav-btn" aria-label="Previous month">
+              <span class="nav-icon">←</span>
+            </button>
+            <h3 class="calendar-title">Current Month's Flags</h3>
+            <button id="nextMonthBtn" class="calendar-nav-btn" aria-label="Next month">
+              <span class="nav-icon">→</span>
+            </button>
           </div>
-
-          <!-- Date Picker Calendar -->
-          <div class="calendar-container date-picker-container">
-            <h2>View Flags and Weather Conditions on a Specific Date</h2>
-            <h3>Note: Flag entries are inconsistent before 2/28/2025.</h3>
-            <div class="date-picker-controls">
-              <input type="date" id="flagDate" placeholder="mm/dd/yyyy" aria-label="Select date to view flags" />
-              <button id="loadFlagsByDayBtn" aria-label="Show flags for selected date">Show Data</button>
-            </div>
-            <p class="calendar-description">Click a date to view the flags and weather conditions for that day. Weather data provided by <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Open-Meteo</a>.</p>
-            <div id="datepickerError" class="error hidden" role="alert"></div>
-            <div id="flagsByDayContainer" class="flags-by-day-container" role="region" aria-label="Flags for selected date"></div>
-            
-            <!-- Weather Chart Container -->
-            <div id="weatherChartContainer" class="weather-chart-container hidden">
-              <h3>Weather Conditions</h3>
-              <p class="chart-instructions">Tip: Click on the legend items to hide/show different weather metrics.</p>
-              <div id="weatherChart" class="weather-chart" role="img" aria-label="Weather conditions chart"></div>
-            </div>
+          <p class="calendar-description">Click a date to view the flags and weather conditions for that day.</p>
+          <h3 class="calendar-description">Note: Flag entries are inconsistent before 2/28/2025.</h3>
+          <div class="calendar-grid" id="calendar-grid" role="grid" aria-label="Monthly flag calendar">
+            <!-- Calendar will be populated by JavaScript -->
           </div>
         </div>
 
-        <!-- Charts Section -->
-        <div id="chartsSection" class="tab-content">
-          <!-- Flag Distribution Charts -->
-          <h2>Flag Distribution - Last 3 Months</h2>
-          <div id="chartsContainer" class="charts-container">
-            <div class="charts-grid">
-              <div id="chart1Container" class="chart-card">
-                <h3 id="chart1Title">Loading...</h3>
-                <div id="chart1" class="chart" role="img"></div>
-              </div>
-              <div id="chart2Container" class="chart-card">
-                <h3 id="chart2Title">Loading...</h3>
-                <div id="chart2" class="chart" role="img"></div>
-              </div>
-              <div id="chart3Container" class="chart-card">
-                <h3 id="chart3Title">Loading...</h3>
-                <div id="chart3" class="chart" role="img"></div>
-              </div>
-            </div>
+        <!-- Date Picker Calendar -->
+        <div class="calendar-container date-picker-container">
+          <h2>View Flags and Weather Conditions on a Specific Date</h2>
+          <h3>Note: Flag entries are inconsistent before 2/28/2025.</h3>
+          <div class="date-picker-controls">
+            <input type="date" id="flagDate" placeholder="mm/dd/yyyy" aria-label="Select date to view flags" />
+            <button id="loadFlagsByDayBtn" aria-label="Show flags for selected date">Show Data</button>
           </div>
-
-          <!-- All-Time Bar Chart Container -->
-          <h2>All-Time Flag Distribution</h2>
-          <div id="allTimeBarChart" role="img"></div>
-        </div>
-
-        <!-- About Section -->
-        <div id="aboutSection" class="tab-content">
-          <h2>About PCB Beach Flags</h2>
-          <p>
-            The Panama City Beach, FL (PCB) Flag System is used to inform the public
-            about current water conditions. Flags are color-coded to indicate the
-            level of safety and potential hazards in the water. Only one forum recorded this data before,
-            but it did not provide a way to visualize the data, so I created this tool.
+          <p class="calendar-description">Click a date to view the flags and weather conditions for that day. Weather
+            data provided by <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Open-Meteo</a>.
           </p>
-          <p><strong>Note: data collection for this tool consistently started from 2/28/2025.
-             More information of how this data is collected can be found <a href="https://github.com/gsquared11/PCBFlagScraper" target="_blank" rel="noopener noreferrer"><u><span style="color: #3a86ff;">here</span></u></a>.</strong> </p>
-          <ul>
-            <li>
-              <strong>Green Flag:</strong> Low hazard, calm conditions, safe for
-              swimming.
-            </li>
-            <li>
-              <strong>Yellow Flag:</strong> Medium hazard, moderate surf and
-              currents – use caution.
-            </li>
-            <li>
-              <strong>Red Flag:</strong> High hazard, strong currents, dangerous
-              conditions – swimming not advised.
-            </li>
-            <li>
-              <strong>Double Red Flag:</strong> Water closed to public use due to
-              extreme hazards.
-            </li>
-            <li>
-              <strong>Purple Flag:</strong> Dangerous marine life present (e.g.,
-              jellyfish, sharks).
-            </li>
-          </ul>
-          <p>
-            Beachgoers should always follow the flag warnings to ensure their
-            safety while enjoying the beach.
-          </p>
+          <div id="datepickerError" class="error hidden" role="alert"></div>
+          <div id="flagsByDayContainer" class="flags-by-day-container" role="region"
+            aria-label="Flags for selected date"></div>
+
+          <!-- Weather Chart Container -->
+          <div id="weatherChartContainer" class="weather-chart-container hidden">
+            <h3>Weather Conditions</h3>
+            <p class="chart-instructions">Tip: Click on the legend items to hide/show different weather metrics.</p>
+            <div id="weatherChart" class="weather-chart" role="img" aria-label="Weather conditions chart"></div>
+          </div>
         </div>
       </div>
 
-      <!-- Error Message Container -->
-      <div id="errorContainer" class="error hidden" role="alert"></div>
+      <!-- Charts Section -->
+      <div id="chartsSection" class="tab-content">
+        <!-- Flag Distribution Charts -->
+        <h2>Flag Distribution - Last 3 Months</h2>
+        <div id="chartsContainer" class="charts-container">
+          <div class="charts-grid">
+            <div id="chart1Container" class="chart-card">
+              <h3 id="chart1Title">Loading...</h3>
+              <div id="chart1" class="chart" role="img"></div>
+            </div>
+            <div id="chart2Container" class="chart-card">
+              <h3 id="chart2Title">Loading...</h3>
+              <div id="chart2" class="chart" role="img"></div>
+            </div>
+            <div id="chart3Container" class="chart-card">
+              <h3 id="chart3Title">Loading...</h3>
+              <div id="chart3" class="chart" role="img"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- All-Time Bar Chart Container -->
+        <h2>All-Time Flag Distribution</h2>
+        <div id="allTimeBarChart" role="img"></div>
+      </div>
+
+      <!-- About Section -->
+      <div id="aboutSection" class="tab-content">
+        <h2>About PCB Beach Flags</h2>
+        <p>
+          The Panama City Beach, FL (PCB) Flag System is used to inform the public
+          about current water conditions. Flags are color-coded to indicate the
+          level of safety and potential hazards in the water. Only one forum recorded this data before,
+          but it did not provide a way to visualize the data, so I created this tool.
+        </p>
+        <p><strong>Note: data collection for this tool consistently started from 2/28/2025.
+            More information of how this data is collected can be found <a
+              href="https://github.com/gsquared11/PCBFlagScraper" target="_blank" rel="noopener noreferrer"><u><span
+                  style="color: #3a86ff;">here</span></u></a>.</strong> </p>
+        <ul>
+          <li>
+            <strong>Green Flag:</strong> Low hazard, calm conditions, safe for
+            swimming.
+          </li>
+          <li>
+            <strong>Yellow Flag:</strong> Medium hazard, moderate surf and
+            currents – use caution.
+          </li>
+          <li>
+            <strong>Red Flag:</strong> High hazard, strong currents, dangerous
+            conditions – swimming not advised.
+          </li>
+          <li>
+            <strong>Double Red Flag:</strong> Water closed to public use due to
+            extreme hazards.
+          </li>
+          <li>
+            <strong>Purple Flag:</strong> Dangerous marine life present (e.g.,
+            jellyfish, sharks).
+          </li>
+        </ul>
+        <p>
+          Beachgoers should always follow the flag warnings to ensure their
+          safety while enjoying the beach.
+        </p>
+      </div>
     </div>
 
-    <!-- Raw Data Table -->
-    <h2>Raw Data</h2>
-    <div id="tableContainer" class="table-container hidden">
-      <!-- Loading Indicator -->
-      <div id="loadingContainer" class="loading" role="status" aria-live="polite">Loading...</div>
-      <table id="dataTable" role="grid">
-        <thead>
-          <tr id="tableHeaders"></tr>
-        </thead>
-        <tbody id="tableBody"></tbody>
-      </table>
-    </div>
+    <!-- Error Message Container -->
+    <div id="errorContainer" class="error hidden" role="alert"></div>
+  </div>
 
-    <!-- Pagination Controls -->
-    <div id="paginationContainer" class="pagination" role="navigation" aria-label="Table pagination">
-      <button id="prevPageBtn" disabled aria-label="Previous page">Previous</button>
-      <span id="currentPage" aria-live="polite">Page 1</span>
-      <button id="nextPageBtn" aria-label="Next page">Next</button>
-    </div>
+  <!-- Raw Data Table -->
+  <h2>Raw Data</h2>
+  <div id="tableContainer" class="table-container hidden">
+    <!-- Loading Indicator -->
+    <div id="loadingContainer" class="loading" role="status" aria-live="polite">Loading...</div>
+    <table id="dataTable" role="grid">
+      <thead>
+        <tr id="tableHeaders"></tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
 
-    <!-- Footer -->
-    <footer>
-      &copy; 2025
-      <a
-        href="https://github.com/gsquared11"
-        target="_blank"
-        rel="noopener noreferrer"
-        style="color: inherit;"
-        >gsquared11</a
-      >
-    </footer>
+  <!-- Pagination Controls -->
+  <div id="paginationContainer" class="pagination" role="navigation" aria-label="Table pagination">
+    <button id="prevPageBtn" disabled aria-label="Previous page">Previous</button>
+    <span id="currentPage" aria-live="polite">Page 1</span>
+    <button id="nextPageBtn" aria-label="Next page">Next</button>
+  </div>
 
-    <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/luxon@3/build/global/luxon.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <script src="./app.js" defer></script>
-  </body>
+  <!-- Footer -->
+  <footer>
+    &copy; 2026
+    <a href="https://github.com/gsquared11" target="_blank" rel="noopener noreferrer"
+      style="color: inherit;">gsquared11</a>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/luxon@3/build/global/luxon.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="./app.js" defer></script>
+</body>
+
 </html>
