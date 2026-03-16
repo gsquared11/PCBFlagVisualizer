@@ -2,20 +2,24 @@
    Root Variables
    ===================================== */
 :root {
-  --primary-color: #3a86ff; 
-  --secondary-color: #8338ec; 
-  --text-color: #ffffff; 
-  --table-bg: rgba(0, 0, 0, 0.2); 
-  --table-hover: rgba(255, 255, 255, 0.1); /* Hover state for table rows */
-  --shadow-sm: 0 4px 6px rgba(0, 0, 0, 0.1); 
-  --shadow-md: 0 8px 16px rgba(0, 0, 0, 0.1); 
-  --shadow-lg: 0 12px 24px rgba(0, 0, 0, 0.15); 
-  --border-radius: 12px; /* Border radius for rounded elements */
-  --transition: 0.25s ease; /* Smooth transition for hover states */
+  --primary-color: #3a86ff;
+  --secondary-color: #8338ec;
+  --text-color: #ffffff;
+  --table-bg: rgba(0, 0, 0, 0.2);
+  --table-hover: rgba(255, 255, 255, 0.1);
+  --shadow-sm: 0 4px 6px rgba(0, 0, 0, 0.15);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.25);
+  --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.35);
+  --border-radius: 12px;
+  --transition: 0.25s ease;
   --disabled-bg: #6c757d;
   --select-bg: rgba(0, 0, 0, 0.3);
   --footer-bg: rgba(0, 0, 0, 0.2);
-  
+  --glass-bg: rgba(255, 255, 255, 0.07);
+  --glass-border: rgba(255, 255, 255, 0.12);
+  --primary-glow: 0 0 30px rgba(58, 134, 255, 0.4);
+  --secondary-glow: 0 0 30px rgba(131, 56, 236, 0.4);
+
   /* Flag gradients */
   --gradient-yellow-flag: linear-gradient(45deg, #c9aa04, rgb(202, 202, 23));
   --gradient-red-flag: linear-gradient(45deg, #ff0000, #ff6666);
@@ -27,32 +31,181 @@
 }
 
 /* =====================================
- Base Styles
- ===================================== */
+   Keyframe Animations
+   ===================================== */
+@keyframes bgFloat {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes shimmerText {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+@keyframes flagPulse {
+  0%, 100% { filter: brightness(1) saturate(1); box-shadow: var(--shadow-md); }
+  50% { filter: brightness(1.08) saturate(1.1); box-shadow: var(--shadow-lg), 0 0 40px rgba(255,255,255,0.1); }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes cellFadeInUp {
+  from { opacity: 0; transform: translateY(10px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes waveScroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+@keyframes dotGlow {
+  0%, 100% { transform: scale(1); opacity: 0.9; }
+  50% { transform: scale(1.2); opacity: 1; }
+}
+
+@keyframes slideInDown {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes subtitleFade {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 0.75; transform: translateY(0); }
+}
+
+/* =====================================
+   Base Styles
+   ===================================== */
+html {
+  background: #0d1f4d;
+  min-height: 100%;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Animated wave layers behind the whole page */
+html::before,
+html::after {
+  content: '';
+  position: fixed;
+  left: -50%;
+  width: 200%;
+  border-radius: 45%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+html::before {
+  height: 55vw;
+  bottom: -30vw;
+  background: rgba(58, 134, 255, 0.03);
+  animation: bgWave 30s linear infinite;
+}
+
+html::after {
+  height: 60vw;
+  bottom: -34vw;
+  background: rgba(131, 56, 236, 0.025);
+  animation: bgWave 42s linear infinite reverse;
+}
+
+@keyframes bgWave {
+  0%   { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
 body {
   font-family: "Inter", system-ui, -apple-system, sans-serif;
-  background: linear-gradient(135deg, #1a3a8f, #0d1f4d); 
+  background: linear-gradient(160deg, #1a3a8f 0%, #0d1f4d 60%, #0a1635 100%);
   color: var(--text-color);
   line-height: 1.6;
   max-width: 1200px;
   margin: 0 auto;
   padding: 2rem;
+  position: relative;
+  z-index: 1;
 }
 
 /* =====================================
- Container Styles
- ===================================== */
+   Site Header
+   ===================================== */
+.site-header {
+  text-align: center;
+  margin-bottom: 0.5rem;
+  animation: slideInDown 0.7s ease both;
+}
+
+h1 {
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
+  font-weight: 700;
+  text-align: center;
+  margin: 0 0 0.4rem;
+  color: #ffffff;
+  letter-spacing: -0.5px;
+}
+
+.site-subtitle {
+  text-align: center;
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0 0 1.5rem;
+  letter-spacing: 0.5px;
+  animation: subtitleFade 0.8s ease 0.3s both;
+}
+
+/* =====================================
+   Container Styles
+   ===================================== */
 .container {
-  background: rgba(255, 255, 255, 0.1); 
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border-radius: var(--border-radius);
+  border: 1px solid var(--glass-border);
   padding: 2rem;
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-md), inset 0 1px 0 rgba(255,255,255,0.08);
   transition: transform var(--transition), box-shadow var(--transition);
 }
 
 /* =====================================
- Chart Styles
- ===================================== */
+   Wave Decoration
+   ===================================== */
+.wave-decoration {
+  position: relative;
+  height: 60px;
+  overflow: hidden;
+  margin: 2rem -2rem -2rem;
+  border-radius: 0 0 var(--border-radius) var(--border-radius);
+  opacity: 0.25;
+  pointer-events: none;
+}
+
+.wave-decoration svg {
+  position: absolute;
+  bottom: 0;
+  width: 200%;
+  animation: waveScroll 12s linear infinite;
+}
+
+.wave-decoration svg.wave2 {
+  animation-duration: 18s;
+  animation-direction: reverse;
+  opacity: 0.6;
+}
+
+/* =====================================
+   Chart Styles
+   ===================================== */
 .charts-container {
   margin: 2rem 0;
 }
@@ -65,17 +218,21 @@ body {
 }
 
 .chart-card {
-  background: var(--table-bg);
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--glass-border);
   border-radius: var(--border-radius);
   padding: 1rem;
   box-shadow: var(--shadow-sm);
-  transition: transform var(--transition), box-shadow var(--transition);
+  transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition);
   overflow: hidden;
 }
 
 .chart-card:hover {
-  transform: translateY(-5px);
-  box-shadow: var(--shadow-md);
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-lg), var(--primary-glow);
+  border-color: rgba(58, 134, 255, 0.3);
 }
 
 .chart {
@@ -84,8 +241,8 @@ body {
 }
 
 /* =====================================
- Table Styles
- ===================================== */
+   Table Styles
+   ===================================== */
 table {
   width: 100%;
   border-spacing: 0;
@@ -102,24 +259,44 @@ td {
 }
 
 th {
-  background-color: rgba(0, 0, 0, 0.3);
+  background-color: rgba(0, 0, 0, 0.35);
+  letter-spacing: 0.3px;
+  font-size: 0.9rem;
+  text-transform: uppercase;
 }
 
 tr:not(:last-child) td {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
 }
 
 tr:hover td {
   background-color: var(--table-hover);
+  transition: background-color 0.2s ease;
 }
 
 /* =====================================
- Feedback States
- ===================================== */
+   Feedback States
+   ===================================== */
 .loading {
   text-align: center;
   margin: 1.5rem 0;
   font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+}
+
+.loading::after {
+  content: '';
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  border-top-color: var(--primary-color);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  flex-shrink: 0;
 }
 
 .error {
@@ -132,8 +309,8 @@ tr:hover td {
 }
 
 /* =====================================
- Layout Components
- ===================================== */
+   Layout Components
+   ===================================== */
 .controls {
   display: flex;
   justify-content: space-between;
@@ -144,52 +321,55 @@ tr:hover td {
 }
 
 /* =====================================
- Interactive Elements (Buttons and Select)
- ===================================== */
+   Interactive Elements (Buttons and Select)
+   ===================================== */
 button {
-  background: var(--primary-color);
+  background: linear-gradient(135deg, var(--primary-color), #2563eb);
   color: var(--text-color);
-  border: none;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   padding: 0.75rem 1.5rem;
   border-radius: 50px;
   font-weight: 500;
   cursor: pointer;
   transition: background var(--transition), transform var(--transition), box-shadow var(--transition);
   box-shadow: var(--shadow-sm);
+  letter-spacing: 0.2px;
 }
 
 button:hover {
-  background: var(--secondary-color);
+  background: linear-gradient(135deg, var(--secondary-color), #6d28d9);
   transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-md), var(--secondary-glow);
 }
 
 button:active {
   transform: translateY(0);
+  box-shadow: var(--shadow-sm);
 }
 
 button:disabled {
-  background-color: var(--disabled-bg);
+  background: var(--disabled-bg);
   opacity: 0.5;
   transform: none;
   box-shadow: none;
 }
 
 /* =====================================
- Current Flag Condition Styles
- ===================================== */
+   Current Flag Condition Styles
+   ===================================== */
 .current-flag-condition {
   font-size: 2.5rem;
   font-weight: bold;
   text-align: center;
   margin: 0;
-  padding: 1rem;
-  border-radius: var(--border-radius);
+  padding: 1.25rem 2rem;
+  border-radius: 0;
   background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  transition: all 0.3s ease;
+  border: none;
+  transition: all 0.4s ease;
   color: #ffffff;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+  animation: flagPulse 4s ease-in-out infinite;
 }
 
 .current-flag-condition.yellow-flag {
@@ -221,8 +401,8 @@ button:disabled {
 }
 
 /* =====================================
- Pagination
- ===================================== */
+   Pagination
+   ===================================== */
 .pagination {
   display: flex;
   justify-content: center;
@@ -236,877 +416,10 @@ button:disabled {
 }
 
 /* =====================================
- Utility Classes
- ===================================== */
+   Utility Classes
+   ===================================== */
 .hidden {
   display: none;
-}
-
-/* =====================================
- Additional Styles
- ===================================== */
-footer {
-  text-align: center;
-  padding: 1rem 0;
-  color: var(--text-color);
-  background: var(--footer-bg);
-}
-
-a {
-  color: inherit;
-  text-decoration: none;
-}
-
-/* =====================================
- Responsive Design
- ===================================== */
-@media (max-width: 768px) {
-  body {
-    padding: 1rem;
-    font-size: 16px; /* Base font size for better readability on mobile */
-  }
-
-  h1 {
-    font-size: 2rem;
-    margin-bottom: 1.5rem;
-  }
-
-  h2 {
-    font-size: 1.5rem;
-    margin: 1.25rem 0;
-  }
-
-  h3 {
-    font-size: 1.1rem;
-    margin: 0.5rem 0;
-  }
-
-  .container {
-    padding: 1rem;
-  }
-
-  /* Improved touch targets */
-  button {
-    padding: 1rem 2rem; /* Larger touch target */
-    min-height: 44px; /* Minimum touch target size */
-    width: 100%; /* Full width on mobile */
-    margin: 0.5rem 0;
-  }
-
-  /* Enhanced table responsiveness */
-  .table-container {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    margin: 0 -1rem;
-    padding: 0 1rem;
-  }
-
-  table {
-    min-width: 600px; /* Minimum width to prevent squishing */
-  }
-
-  th, td {
-    padding: 0.75rem;
-    font-size: 0.9rem;
-  }
-
-  /* Improved charts layout */
-  .charts-grid {
-    grid-template-columns: 1fr;
-    gap: 1rem;
-  }
-
-  .chart-card {
-    max-width: 100%;
-    margin: 0;
-  }
-
-  .chart {
-    height: 300px; /* Taller charts for better visibility */
-  }
-
-  /* Enhanced calendar view */
-  .calendar-container {
-    padding: 0.5rem;
-    margin: 0.5rem 0;
-  }
-
-  .calendar-grid {
-    gap: 0.25rem;
-  }
-
-  .calendar-day {
-    min-height: 50px;
-    padding: 0.15rem;
-  }
-
-  .calendar-day-number {
-    font-size: 0.7rem;
-  }
-
-  .flags-container {
-    max-height: 50px;
-  }
-
-  .flag-icon {
-    width: 18px;
-    height: 18px;
-    font-size: 0.65rem;
-  }
-
-  /* Improved current flag display */
-  .current-flag-condition {
-    font-size: 2rem;
-    padding: 1rem;
-  }
-
-  /* Better spacing for about section */
-  .about-section {
-    padding: 1rem;
-  }
-
-  .about-section ul {
-    padding-left: 1.5rem;
-  }
-
-  .about-section li {
-    margin-bottom: 0.75rem;
-  }
-
-  /* Enhanced date picker */
-  .date-picker-container input[type="date"] {
-    width: 100%;
-    padding: 1rem;
-    font-size: 1rem;
-    margin: 0.5rem 0;
-  }
-
-  /* Improved flags list */
-  .flags-list {
-    padding: 0.5rem;
-  }
-
-  .flag-entry {
-    padding: 0.75rem;
-    margin: 0.5rem 0;
-  }
-
-  /* Better pagination controls */
-  .pagination {
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    justify-content: center;
-  }
-
-  .pagination button {
-    min-width: 120px;
-  }
-
-  /* Enhanced footer */
-  footer {
-    padding: 1rem;
-    text-align: center;
-    font-size: 0.9rem;
-  }
-}
-
-/* Additional small screen optimizations */
-@media (max-width: 480px) {
-  body {
-    padding: 0.5rem;
-  }
-
-  .container {
-    padding: 0.75rem;
-  }
-
-  h1 {
-    font-size: 1.75rem;
-  }
-
-  h2 {
-    font-size: 1.25rem;
-  }
-
-  .current-flag-condition {
-    font-size: 1.75rem;
-  }
-
-  .chart {
-    height: 250px;
-  }
-
-  .calendar-day {
-    min-height: 45px;
-  }
-
-  .calendar-day-number {
-    font-size: 0.65rem;
-  }
-
-  .calendar-flag {
-    width: clamp(6px, 1.2vw, 12px);
-    height: clamp(6px, 1.2vw, 12px);
-    font-size: clamp(0.35rem, 0.7vw, 0.5rem);
-  }
-}
-
-/* =====================================
-Calendar Styles
- ===================================== */
-.calendar-container {
-  background: var(--table-bg);
-  border-radius: var(--border-radius);
-  padding: 0.75rem;
-  margin: 1rem 0;
-  box-shadow: var(--shadow-sm);
-}
-
-.calendar-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.calendar-title {
-  font-size: 1.5em;
-  font-weight: 600;
-  color: var(--text-color);
-  margin: 0;
-}
-
-.calendar-grid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 0.25rem;
-  margin-top: 0.5rem;
-  min-width: 100%;
-}
-
-.calendar-day-header {
-  text-align: center;
-  font-weight: 500;
-  padding: 0.25rem;
-  color: var(--text-color);
-  opacity: 0.8;
-  font-size: 0.8rem;
-}
-
-.calendar-day {
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: var(--border-radius);
-  padding: 0.25rem;
-  min-height: 60px;
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-  overflow: hidden;
-  position: relative;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  border: 1px solid transparent;
-}
-
-.calendar-day:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-sm);
-  border-color: rgba(255, 255, 255, 0.2);
-}
-
-.calendar-day.selected {
-  background: rgba(58, 134, 255, 0.2);
-  border: 1px solid rgba(58, 134, 255, 0.5);
-  box-shadow: 0 0 15px rgba(58, 134, 255, 0.2);
-  transform: translateY(-2px);
-}
-
-.calendar-day.selected:hover {
-  background: rgba(58, 134, 255, 0.25);
-  border-color: rgba(58, 134, 255, 0.6);
-}
-
-.calendar-day.has-flags {
-  background: rgba(58, 134, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.calendar-day.has-flags:hover {
-  background: rgba(58, 134, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.3);
-}
-
-.calendar-day.has-flags.selected {
-  background: rgba(58, 134, 255, 0.25);
-  border-color: rgba(58, 134, 255, 0.6);
-  box-shadow: 0 0 15px rgba(58, 134, 255, 0.3);
-}
-
-.calendar-day-number {
-  font-size: 0.8rem;
-  font-weight: 500;
-  color: var(--text-color);
-  opacity: 0.8;
-}
-
-.flags-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.15rem;
-  padding-right: 0.15rem;
-  justify-content: center;
-  min-height: 20px;
-}
-
-.calendar-flag {
-  width: clamp(8px, 1.5vw, 16px);
-  height: clamp(8px, 1.5vw, 16px);
-  border-radius: 50%;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: clamp(0.4rem, 0.8vw, 0.6rem);
-  font-weight: bold;
-  flex-shrink: 0;
-  position: relative;
-}
-
-.calendar-flag.yellow-flag {
-  background: var(--gradient-yellow-flag);
-  box-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
-}
-
-.calendar-flag.red-flag {
-  background: var(--gradient-red-flag);
-  box-shadow: 0 0 5px rgba(255, 0, 0, 0.5);
-}
-
-.calendar-flag.double-red-flag {
-  background: var(--gradient-double-red-flag);
-  box-shadow: 0 0 5px rgba(139, 0, 0, 0.5);
-}
-
-.calendar-flag.red-over-purple-flag {
-  background: repeating-linear-gradient(
-    45deg,
-    #ff0000,
-    #ff0000 50%,
-    #800080 50%,
-    #800080 100%
-  );
-  box-shadow: 0 0 5px rgba(128, 0, 128, 0.5);
-}
-
-.calendar-flag.purple-flag {
-  background: var(--gradient-purple-flag);
-  box-shadow: 0 0 5px rgba(153, 51, 255, 0.5);
-}
-
-.calendar-flag.green-flag {
-  background: var(--gradient-green-flag);
-  box-shadow: 0 0 5px rgba(0, 204, 0, 0.5);
-}
-
-.calendar-flag.yellow-over-purple-flag {
-  background: repeating-linear-gradient(
-    45deg,
-    #ffd700,
-    #ffd700 50%,
-    #800080 50%,
-    #800080 100%
-  );
-  box-shadow: 0 0 5px rgba(128, 0, 128, 0.5);
-}
-
-.calendar-day.empty {
-  background: var(--table-bg);
-  border: none;
-  cursor: default;
-  opacity: 0.5;
-}
-
-.calendar-day.empty:hover {
-  transform: none;
-  box-shadow: none;
-  background: var(--table-bg);
-}
-
-/* =====================================
-Current Status
- ===================================== */
-.current-status-section {
-  display: grid;
-  grid-template-columns: 1fr 2fr;
-  gap: 20px;
-  margin: 20px 0;
-}
-
-.current-flag-box {
-  background: var(--table-bg);
-  border-radius: var(--border-radius);
-  padding: 1rem;
-  margin: 1rem 0 2rem;
-  box-shadow: var(--shadow-sm);
-  text-align: center;
-}
-
-.current-flag-condition {
-  font-size: 2.5rem;
-  font-weight: bold;
-  text-align: center;
-  margin: 0;
-  padding: 1rem;
-  border-radius: var(--border-radius);
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #ffffff;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-}
-
-.flag-label {
-  color: #ffffff;
-  opacity: 0.9;
-}
-
-.flag-value {
-  color: #ffffff;
-  margin-left: 0.5rem;
-  text-transform: capitalize;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-  font-weight: 600;
-}
-
-/* =====================================
-Date Picker
- ===================================== */
-.date-picker-container {
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: var(--border-radius);
-  padding: 1.5rem;
-  box-shadow: var(--shadow-md);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  margin-top: 1.5rem;
-}
-
-.date-picker-container h2 {
-  margin-top: 0;
-  margin-bottom: 0.25rem;
-  font-size: 1.5rem;
-  color: #ffffff;
-}
-
-.date-picker-container h3 {
-  margin-top: 0;
-  margin-bottom: 1rem;
-  font-size: 0.9rem;
-  opacity: 0.8;
-  color: #ffffff;
-}
-
-.date-picker-controls {
-  display: flex;
-  gap: 0.75rem;
-  align-items: center;
-  margin-bottom: 0.75rem;
-}
-
-.date-picker-container input[type="date"] {
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: var(--border-radius);
-  padding: 0.5rem 0.75rem;
-  color: #ffffff;
-  font-size: 0.9rem;
-  flex: 1;
-  min-width: 200px;
-  max-width: 100%;
-  height: 40px;
-}
-
-.date-picker-container button {
-  background: var(--primary-color);
-  color: #ffffff;
-  border: none;
-  padding: 0.5rem 1.5rem;
-  border-radius: var(--border-radius);
-  font-size: 0.9rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  height: 40px;
-  min-width: 120px;
-}
-
-.date-picker-container button:hover {
-  background: var(--secondary-color);
-  transform: translateY(-2px);
-}
-
-.flags-by-day-container {
-  margin-top: 1.5rem;
-  padding: 1.5rem;
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: var(--border-radius);
-}
-
-/* Weather Chart Styles */
-.weather-chart-container {
-  margin-top: 1.5rem;
-  padding: 1.5rem;
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: var(--border-radius);
-}
-
-.weather-chart {
-  height: 300px;
-  margin-top: 1rem;
-  background: rgba(0, 0, 0, 0.3);
-  border-radius: var(--border-radius);
-  padding: 1rem;
-}
-
-.weather-chart-container h3 {
-  color: var(--text-color);
-  margin-bottom: 0.5rem;
-  font-size: 1.2rem;
-}
-
-@media (max-width: 768px) {
-  .current-status-section {
-    grid-template-columns: 1fr;
-  }
-
-  .current-flag-box {
-    margin: 0.5rem 0 1.5rem;
-    padding: 0.75rem;
-  }
-
-  .current-flag-condition {
-    font-size: 2rem;
-    padding: 0.75rem;
-  }
-
-  .date-picker-controls {
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-
-  .date-picker-container input[type="date"],
-  .date-picker-container button {
-    width: 100%;
-    margin: 0;
-  }
-}
-
-/* =====================================
-Flags List in Date Picker
- ===================================== */
-.flags-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  max-height: 300px;
-  overflow-y: auto;
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: var(--border-radius);
-}
-
-.flag-entry {
-  padding: 10px 15px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  transition: all 0.3s ease;
-}
-
-.flag-entry:last-child {
-  border-bottom: none;
-}
-
-.flag-entry[data-flag-type="Red Flag"] {
-  background: var(--gradient-red-flag);
-}
-
-.flag-entry[data-flag-type="Yellow Flag"] {
-  background: var(--gradient-yellow-flag);
-}
-
-.flag-entry[data-flag-type="Double Red Flag"] {
-  background: var(--gradient-double-red-flag);
-}
-
-.flag-entry[data-flag-type="Red Over Purple Flag"] {
-  background: var(--gradient-red-over-purple-flag);
-}
-
-.flag-entry[data-flag-type="Yellow Over Purple Flag"] {
-  background: var(--gradient-yellow-over-purple-flag);
-}
-
-.flag-entry:hover {
-  transform: translateX(5px);
-}
-
-.flag-entry strong {
-  color: var(--text-color);
-  font-size: 1.1em;
-}
-
-.flag-entry em {
-  color: rgba(255, 255, 255, 0.7);
-  font-style: italic;
-}
-
-.no-data {
-  padding: 20px;
-  text-align: center;
-  color: rgba(255, 255, 255, 0.7);
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: var(--border-radius);
-}
-
-/* Calendar Navigation Styles */
-.calendar-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-  padding: 0 0.5rem;
-}
-
-.calendar-nav-btn {
-  background: rgba(0, 0, 0, 0.2);
-  border: none;
-  color: var(--text-color);
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  padding: 0;
-}
-
-.calendar-nav-btn:hover {
-  background: rgba(0, 0, 0, 0.3);
-  transform: scale(1.1);
-}
-
-.calendar-nav-btn:active {
-  transform: scale(0.95);
-}
-
-.nav-icon {
-  font-size: 1.2rem;
-  line-height: 1;
-}
-
-/* Mobile Calendar Navigation Styles */
-@media (max-width: 768px) {
-  .calendar-nav-btn {
-    width: 36px;
-    height: 36px;
-  }
-
-  .nav-icon {
-    font-size: 1rem;
-  }
-}
-
-/* Update count badge position for smaller screens */
-@media (max-width: 768px) {
-  .calendar-day {
-    position: relative;
-  }
-  
-  .calendar-day .count-badge {
-    position: absolute;
-    top: 15px;
-    right: 2px;
-    font-size: 0.5em;
-  }
-}
-
-.date-picker-container input[type="date"]::-webkit-calendar-picker-indicator {
-  filter: invert(1);
-  opacity: 0.7;
-  cursor: pointer;
-}
-
-.date-picker-container input[type="date"]::-webkit-datetime-edit {
-  color: #ffffff;
-  opacity: 0.9;
-}
-
-.date-picker-container input[type="date"]::-webkit-datetime-edit-fields-wrapper {
-  padding: 0;
-}
-
-.date-picker-container input[type="date"]::-webkit-datetime-edit-text,
-.date-picker-container input[type="date"]::-webkit-datetime-edit-month-field,
-.date-picker-container input[type="date"]::-webkit-datetime-edit-day-field,
-.date-picker-container input[type="date"]::-webkit-datetime-edit-year-field {
-  color: #ffffff;
-  opacity: 0.9;
-}
-
-.calendar-description {
-  text-align: center;
-  color: #ffffff;
-  opacity: 0.9;
-  margin-bottom: 0.75rem;
-  font-size: 0.9rem;
-  line-height: 1.4;
-}
-
-.calendar-description a {
-  color: var(--primary-color);
-  text-decoration: none;
-  transition: color var(--transition);
-}
-
-.calendar-description a:hover {
-  color: var(--secondary-color);
-  text-decoration: underline;
-}
-
-/* =====================================
-   Navigation Tabs
-   ===================================== */
-.nav-tabs {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 0.5rem;
-  margin: 1.5rem 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-  padding-bottom: 1rem;
-}
-
-.tab-button {
-  padding: 0.75rem 1.25rem;
-  border-radius: 8px;
-  font-weight: 500;
-  background: rgba(0, 0, 0, 0.3);
-  border: none;
-  color: var(--text-color);
-  cursor: pointer;
-  transition: all var(--transition);
-  position: relative;
-  min-width: 120px;
-}
-
-.tab-button:hover {
-  background: rgba(0, 0, 0, 0.4);
-  transform: translateY(-2px);
-}
-
-.tab-button.active {
-  background: var(--primary-color);
-  box-shadow: var(--shadow-md);
-}
-
-.tab-button.active::after {
-  content: '';
-  position: absolute;
-  bottom: -10px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 0;
-  height: 0;
-  border-left: 8px solid transparent;
-  border-right: 8px solid transparent;
-  border-top: 8px solid var(--primary-color);
-}
-
-.tab-content-container {
-  position: relative;
-  min-height: 200px;
-}
-
-.tab-content {
-  display: none;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  animation: fadeIn 0.5s forwards;
-}
-
-.tab-content.active {
-  display: block;
-  opacity: 1;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-/* =====================================
- Media Queries for Navigation Tabs
- ===================================== */
-@media (max-width: 768px) {
-  .nav-tabs {
-    gap: 0.25rem;
-  }
-  
-  .tab-button {
-    padding: 0.6rem 1rem;
-    font-size: 0.9rem;
-    flex-basis: calc(33.333% - 0.5rem);
-    min-width: unset;
-  }
-}
-
-@media (max-width: 480px) {
-  .tab-button {
-    flex-basis: 100%;
-    margin-bottom: 0.5rem;
-  }
-  
-  .tab-button.active::after {
-    display: none;
-  }
-}
-
-/* =====================================
-   About Section
-   ===================================== */
-.about-section {
-  padding: 2rem;
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: var(--border-radius);
-  box-shadow: var(--shadow-md);
-}
-
-.about-section h2 {
-  margin-bottom: 1.5rem;
-  color: var(--text-color);
-}
-
-.about-section p {
-  margin-bottom: 1rem;
-  line-height: 1.6;
-}
-
-.about-section ul {
-  list-style-type: none;
-  padding-left: 0;
-}
-
-.about-section li {
-  margin-bottom: 1rem;
-  padding-left: 1.5rem;
-  position: relative;
-}
-
-.about-section li::before {
-  content: "•";
-  position: absolute;
-  left: 0;
-  color: var(--primary-color);
 }
 
 /* =====================================
@@ -1114,9 +427,20 @@ Flags List in Date Picker
    ===================================== */
 footer {
   text-align: center;
-  padding: 1rem 0;
-  color: var(--text-color);
+  padding: 1.25rem 0 0.75rem;
+  color: rgba(255, 255, 255, 0.6);
   background: var(--footer-bg);
+  font-size: 0.9rem;
+  letter-spacing: 0.3px;
+}
+
+footer a {
+  color: var(--primary-color);
+  transition: color var(--transition);
+}
+
+footer a:hover {
+  color: #7ec8ff;
 }
 
 a {
@@ -1228,6 +552,875 @@ a {
 
   .about-section ul {
     padding-left: 1.5rem;
+  }
+
+  .about-section li {
+    margin-bottom: 0.75rem;
+  }
+
+  .date-picker-container input[type="date"] {
+    width: 100%;
+    padding: 1rem;
+    font-size: 1rem;
+    margin: 0.5rem 0;
+  }
+
+  .flags-list {
+    padding: 0.5rem;
+  }
+
+  .flag-entry {
+    padding: 0.75rem;
+    margin: 0.5rem 0;
+  }
+
+  .pagination {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: center;
+  }
+
+  .pagination button {
+    min-width: 120px;
+  }
+
+  footer {
+    padding: 1rem;
+    text-align: center;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  body {
+    padding: 0.5rem;
+  }
+
+  .container {
+    padding: 0.75rem;
+  }
+
+  h1 {
+    font-size: 1.75rem;
+  }
+
+  h2 {
+    font-size: 1.25rem;
+  }
+
+  .current-flag-condition {
+    font-size: 1.75rem;
+  }
+
+  .chart {
+    height: 250px;
+  }
+
+  .calendar-day {
+    min-height: 45px;
+  }
+
+  .calendar-day-number {
+    font-size: 0.65rem;
+  }
+
+  .calendar-flag {
+    width: clamp(6px, 1.2vw, 12px);
+    height: clamp(6px, 1.2vw, 12px);
+    font-size: clamp(0.35rem, 0.7vw, 0.5rem);
+  }
+}
+
+/* =====================================
+   Calendar Styles
+   ===================================== */
+.calendar-container {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--border-radius);
+  padding: 0.75rem;
+  margin: 1rem 0;
+  box-shadow: var(--shadow-sm);
+}
+
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.calendar-title {
+  font-size: 1.5em;
+  font-weight: 600;
+  color: var(--text-color);
+  margin: 0;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.25rem;
+  margin-top: 0.5rem;
+  min-width: 100%;
+}
+
+.calendar-day-header {
+  text-align: center;
+  font-weight: 600;
+  padding: 0.25rem;
+  color: var(--text-color);
+  opacity: 0.6;
+  font-size: 0.75rem;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.calendar-day {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: var(--border-radius);
+  padding: 0.25rem;
+  min-height: 60px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  overflow: hidden;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+  animation: cellFadeInUp 0.35s ease both;
+}
+
+/* Stagger calendar cells */
+.calendar-day:nth-child(7n+1) { animation-delay: 0.02s; }
+.calendar-day:nth-child(7n+2) { animation-delay: 0.05s; }
+.calendar-day:nth-child(7n+3) { animation-delay: 0.08s; }
+.calendar-day:nth-child(7n+4) { animation-delay: 0.11s; }
+.calendar-day:nth-child(7n+5) { animation-delay: 0.14s; }
+.calendar-day:nth-child(7n+6) { animation-delay: 0.17s; }
+.calendar-day:nth-child(7n)   { animation-delay: 0.20s; }
+
+.calendar-day:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: var(--shadow-md), 0 0 15px rgba(58, 134, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.calendar-day.selected {
+  background: rgba(58, 134, 255, 0.2);
+  border: 1px solid rgba(58, 134, 255, 0.6);
+  box-shadow: 0 0 20px rgba(58, 134, 255, 0.3);
+  transform: translateY(-2px);
+}
+
+.calendar-day.selected:hover {
+  background: rgba(58, 134, 255, 0.25);
+  border-color: rgba(58, 134, 255, 0.7);
+}
+
+.calendar-day.has-flags {
+  background: rgba(58, 134, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.calendar-day.has-flags:hover {
+  background: rgba(58, 134, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.calendar-day.has-flags.selected {
+  background: rgba(58, 134, 255, 0.25);
+  border-color: rgba(58, 134, 255, 0.6);
+  box-shadow: 0 0 20px rgba(58, 134, 255, 0.35);
+}
+
+.calendar-day-number {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-color);
+  opacity: 0.85;
+}
+
+.flags-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.15rem;
+  padding-right: 0.15rem;
+  justify-content: center;
+  min-height: 20px;
+}
+
+.calendar-flag {
+  width: clamp(8px, 1.5vw, 16px);
+  height: clamp(8px, 1.5vw, 16px);
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(0.4rem, 0.8vw, 0.6rem);
+  font-weight: bold;
+  flex-shrink: 0;
+  position: relative;
+  transition: transform 0.2s ease;
+}
+
+.calendar-day:hover .calendar-flag {
+  animation: dotGlow 0.8s ease-in-out infinite;
+}
+
+.calendar-flag.yellow-flag {
+  background: var(--gradient-yellow-flag);
+  box-shadow: 0 0 6px rgba(255, 215, 0, 0.6);
+}
+
+.calendar-flag.red-flag {
+  background: var(--gradient-red-flag);
+  box-shadow: 0 0 6px rgba(255, 0, 0, 0.6);
+}
+
+.calendar-flag.double-red-flag {
+  background: var(--gradient-double-red-flag);
+  box-shadow: 0 0 6px rgba(139, 0, 0, 0.6);
+}
+
+.calendar-flag.red-over-purple-flag {
+  background: repeating-linear-gradient(
+    45deg,
+    #ff0000,
+    #ff0000 50%,
+    #800080 50%,
+    #800080 100%
+  );
+  box-shadow: 0 0 6px rgba(128, 0, 128, 0.6);
+}
+
+.calendar-flag.purple-flag {
+  background: var(--gradient-purple-flag);
+  box-shadow: 0 0 6px rgba(153, 51, 255, 0.6);
+}
+
+.calendar-flag.green-flag {
+  background: var(--gradient-green-flag);
+  box-shadow: 0 0 6px rgba(0, 204, 0, 0.6);
+}
+
+.calendar-flag.yellow-over-purple-flag {
+  background: repeating-linear-gradient(
+    45deg,
+    #ffd700,
+    #ffd700 50%,
+    #800080 50%,
+    #800080 100%
+  );
+  box-shadow: 0 0 6px rgba(128, 0, 128, 0.6);
+}
+
+.calendar-day.empty {
+  background: rgba(0, 0, 0, 0.1);
+  border: none;
+  cursor: default;
+  opacity: 0.3;
+  animation: none;
+}
+
+.calendar-day.empty:hover {
+  transform: none;
+  box-shadow: none;
+  background: rgba(0, 0, 0, 0.1);
+}
+
+/* =====================================
+   Current Status
+   ===================================== */
+.current-status-section {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 20px;
+  margin: 20px 0;
+}
+
+.current-flag-box {
+  margin: 1rem -2rem 2rem;
+  overflow: hidden;
+  border-radius: 0;
+}
+
+.flag-label {
+  color: #ffffff;
+  opacity: 0.9;
+}
+
+.flag-value {
+  color: #ffffff;
+  margin-left: 0.5rem;
+  text-transform: capitalize;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  font-weight: 600;
+}
+
+/* =====================================
+   Date Picker
+   ===================================== */
+.date-picker-container {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: var(--border-radius);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-md);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  margin-top: 1.5rem;
+}
+
+.date-picker-container h2 {
+  margin-top: 0;
+  margin-bottom: 0.25rem;
+  font-size: 1.5rem;
+  color: #ffffff;
+}
+
+.date-picker-container h3 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+  opacity: 0.8;
+  color: #ffffff;
+}
+
+.date-picker-controls {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.date-picker-container input[type="date"] {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--border-radius);
+  padding: 0.5rem 0.75rem;
+  color: #ffffff;
+  font-size: 0.9rem;
+  flex: 1;
+  min-width: 200px;
+  max-width: 100%;
+  height: 40px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.date-picker-container input[type="date"]:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(58, 134, 255, 0.2);
+}
+
+.date-picker-container button {
+  background: linear-gradient(135deg, var(--primary-color), #2563eb);
+  color: #ffffff;
+  border: none;
+  padding: 0.5rem 1.5rem;
+  border-radius: var(--border-radius);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  height: 40px;
+  min-width: 120px;
+}
+
+.date-picker-container button:hover {
+  background: linear-gradient(135deg, var(--secondary-color), #6d28d9);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md), var(--secondary-glow);
+}
+
+.flags-by-day-container {
+  margin-top: 1.5rem;
+  padding: 1.5rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: var(--border-radius);
+}
+
+/* Weather Chart Styles */
+.weather-chart-container {
+  margin-top: 1.5rem;
+  padding: 1.5rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: var(--border-radius);
+}
+
+.weather-chart {
+  height: 300px;
+  margin-top: 1rem;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: var(--border-radius);
+  padding: 1rem;
+}
+
+.weather-chart-container h3 {
+  color: var(--text-color);
+  margin-bottom: 0.5rem;
+  font-size: 1.2rem;
+}
+
+@media (max-width: 768px) {
+  .current-status-section {
+    grid-template-columns: 1fr;
+  }
+
+  .current-flag-box {
+    margin: 0.5rem -1rem 1.5rem;
+  }
+
+  .current-flag-condition {
+    font-size: 2rem;
+    padding: 0.75rem;
+  }
+
+  .date-picker-controls {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .date-picker-container input[type="date"],
+  .date-picker-container button {
+    width: 100%;
+    margin: 0;
+  }
+}
+
+/* =====================================
+   Flags List in Date Picker
+   ===================================== */
+.flags-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 300px;
+  overflow-y: auto;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: var(--border-radius);
+}
+
+.flag-entry {
+  padding: 10px 15px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.25s ease;
+}
+
+.flag-entry:last-child {
+  border-bottom: none;
+}
+
+.flag-entry[data-flag-type="Red Flag"] {
+  background: var(--gradient-red-flag);
+}
+
+.flag-entry[data-flag-type="Yellow Flag"] {
+  background: var(--gradient-yellow-flag);
+}
+
+.flag-entry[data-flag-type="Double Red Flag"] {
+  background: var(--gradient-double-red-flag);
+}
+
+.flag-entry[data-flag-type="Red Over Purple Flag"] {
+  background: var(--gradient-red-over-purple-flag);
+}
+
+.flag-entry[data-flag-type="Yellow Over Purple Flag"] {
+  background: var(--gradient-yellow-over-purple-flag);
+}
+
+.flag-entry:hover {
+  transform: translateX(6px);
+  filter: brightness(1.1);
+}
+
+.flag-entry strong {
+  color: var(--text-color);
+  font-size: 1.1em;
+}
+
+.flag-entry em {
+  color: rgba(255, 255, 255, 0.7);
+  font-style: italic;
+}
+
+.no-data {
+  padding: 20px;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.7);
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: var(--border-radius);
+}
+
+/* =====================================
+   Calendar Navigation Styles
+   ===================================== */
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding: 0 0.5rem;
+}
+
+.calendar-nav-btn {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: var(--text-color);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0;
+  box-shadow: none;
+}
+
+.calendar-nav-btn:hover {
+  background: rgba(58, 134, 255, 0.25);
+  border-color: rgba(58, 134, 255, 0.5);
+  transform: scale(1.1);
+  box-shadow: var(--primary-glow);
+}
+
+.calendar-nav-btn:active {
+  transform: scale(0.95);
+}
+
+.nav-icon {
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+@media (max-width: 768px) {
+  .calendar-nav-btn {
+    width: 36px;
+    height: 36px;
+  }
+
+  .nav-icon {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .calendar-day {
+    position: relative;
+  }
+
+  .calendar-day .count-badge {
+    position: absolute;
+    top: 15px;
+    right: 2px;
+    font-size: 0.5em;
+  }
+}
+
+/* Date input styling */
+.date-picker-container input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  opacity: 0.7;
+  cursor: pointer;
+}
+
+.date-picker-container input[type="date"]::-webkit-datetime-edit {
+  color: #ffffff;
+  opacity: 0.9;
+}
+
+.date-picker-container input[type="date"]::-webkit-datetime-edit-fields-wrapper {
+  padding: 0;
+}
+
+.date-picker-container input[type="date"]::-webkit-datetime-edit-text,
+.date-picker-container input[type="date"]::-webkit-datetime-edit-month-field,
+.date-picker-container input[type="date"]::-webkit-datetime-edit-day-field,
+.date-picker-container input[type="date"]::-webkit-datetime-edit-year-field {
+  color: #ffffff;
+  opacity: 0.9;
+}
+
+.calendar-description {
+  text-align: center;
+  color: #ffffff;
+  opacity: 0.8;
+  margin-bottom: 0.75rem;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.calendar-description a {
+  color: var(--primary-color);
+  text-decoration: none;
+  transition: color var(--transition);
+}
+
+.calendar-description a:hover {
+  color: #7ec8ff;
+  text-decoration: underline;
+}
+
+/* =====================================
+   Navigation Tabs
+   ===================================== */
+.nav-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+  margin: 1.5rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  padding-bottom: 1rem;
+}
+
+.tab-button {
+  padding: 0.75rem 1.5rem;
+  border-radius: 50px;
+  font-weight: 500;
+  background: rgba(255, 255, 255, 0.07);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.8);
+  cursor: pointer;
+  transition: all var(--transition);
+  position: relative;
+  min-width: 120px;
+  letter-spacing: 0.2px;
+  box-shadow: none;
+}
+
+.tab-button:hover {
+  background: rgba(255, 255, 255, 0.13);
+  border-color: rgba(255, 255, 255, 0.28);
+  color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+
+.tab-button.active {
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  border: none;
+  color: #ffffff;
+  box-shadow: var(--shadow-md), var(--primary-glow);
+}
+
+.tab-button.active::after {
+  display: none;
+}
+
+.tab-content-container {
+  position: relative;
+  min-height: 200px;
+}
+
+.tab-content {
+  display: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  animation: fadeIn 0.4s forwards;
+}
+
+.tab-content.active {
+  display: block;
+  opacity: 1;
+}
+
+/* =====================================
+   Media Queries for Navigation Tabs
+   ===================================== */
+@media (max-width: 768px) {
+  .nav-tabs {
+    gap: 0.25rem;
+  }
+
+  .tab-button {
+    padding: 0.6rem 1rem;
+    font-size: 0.9rem;
+    flex-basis: calc(33.333% - 0.5rem);
+    min-width: unset;
+    border-radius: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .tab-button {
+    flex-basis: 100%;
+    margin-bottom: 0.5rem;
+  }
+
+  .tab-button.active::after {
+    display: none;
+  }
+}
+
+/* =====================================
+   About Section
+   ===================================== */
+.about-section {
+  padding: 2rem;
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-md);
+}
+
+.about-section h2 {
+  margin-bottom: 1.5rem;
+  color: var(--text-color);
+}
+
+.about-section p {
+  margin-bottom: 1rem;
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.about-section ul {
+  list-style-type: none;
+  padding-left: 0;
+}
+
+.about-section li {
+  margin-bottom: 1rem;
+  padding: 0.75rem 0.75rem 0.75rem 2rem;
+  position: relative;
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+  border-left: 3px solid var(--primary-color);
+  transition: background var(--transition), transform var(--transition);
+}
+
+.about-section li:hover {
+  background: rgba(58, 134, 255, 0.1);
+  transform: translateX(4px);
+}
+
+.about-section li::before {
+  content: "🚩";
+  position: absolute;
+  left: 0.5rem;
+  font-size: 0.85rem;
+}
+
+/* =====================================
+   Responsive Design (duplicate block cleanup)
+   ===================================== */
+@media (max-width: 768px) {
+  body {
+    padding: 1rem;
+    font-size: 16px;
+  }
+
+  h1 {
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+    margin: 1.25rem 0;
+  }
+
+  h3 {
+    font-size: 1.1rem;
+    margin: 0.5rem 0;
+  }
+
+  .container {
+    padding: 1rem;
+  }
+
+  button {
+    padding: 1rem 2rem;
+    min-height: 44px;
+    width: 100%;
+    margin: 0.5rem 0;
+  }
+
+  .table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 0 -1rem;
+    padding: 0 1rem;
+  }
+
+  table {
+    min-width: 600px;
+  }
+
+  th, td {
+    padding: 0.75rem;
+    font-size: 0.9rem;
+  }
+
+  .charts-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .chart-card {
+    max-width: 100%;
+    margin: 0;
+  }
+
+  .chart {
+    height: 300px;
+  }
+
+  .calendar-container {
+    padding: 0.5rem;
+    margin: 0.5rem 0;
+  }
+
+  .calendar-grid {
+    gap: 0.25rem;
+  }
+
+  .calendar-day {
+    min-height: 50px;
+    padding: 0.15rem;
+  }
+
+  .calendar-day-number {
+    font-size: 0.7rem;
+  }
+
+  .flags-container {
+    max-height: 50px;
+  }
+
+  .flag-icon {
+    width: 18px;
+    height: 18px;
+    font-size: 0.65rem;
+  }
+
+  .current-flag-condition {
+    font-size: 2rem;
+    padding: 1rem;
+  }
+
+  .about-section {
+    padding: 1rem;
+  }
+
+  .about-section ul {
+    padding-left: 0;
   }
 
   .about-section li {

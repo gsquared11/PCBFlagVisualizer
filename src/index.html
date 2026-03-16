@@ -9,13 +9,16 @@
   <title>PCB Flag Data Visualizer</title>
   <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/119/119596.png" type="image/x-icon" />
   <link rel="stylesheet" href="./styles.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
 
 <body>
   <!-- Main Container -->
   <div class="container">
-    <h1 style="text-align: center;">PCB Flag Data Visualizer</h1>
+    <div class="site-header">
+      <h1>🌊 PCB Flag Data Visualizer</h1>
+      <p class="site-subtitle">Panama City Beach · Real-Time Water Conditions</p>
+    </div>
 
     <!-- Current Flag Display -->
     <div class="current-flag-box">
@@ -156,6 +159,16 @@
 
     <!-- Error Message Container -->
     <div id="errorContainer" class="error hidden" role="alert"></div>
+
+    <!-- Decorative Wave -->
+    <div class="wave-decoration" aria-hidden="true">
+      <svg class="wave1" viewBox="0 0 1440 60" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M0,30 C240,60 480,0 720,30 C960,60 1200,0 1440,30 L1440,60 L0,60 Z" fill="rgba(58,134,255,0.5)"/>
+      </svg>
+      <svg class="wave2" viewBox="0 0 1440 60" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M0,20 C360,55 720,5 1080,35 C1260,50 1380,20 1440,25 L1440,60 L0,60 Z" fill="rgba(131,56,236,0.4)"/>
+      </svg>
+    </div>
   </div>
 
   <!-- Raw Data Table -->
@@ -180,9 +193,8 @@
 
   <!-- Footer -->
   <footer>
-    &copy; 2026
-    <a href="https://github.com/gsquared11" target="_blank" rel="noopener noreferrer"
-      style="color: inherit;">gsquared11</a>
+    &copy; 2026 &mdash;
+    <a href="https://github.com/gsquared11" target="_blank" rel="noopener noreferrer">gsquared11</a>
   </footer>
 
   <!-- Scripts -->
