@@ -40,11 +40,13 @@ const chart1Container = document.getElementById("chart1");
 const chart2Container = document.getElementById("chart2");
 const chart3Container = document.getElementById("chart3");
 const flagColorMapping = {
-  "yellow flag": "yellow",
-  "red flag": "red",
-  "double red flag": "#800000",
-  "red over purple flag": "#9b525a",
-  "yellow over purple flag": "#9da04b"
+  "green flag": "#36a06b",
+  "yellow flag": "#d6a32b",
+  "red flag": "#d6504e",
+  "double red flag": "#a8322f",
+  "purple flag": "#8d6fd1",
+  "red over purple flag": "#b15f8f",
+  "yellow over purple flag": "#b1897e"
 };
 const flagGradientMapping = {
   "yellow flag": "linear-gradient(45deg, #ffd700,rgb(202, 202, 23))",
