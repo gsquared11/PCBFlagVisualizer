@@ -6,8 +6,9 @@ See the website here: https://pcbflags.gsquared.dev
 
 Data from https://github.com/gsquared11/PCBFlagScraper
 
-![image](https://github.com/user-attachments/assets/56490105-6e2d-4363-ab95-b0d2c1baa6fb)
-![image](https://github.com/user-attachments/assets/cb6f0c33-1f7f-44ff-ae60-6e0ad4af6a6c)
+<img width="2142" height="1612" alt="image" src="https://github.com/user-attachments/assets/3f7bd28d-0751-43cd-91ce-d5112d8da81f" />
+<img width="2098" height="1614" alt="image" src="https://github.com/user-attachments/assets/91a34f12-7fe3-47e4-be86-1fc4990afedb" />
+
 
 ## Features
 - **Current Flag Status**: Real-time display of the most recent beach flag condition.
