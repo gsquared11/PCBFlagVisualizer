@@ -18,6 +18,9 @@ app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
 connection_string = os.environ.get('SQL_CONNECTION_STRING')
 CENTRAL_TZ = pytz.timezone('America/Chicago')
 UTC_TZ = pytz.UTC
+DATA_START_CENTRAL = CENTRAL_TZ.localize(datetime(2025, 2, 28))
+DATA_START_UTC = DATA_START_CENTRAL.astimezone(UTC_TZ)
+DATA_START_UTC_NAIVE = DATA_START_UTC.replace(tzinfo=None)
 
 def get_db_connection():
     return pyodbc.connect(connection_string)
@@ -123,7 +126,7 @@ def get_flag_distribution(req: func.HttpRequest) -> func.HttpResponse:
              COUNT(CASE WHEN date_time >= ? AND date_time <= ? THEN 1 END) +
              COUNT(CASE WHEN date_time >= ? AND date_time <= ? THEN 1 END)) DESC
         """
-        min_date = month3_start
+        min_date = max(month3_start, DATA_START_UTC_NAIVE)
         cursor.execute(query, (
             month1_start, month1_end,
             month2_start, month2_end,
@@ -161,8 +164,14 @@ def get_all_time_flag_distribution(req: func.HttpRequest) -> func.HttpResponse:
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        query = "SELECT flag_type, COUNT(*) AS count FROM flag_data GROUP BY flag_type ORDER BY count DESC"
-        cursor.execute(query)
+        query = """
+            SELECT flag_type, COUNT(*) AS count
+            FROM flag_data
+            WHERE date_time >= ?
+            GROUP BY flag_type
+            ORDER BY count DESC
+        """
+        cursor.execute(query, (DATA_START_UTC_NAIVE,))
         rows = cursor.fetchall()
         result = [{"flag_type": row[0], "count": row[1]} for row in rows]
         cursor.close()
@@ -225,9 +234,10 @@ def get_current_month_flags(req: func.HttpRequest) -> func.HttpResponse:
             date_time,
             flag_type
         FROM flag_data
+        WHERE date_time >= ?
         ORDER BY date_time ASC
         """
-        cursor.execute(query)
+        cursor.execute(query, (DATA_START_UTC_NAIVE,))
         rows = cursor.fetchall()
         result = []
         for row in rows:

@@ -4,6 +4,7 @@
   const { DateTime } = luxon;
 
   const BEACH_TIME_ZONE = "America/Chicago";
+  const DATA_START_DATE = "2025-02-28";
   const API = {
     tableData: "/api/table-data",
     flagDistribution: "/api/flag-distribution",
@@ -911,7 +912,7 @@
     return history
       .map((entry) => {
         const date = parseHistoryDateTime(entry);
-        if (!date.isValid) return null;
+        if (!isOnOrAfterDataStart(date)) return null;
         return {
           date,
           flag: getFlagMeta(entry.flag_type),
@@ -926,6 +927,10 @@
     if (entry.date && entry.time) return DateTime.fromISO(`${entry.date}T${entry.time}:00`, { zone: BEACH_TIME_ZONE });
     if (entry.date) return DateTime.fromISO(entry.date, { zone: BEACH_TIME_ZONE });
     return DateTime.invalid("Missing flag date");
+  }
+
+  function isOnOrAfterDataStart(date) {
+    return date.isValid && date >= DateTime.fromISO(DATA_START_DATE, { zone: BEACH_TIME_ZONE }).startOf("day");
   }
 
   function renderMonthlyTrendChart(payload) {
@@ -1045,7 +1050,7 @@
       summaryCard("Latest month", latestMostCommon?.label || "No data", latest ? latest.name : "No month returned"),
       summaryCard("Hazard share", total ? `${Math.round((hazardCount / total) * 100)}%` : "N/A", "red, double red, or red over purple"),
       summaryCard("Peak window", peakWindow ? `${peakWindow.weekdayLabel}, ${peakWindow.bucketLabel}` : "N/A", peakWindow ? `${formatNumber(peakWindow.averageSeverity, 1)} average hazard` : "not enough readings"),
-      summaryCard("Total readings", formatInteger(total), "all recorded flag entries")
+      summaryCard("Total readings", formatInteger(total), `flag entries since ${formatDate(DATA_START_DATE)}`)
     );
   }
 

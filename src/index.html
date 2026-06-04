@@ -15,8 +15,29 @@
   <!-- Main Container -->
   <div class="container">
     <div class="site-header">
-      <h1>PCB Flag Data Visualizer</h1>
-      <p class="site-subtitle">Panama City Beach · Real-Time Water Conditions</p>
+      <div class="brand-lockup">
+        <svg class="brand-mark" viewBox="0 0 72 72" role="img" aria-labelledby="brandMarkTitle brandMarkDesc">
+          <title id="brandMarkTitle">PCB flag logo</title>
+          <desc id="brandMarkDesc">A beach flag above stylized waves.</desc>
+          <defs>
+            <linearGradient id="brandMarkBg" x1="10" y1="8" x2="62" y2="66" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#1f405b" />
+              <stop offset="1" stop-color="#10283c" />
+            </linearGradient>
+          </defs>
+          <rect class="brand-mark-bg" x="4" y="4" width="64" height="64" rx="16" />
+          <path class="brand-wave wave-back" d="M12 48c8-7 16-7 24 0s16 7 24 0" />
+          <path class="brand-wave wave-front" d="M12 56c8-7 16-7 24 0s16 7 24 0" />
+          <path class="brand-pole" d="M25 18v34" />
+          <path class="brand-flag flag-yellow" d="M26 18h22l-5 8 5 8H26z" />
+          <path class="brand-flag flag-red" d="M26 34h18l-4 7 4 7H26z" />
+        </svg>
+        <div class="brand-copy">
+          <p class="brand-kicker">Panama City Beach</p>
+          <h1><span>PCB Flag</span> Data Visualizer</h1>
+          <p class="site-subtitle">Real-time water conditions and historical beach flag patterns</p>
+        </div>
+      </div>
     </div>
 
     <!-- Current Flag Display -->
@@ -115,9 +136,9 @@
 
         <div class="chart-panel">
           <div class="chart-panel-header">
-            <h3>All-Time Flag Distribution</h3>
+            <h3>Flag Distribution Since Feb 28, 2025</h3>
           </div>
-          <div id="allTimeBarChart" class="chart chart-wide" role="img" aria-label="All-time flag distribution"></div>
+          <div id="allTimeBarChart" class="chart chart-wide" role="img" aria-label="Flag distribution since February 28, 2025"></div>
         </div>
       </div>
 
