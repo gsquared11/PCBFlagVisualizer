@@ -38,15 +38,16 @@
           <p class="site-subtitle">Real-time water conditions and historical beach flag patterns</p>
         </div>
       </div>
-      <nav class="site-menu" aria-label="Primary sections" role="tablist">
-        <button id="calendarTabBtn" class="site-menu-button active" role="tab" aria-selected="true" data-tab="calendar"
-          aria-controls="calendarSection">Calendar</button>
-        <button id="chartsTabBtn" class="site-menu-button" role="tab" aria-selected="false" data-tab="charts"
-          aria-controls="chartsSection">Charts</button>
-        <button id="aboutTabBtn" class="site-menu-button" role="tab" aria-selected="false" data-tab="about"
-          aria-controls="aboutSection">About</button>
-      </nav>
     </div>
+
+    <nav class="site-menu" aria-label="Primary sections" role="tablist">
+      <button id="calendarTabBtn" class="site-menu-button active" role="tab" aria-selected="true" data-tab="calendar"
+        aria-controls="calendarSection">Calendar</button>
+      <button id="chartsTabBtn" class="site-menu-button" role="tab" aria-selected="false" data-tab="charts"
+        aria-controls="chartsSection">Charts</button>
+      <button id="aboutTabBtn" class="site-menu-button" role="tab" aria-selected="false" data-tab="about"
+        aria-controls="aboutSection">About</button>
+    </nav>
 
     <!-- Current Flag Display -->
     <div class="current-flag-box">
@@ -238,7 +239,7 @@
   <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/luxon@3/build/global/luxon.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
-  <script src="./app.js" defer></script>
+  <script type="module" src="./app.js"></script>
 </body>
 
 </html>

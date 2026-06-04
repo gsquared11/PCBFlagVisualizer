@@ -112,7 +112,7 @@ h3 {
   justify-content: space-between;
   gap: 1.25rem;
   text-align: left;
-  margin-bottom: 1.5rem;
+  margin-bottom: 0.9rem;
   padding-top: 1.5rem;
 }
 
@@ -393,22 +393,42 @@ h1 span {
 }
 
 .site-menu {
+  position: sticky;
+  top: 0.6rem;
+  z-index: 40;
   display: flex;
   flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 0.35rem;
-  flex: 0 0 auto;
-  padding: 0.25rem;
+  justify-content: center;
+  gap: 0.2rem;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 0 1rem auto;
+  padding: 0.18rem;
   background: rgba(10, 28, 43, 0.45);
   border: 1px solid rgba(72, 183, 207, 0.14);
-  border-radius: 8px;
+  border-radius: 999px;
+  box-shadow: none;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition:
+    background-color 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease,
+    transform 0.22s ease;
+}
+
+.site-menu.is-stuck {
+  background: rgba(8, 22, 34, 0.86);
+  border-color: rgba(72, 183, 207, 0.32);
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.28), 0 0 0 1px rgba(255, 255, 255, 0.03);
+  animation: stickyMenuSettle 0.28s ease both;
 }
 
 .site-menu-button {
-  padding: 0.42rem 0.78rem;
-  border-radius: 6px;
+  padding: 0.32rem 0.7rem;
+  border-radius: 999px;
   font: inherit;
-  font-size: 0.82rem;
+  font-size: 0.74rem;
   font-weight: 700;
   background: transparent;
   border: 1px solid transparent;
@@ -419,6 +439,8 @@ h1 span {
   box-shadow: none;
   letter-spacing: 0.01em;
   white-space: nowrap;
+  min-height: 34px;
+  min-width: 86px;
 }
 
 .site-menu-button:hover {
@@ -443,6 +465,15 @@ h1 span {
 .tab-content.active { display: block; animation: fadeIn 0.25s ease both; }
 
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+@keyframes stickyMenuSettle {
+  0% {
+    transform: translateY(-0.4rem) scale(0.98);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+  }
+}
 
 /* ============================================================
    Buttons — flat teal
@@ -672,6 +703,7 @@ button:disabled {
   padding: 1.5rem;
   box-shadow: none;
   margin-top: 1rem;
+  scroll-margin-top: 5rem;
 }
 
 .date-picker-container h2 {
@@ -1195,8 +1227,14 @@ body > footer {
   }
   .flag-value { font-size: 1.6rem; }
 
-  .site-menu { width: 100%; justify-content: stretch; }
-  .site-menu-button { flex: 1 1 0; text-align: center; }
+  .site-menu {
+    top: 0.45rem;
+    width: 100%;
+    justify-content: stretch;
+    margin-right: 0;
+    margin-left: 0;
+  }
+  .site-menu-button { flex: 1 1 0; min-width: 0; text-align: center; }
 
   button { min-height: 44px; }
   .table-container { overflow-x: auto; -webkit-overflow-scrolling: touch; }
@@ -1220,8 +1258,8 @@ body > footer {
   body::before { margin: 0 -0.75rem; }
   .container { padding: 0; }
   .flag-value { font-size: 1.4rem; }
-  .site-menu { flex-direction: column; }
-  .site-menu-button { width: 100%; }
+  .site-menu { gap: 0.16rem; padding: 0.16rem; }
+  .site-menu-button { width: auto; padding-inline: 0.45rem; }
   .calendar-grid { gap: 4px; }
 }
 
