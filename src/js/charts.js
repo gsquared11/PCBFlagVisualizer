@@ -6,7 +6,7 @@ export function applyChartDefaults() {
   const Chart = window.Chart;
   Chart.defaults.color = "#9fb2c6";
   Chart.defaults.borderColor = "rgba(255, 255, 255, 0.08)";
-  Chart.defaults.font.family = "'Manrope', system-ui, -apple-system, sans-serif";
+  Chart.defaults.font.family = "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
   Chart.defaults.plugins.tooltip.backgroundColor = "#07151f";
   Chart.defaults.plugins.tooltip.borderColor = "rgba(255, 255, 255, 0.14)";
   Chart.defaults.plugins.tooltip.borderWidth = 1;
