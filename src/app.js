@@ -139,6 +139,7 @@ function handleRawDataToggle() {
 function setDefaultDate() {
   const today = DateTime.now().setZone(BEACH_TIME_ZONE).toISODate();
   els.flagDate.max = today;
+  if (!els.flagDate.value) els.flagDate.value = today;
 }
 
 function measureStickyNav() {
