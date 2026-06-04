@@ -65,18 +65,20 @@
       <div id="calendarSection" class="tab-content active" data-tab-panel="calendar">
         <!-- Monthly Calendar -->
         <div class="calendar-container">
-          <div class="calendar-header">
-            <button id="prevMonthBtn" class="calendar-nav-btn" aria-label="Previous month">
-              <span class="nav-icon">←</span>
-            </button>
-            <h3 class="calendar-title">Current Month's Flags</h3>
-            <button id="nextMonthBtn" class="calendar-nav-btn" aria-label="Next month">
-              <span class="nav-icon">→</span>
-            </button>
-          </div>
-          <p class="calendar-description">Click a date to view recorded flags, weather, wind, and surf context. Flag entries are inconsistent before 2/28/2025.</p>
-          <div class="calendar-grid" id="calendar-grid" role="grid" aria-label="Monthly flag calendar">
-            <!-- Calendar will be populated by JavaScript -->
+          <div class="calendar-inner">
+            <div class="calendar-header">
+              <button id="prevMonthBtn" class="calendar-nav-btn" aria-label="Previous month">
+                <span class="nav-icon">←</span>
+              </button>
+              <h3 class="calendar-title">Current Month's Flags</h3>
+              <button id="nextMonthBtn" class="calendar-nav-btn" aria-label="Next month">
+                <span class="nav-icon">→</span>
+              </button>
+            </div>
+            <p class="calendar-description">Click a date to view recorded flags, weather, wind, and surf context. Flag entries are inconsistent before 2/28/2025.</p>
+            <div class="calendar-grid" id="calendar-grid" role="grid" aria-label="Monthly flag calendar">
+              <!-- Calendar will be populated by JavaScript -->
+            </div>
           </div>
         </div>
 

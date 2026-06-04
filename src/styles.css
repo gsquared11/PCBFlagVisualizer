@@ -528,21 +528,28 @@ button:disabled {
   -webkit-backdrop-filter: none;
 }
 
+.calendar-inner {
+  width: min(100%, 980px);
+  margin: 0 auto;
+}
+
 .calendar-header {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 36px 1fr 36px;
+  column-gap: 0.75rem;
   align-items: center;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.65rem;
   padding: 0;
 }
 
 .calendar-title {
-  font-size: 0.95rem;
+  font-size: 1rem;
   font-weight: 600;
   margin: 0;
   letter-spacing: 0;
   color: var(--ink);
   white-space: nowrap;
+  text-align: center;
 }
 
 .calendar-nav-btn {
@@ -576,7 +583,7 @@ button:disabled {
   text-align: left;
   color: var(--ink-3);
   opacity: 1;
-  margin: 0.25rem 0 0.5rem;
+  margin: 0 0 0.85rem;
   font-size: 0.82rem;
   line-height: 1.4;
   font-weight: 400;
@@ -587,11 +594,9 @@ button:disabled {
 .calendar-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 5px;
-  margin-top: 0.75rem;
-  width: min(100%, 980px);
-  margin-left: auto;
-  margin-right: auto;
+  gap: 6px;
+  width: 100%;
+  margin: 0;
 }
 
 .calendar-day-header {
@@ -611,7 +616,7 @@ button:disabled {
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 7px;
   padding: 0.45rem;
-  min-height: 56px;
+  min-height: 72px;
   aspect-ratio: 1.35 / 1;
   display: flex;
   flex-direction: column;
@@ -1270,6 +1275,13 @@ body > footer {
     margin-top: 0.65rem;
   }
 
+  .calendar-container { padding: 0.9rem; }
+  .calendar-inner { width: 100%; }
+  .calendar-header {
+    grid-template-columns: 34px 1fr 34px;
+    column-gap: 0.5rem;
+  }
+  .calendar-description { font-size: 0.78rem; }
   .calendar-day { min-height: 40px; padding: 0.28rem; aspect-ratio: 1 / 1; }
   .calendar-day-number { font-size: 0.68rem; }
   .calendar-day-meta { font-size: 0.54rem; }
@@ -1291,6 +1303,8 @@ body > footer {
   .weather-chart-container { padding: 0.75rem; }
   .weather-chart { height: 380px; padding: 0.35rem; }
   .calendar-grid { gap: 4px; }
+  .calendar-container { padding: 0.75rem; }
+  .calendar-title { font-size: 0.9rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {
