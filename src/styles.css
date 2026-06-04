@@ -1241,8 +1241,34 @@ body > footer {
   table { min-width: 560px; }
 
   .chart-panel-header { flex-direction: column; align-items: flex-start; gap: 0.35rem; }
+  .chart-panel {
+    padding: 0.9rem;
+  }
+
   .chart-wide,
-  .weather-chart { height: 320px; }
+  .weather-chart { height: 360px; }
+
+  .chart-wide {
+    padding: 0.45rem;
+  }
+
+  .weather-chart-container {
+    padding: 0.9rem;
+  }
+
+  .weather-chart-container .summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .chart-instructions {
+    font-size: 0.78rem;
+    line-height: 1.45;
+  }
+
+  .weather-chart {
+    padding: 0.45rem;
+    margin-top: 0.65rem;
+  }
 
   .calendar-day { min-height: 40px; padding: 0.28rem; aspect-ratio: 1 / 1; }
   .calendar-day-number { font-size: 0.68rem; }
@@ -1260,6 +1286,10 @@ body > footer {
   .flag-value { font-size: 1.4rem; }
   .site-menu { gap: 0.16rem; padding: 0.16rem; }
   .site-menu-button { width: auto; padding-inline: 0.45rem; }
+  .chart-panel { padding: 0.75rem; }
+  .chart-wide { height: 380px; padding: 0.35rem; }
+  .weather-chart-container { padding: 0.75rem; }
+  .weather-chart { height: 380px; padding: 0.35rem; }
   .calendar-grid { gap: 4px; }
 }
 

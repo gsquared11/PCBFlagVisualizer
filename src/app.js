@@ -483,6 +483,7 @@ function weatherSummaryCards(summary = {}, hourly = [], marine = []) {
 }
 
 function renderWeatherChart(hourly, marine, flags) {
+  const isCompact = window.matchMedia("(max-width: 640px)").matches;
   const labels = hourly.map((row) => formatHourLabel(row.time));
   const marineByHour = new Map(marine.map((row) => [formatHourKey(row.time), row]));
   const flagByHour = new Map(flags.map((row) => [formatHourKey(row.date_time || row.time), getFlagMeta(row.flag_type).severity]));
@@ -554,7 +555,7 @@ function renderWeatherChart(hourly, marine, flags) {
           data: flagSeverity.map((severity, index) => (severity == null ? null : { x: labels[index], y: severity })),
           borderColor: "#e7eef6",
           backgroundColor: "#e7eef6",
-          pointRadius: 5,
+          pointRadius: isCompact ? 4 : 5,
           yAxisID: "flag",
         },
       ],
@@ -565,19 +566,37 @@ function renderWeatherChart(hourly, marine, flags) {
       scales: {
         x: {
           grid: { display: false },
-          ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 8 },
+          ticks: {
+            maxRotation: 0,
+            autoSkip: !isCompact,
+            maxTicksLimit: isCompact ? 4 : 8,
+            autoSkipPadding: isCompact ? 20 : 8,
+            font: { size: isCompact ? 10 : 12 },
+            callback: function tickLabel(value, index) {
+              const label = this.getLabelForValue(value);
+              return !isCompact || index % 6 === 0 ? label : "";
+            },
+          },
         },
         wind: {
           position: "left",
           beginAtZero: true,
-          title: { display: true, text: "Wind" },
-          ticks: { callback: (value) => `${value} mph` },
+          title: { display: !isCompact, text: "Wind" },
+          ticks: {
+            callback: (value) => (isCompact ? value : `${value} mph`),
+            font: { size: isCompact ? 10 : 12 },
+            maxTicksLimit: isCompact ? 6 : 8,
+          },
         },
         surf: {
           position: "right",
           beginAtZero: true,
-          title: { display: true, text: "Surf" },
-          ticks: { callback: (value) => `${value}` },
+          title: { display: !isCompact, text: "Surf" },
+          ticks: {
+            callback: (value) => `${value}`,
+            font: { size: isCompact ? 10 : 12 },
+            maxTicksLimit: isCompact ? 6 : 8,
+          },
           grid: { drawOnChartArea: false },
         },
         rain: {
@@ -594,7 +613,15 @@ function renderWeatherChart(hourly, marine, flags) {
         },
       },
       plugins: {
-        legend: { position: "bottom", labels: { usePointStyle: true, boxWidth: 8 } },
+        legend: {
+          position: "bottom",
+          labels: {
+            usePointStyle: true,
+            boxWidth: isCompact ? 7 : 8,
+            padding: isCompact ? 8 : 10,
+            font: { size: isCompact ? 11 : 12 },
+          },
+        },
         tooltip: {
           callbacks: {
             label: weatherTooltipLabel,
@@ -626,6 +653,7 @@ async function refreshCharts() {
 }
 
 function renderHazardTrendChart(history) {
+  const isCompact = window.matchMedia("(max-width: 640px)").matches;
   const months = monthlyHazardBuckets(history);
 
   if (!months.length) {
@@ -644,7 +672,7 @@ function renderHazardTrendChart(history) {
           data: months.map((month) => month.averageSeverity),
           borderColor: "#48b7cf",
           backgroundColor: "rgba(72, 183, 207, 0.16)",
-          pointRadius: 3,
+          pointRadius: isCompact ? 2 : 3,
           tension: 0.25,
           yAxisID: "severity",
         },
@@ -653,7 +681,7 @@ function renderHazardTrendChart(history) {
           data: months.map((month) => month.highHazardShare),
           borderColor: "#d6504e",
           backgroundColor: "rgba(214, 80, 78, 0.12)",
-          pointRadius: 3,
+          pointRadius: isCompact ? 2 : 3,
           tension: 0.25,
           yAxisID: "share",
         },
@@ -665,25 +693,50 @@ function renderHazardTrendChart(history) {
       scales: {
         x: {
           grid: { display: false },
-          ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 8 },
+          ticks: {
+            maxRotation: 0,
+            autoSkip: !isCompact,
+            maxTicksLimit: isCompact ? 4 : 8,
+            font: { size: isCompact ? 10 : 12 },
+            callback: function tickLabel(value, index) {
+              const label = this.getLabelForValue(value);
+              return !isCompact || index % 3 === 0 ? label.replace(" ", "\n") : "";
+            },
+          },
         },
         severity: {
           position: "left",
           min: 0,
           max: 7,
-          title: { display: true, text: "Hazard index" },
+          title: { display: !isCompact, text: "Hazard index" },
+          ticks: {
+            font: { size: isCompact ? 10 : 12 },
+            maxTicksLimit: isCompact ? 5 : 8,
+          },
         },
         share: {
           position: "right",
           min: 0,
           max: 100,
-          title: { display: true, text: "High hazard" },
-          ticks: { callback: (value) => `${value}%` },
+          title: { display: !isCompact, text: "High hazard" },
+          ticks: {
+            callback: (value) => `${value}%`,
+            font: { size: isCompact ? 10 : 12 },
+            maxTicksLimit: isCompact ? 5 : 8,
+          },
           grid: { drawOnChartArea: false },
         },
       },
       plugins: {
-        legend: { position: "bottom", labels: { usePointStyle: true, boxWidth: 8 } },
+        legend: {
+          position: "bottom",
+          labels: {
+            usePointStyle: true,
+            boxWidth: isCompact ? 7 : 8,
+            padding: isCompact ? 8 : 10,
+            font: { size: isCompact ? 11 : 12 },
+          },
+        },
         tooltip: {
           callbacks: {
             label: (context) => {
