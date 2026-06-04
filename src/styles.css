@@ -232,6 +232,52 @@ h1 {
 }
 
 /* ============================================================
+   Summary metrics
+   ============================================================ */
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+
+.summary-grid:empty { display: none; }
+
+.summary-card {
+  background: var(--surface-2);
+  border: 1px solid var(--line-2);
+  border-radius: 8px;
+  padding: 0.85rem 0.95rem;
+  min-height: 92px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 0.35rem;
+}
+
+.summary-k {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.summary-v {
+  display: block;
+  color: var(--ink);
+  font-size: 1.15rem;
+  line-height: 1.2;
+  font-weight: 600;
+}
+
+.summary-d {
+  color: var(--ink-3);
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
+/* ============================================================
    Navigation Tabs — flat pills
    ============================================================ */
 .nav-tabs {
@@ -445,6 +491,12 @@ button:disabled {
   overflow: hidden;
   transition: outline-color var(--transition), filter var(--transition);
   animation: none;
+  color: var(--ink);
+  width: 100%;
+  min-width: 0;
+  align-items: stretch;
+  text-align: left;
+  white-space: normal;
 }
 
 .calendar-day-number {
@@ -453,28 +505,35 @@ button:disabled {
   color: var(--ink-3);
 }
 
-/* Direction C: full-cell heatmap. Hide the individual dots; the cell
-   itself is filled with the day's most-severe flag via :has().
-   Ordered least → most severe so the most severe wins the cascade. */
-.flags-container { display: none; }
-
 .calendar-day.has-flags { border-color: rgba(0, 0, 0, 0.22); }
 .calendar-day.has-flags .calendar-day-number {
   color: rgba(255, 255, 255, 0.95);
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
 }
 
-.calendar-day:has(.calendar-flag.green-flag)  { background: var(--f-green); }
-.calendar-day:has(.calendar-flag.yellow-flag) { background: var(--f-yellow); }
-.calendar-day:has(.calendar-flag.purple-flag) { background: var(--f-purple); }
-.calendar-day:has(.calendar-flag.red-flag)    { background: var(--f-red); }
-.calendar-day:has(.calendar-flag.red-over-purple-flag) {
+.calendar-day.green-flag  { background: var(--f-green); }
+.calendar-day.yellow-flag { background: var(--f-yellow); }
+.calendar-day.purple-flag { background: var(--f-purple); }
+.calendar-day.red-flag    { background: var(--f-red); }
+.calendar-day.red-over-purple-flag {
   background: linear-gradient(135deg, var(--f-red) 0 50%, var(--f-purple) 50%);
 }
-.calendar-day:has(.calendar-flag.yellow-over-purple-flag) {
+.calendar-day.yellow-over-purple-flag {
   background: linear-gradient(135deg, var(--f-yellow) 0 50%, var(--f-purple) 50%);
 }
-.calendar-day:has(.calendar-flag.double-red-flag) { background: var(--f-double-red); }
+.calendar-day.double-red-flag { background: var(--f-double-red); }
+
+.calendar-day-meta {
+  margin-top: auto;
+  display: block;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.62rem;
+  line-height: 1.2;
+  font-weight: 600;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
 .calendar-day:hover { filter: brightness(1.08); }
 
@@ -644,7 +703,7 @@ button:disabled {
 .weather-chart-container h3 { margin: 0 0 0.5rem; font-size: 1rem; color: var(--ink); }
 .chart-instructions { font-size: 0.8rem; color: var(--ink-3); margin: 0 0 0.5rem; }
 .weather-chart {
-  height: 300px;
+  height: 380px;
   margin-top: 0.75rem;
   background: var(--surface-2);
   border: 1px solid var(--line-2);
@@ -655,37 +714,57 @@ button:disabled {
 /* ============================================================
    Distribution charts
    ============================================================ */
-.charts-container { margin: 1.25rem 0; }
-.charts-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1rem;
-  margin-top: 1rem;
-}
-.chart-card {
+.chart-panel {
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  padding: 1rem;
+  padding: 1.1rem;
+  margin: 1rem 0;
   box-shadow: none;
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
   transition: border-color var(--transition);
 }
-.chart-card:hover {
+.chart-panel:hover {
   transform: none;
   box-shadow: none;
   border-color: rgba(255, 255, 255, 0.16);
 }
-.chart-card h3 { font-size: 0.85rem; font-weight: 500; color: var(--ink-2); margin: 0 0 0.5rem; }
-.chart { height: 250px; position: relative; }
 
-#allTimeBarChart {
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
+.chart-panel-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: baseline;
+  margin-bottom: 0.75rem;
+}
+
+.chart-panel-header h3 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0;
+}
+
+.chart-panel-header p {
+  font-size: 0.78rem;
+  color: var(--ink-3);
+  margin: 0;
+  max-width: 34ch;
+  line-height: 1.4;
+}
+
+.chart {
+  height: 260px;
+  position: relative;
+}
+
+.chart-wide {
+  height: 360px;
+  background: var(--surface-2);
+  border: 1px solid var(--line-2);
+  border-radius: 8px;
   padding: 1rem;
-  margin-top: 1rem;
 }
 
 /* ============================================================
@@ -850,7 +929,9 @@ footer a:hover { color: #6fc0d8; }
   .table-container { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   table { min-width: 560px; }
 
-  .charts-grid { grid-template-columns: 1fr; }
+  .chart-panel-header { flex-direction: column; align-items: flex-start; gap: 0.35rem; }
+  .chart-wide,
+  .weather-chart { height: 320px; }
 
   .calendar-day { min-height: 46px; padding: 0.3rem; }
   .calendar-day-number { font-size: 0.7rem; }

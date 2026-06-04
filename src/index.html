@@ -25,16 +25,18 @@
       <div id="currentFlagCondition" class="current-flag-condition" role="status" aria-live="polite">
         <span class="flag-label">Current Flag: </span>
         <span class="flag-value">Loading...</span>
+        <span class="flag-desc"></span>
+        <span class="flag-stats"></span>
       </div>
     </div>
 
     <!-- Navigation Tabs -->
     <div class="nav-tabs" role="tablist">
-      <button id="calendarTabBtn" class="tab-button active" role="tab" aria-selected="true"
+      <button id="calendarTabBtn" class="tab-button active" role="tab" aria-selected="true" data-tab="calendar"
         aria-controls="calendarSection">Calendar</button>
-      <button id="chartsTabBtn" class="tab-button" role="tab" aria-selected="false"
+      <button id="chartsTabBtn" class="tab-button" role="tab" aria-selected="false" data-tab="charts"
         aria-controls="chartsSection">Charts</button>
-      <button id="aboutTabBtn" class="tab-button" role="tab" aria-selected="false" aria-controls="aboutSection">About
+      <button id="aboutTabBtn" class="tab-button" role="tab" aria-selected="false" data-tab="about" aria-controls="aboutSection">About
         App</button>
     </div>
 
@@ -46,7 +48,7 @@
     <!-- Content Sections -->
     <div class="tab-content-container">
       <!-- Calendar Section -->
-      <div id="calendarSection" class="tab-content active">
+      <div id="calendarSection" class="tab-content active" data-tab-panel="calendar">
         <!-- Monthly Calendar -->
         <div class="calendar-container">
           <div class="calendar-header">
@@ -58,8 +60,7 @@
               <span class="nav-icon">→</span>
             </button>
           </div>
-          <p class="calendar-description">Click a date to view the flags and weather conditions for that day.</p>
-          <h3 class="calendar-description">Note: Flag entries are inconsistent before 2/28/2025.</h3>
+          <p class="calendar-description">Click a date to view recorded flags, weather, wind, and surf context. Flag entries are inconsistent before 2/28/2025.</p>
           <div class="calendar-grid" id="calendar-grid" role="grid" aria-label="Monthly flag calendar">
             <!-- Calendar will be populated by JavaScript -->
           </div>
@@ -68,7 +69,7 @@
         <!-- Date Picker Calendar -->
         <div class="calendar-container date-picker-container">
           <h2>View Flags and Weather Conditions on a Specific Date</h2>
-          <h3>Note: Flag entries are inconsistent before 2/28/2025.</h3>
+          <h3>Flag entries are inconsistent before 2/28/2025.</h3>
           <div class="date-picker-controls">
             <input type="date" id="flagDate" placeholder="mm/dd/yyyy" aria-label="Select date to view flags" />
             <button id="loadFlagsByDayBtn" aria-label="Show flags for selected date">Show Data</button>
@@ -77,46 +78,44 @@
             data provided by <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Open-Meteo</a>.
           </p>
           <div id="datepickerError" class="error hidden" role="alert"></div>
+          <div id="daySummaryContainer" class="summary-grid" aria-live="polite"></div>
           <div id="flagsByDayContainer" class="flags-by-day-container" role="region"
             aria-label="Flags for selected date"></div>
 
           <!-- Weather Chart Container -->
           <div id="weatherChartContainer" class="weather-chart-container hidden">
-            <h3>Weather Conditions</h3>
-            <p class="chart-instructions">Tip: Click on the legend items to hide/show different weather metrics.</p>
+            <h3>Weather and Surf Context</h3>
+            <div id="weatherSummary" class="summary-grid"></div>
+            <p class="chart-instructions">Open-Meteo weather and marine model data. Marine values are model estimates and should not be used for navigation.</p>
             <div id="weatherChart" class="weather-chart" role="img" aria-label="Weather conditions chart"></div>
           </div>
         </div>
       </div>
 
       <!-- Charts Section -->
-      <div id="chartsSection" class="tab-content">
-        <!-- Flag Distribution Charts -->
-        <h2>Flag Distribution - Last 3 Months</h2>
-        <div id="chartsContainer" class="charts-container">
-          <div class="charts-grid">
-            <div id="chart1Container" class="chart-card">
-              <h3 id="chart1Title">Loading...</h3>
-              <div id="chart1" class="chart" role="img"></div>
-            </div>
-            <div id="chart2Container" class="chart-card">
-              <h3 id="chart2Title">Loading...</h3>
-              <div id="chart2" class="chart" role="img"></div>
-            </div>
-            <div id="chart3Container" class="chart-card">
-              <h3 id="chart3Title">Loading...</h3>
-              <div id="chart3" class="chart" role="img"></div>
-            </div>
+      <div id="chartsSection" class="tab-content" data-tab-panel="charts">
+        <h2>Flag Trends</h2>
+        <div id="chartInsightGrid" class="summary-grid"></div>
+
+        <div class="chart-panel">
+          <div class="chart-panel-header">
+            <h3>Last 3 Months by Flag Type</h3>
+            <p>Stacked bars make month-to-month changes easier to compare than separate pies.</p>
           </div>
+          <div id="monthlyTrendChart" class="chart chart-wide" role="img" aria-label="Stacked monthly flag comparison"></div>
         </div>
 
-        <!-- All-Time Bar Chart Container -->
-        <h2>All-Time Flag Distribution</h2>
-        <div id="allTimeBarChart" role="img"></div>
+        <div class="chart-panel">
+          <div class="chart-panel-header">
+            <h3>All-Time Flag Distribution</h3>
+            <p>Sorted by hazard level so the distribution reads like a safety profile.</p>
+          </div>
+          <div id="allTimeBarChart" class="chart chart-wide" role="img" aria-label="All-time flag distribution"></div>
+        </div>
       </div>
 
       <!-- About Section -->
-      <div id="aboutSection" class="tab-content">
+      <div id="aboutSection" class="tab-content" data-tab-panel="about">
         <h2>About PCB Beach Flags</h2>
         <p>
           The Panama City Beach, FL (PCB) Flag System is used to inform the public
@@ -200,7 +199,6 @@
   <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/luxon@3/build/global/luxon.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
-  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
   <script src="./app.js" defer></script>
 </body>
 

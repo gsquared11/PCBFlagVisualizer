@@ -8,7 +8,6 @@ from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 from dotenv import load_dotenv
 import requests
-import openmeteo_requests
 import pandas as pd
 from retry_requests import retry
 
@@ -239,7 +238,6 @@ def get_current_month_flags(req: func.HttpRequest) -> func.HttpResponse:
         return make_json_response({"error": str(e)}, 500)
 
 retry_session = retry(requests.Session(), retries=5, backoff_factor=0.2)
-openmeteo = openmeteo_requests.Client(session=retry_session)
 
 @app.route(route="weather-data", methods=["GET"])
 def get_weather_data(req: func.HttpRequest) -> func.HttpResponse:
@@ -252,66 +250,176 @@ def get_weather_data(req: func.HttpRequest) -> func.HttpResponse:
         current_date = datetime.now()
         date_diff = (current_date - requested_date).days
 
-        if date_diff > 2:
-            url = "https://archive-api.open-meteo.com/v1/archive"
+        if date_diff > 5:
+            weather_url = "https://archive-api.open-meteo.com/v1/archive"
+            data_source = "historical_weather"
         else:
-            url = "https://api.open-meteo.com/v1/forecast"
-            
-        start_date = requested_date
-        end_date = requested_date + timedelta(days=1)  
-        
-        params = {
+            weather_url = "https://api.open-meteo.com/v1/forecast"
+            data_source = "forecast"
+
+        weather_params = {
             "latitude": 30.1766,
             "longitude": -85.8055,
-            "start_date": start_date.strftime('%Y-%m-%d'),
-            "end_date": end_date.strftime('%Y-%m-%d'),
-            "hourly": ["temperature_2m", "surface_pressure", "precipitation", "wind_speed_10m"],
-            "timezone": "UTC",
-            "wind_speed_unit": "mph",
+            "start_date": date_str,
+            "end_date": date_str,
+            "timezone": "America/Chicago",
             "temperature_unit": "fahrenheit",
-            "precipitation_unit": "inch"
+            "wind_speed_unit": "mph",
+            "precipitation_unit": "inch",
+            "hourly": [
+                "temperature_2m",
+                "apparent_temperature",
+                "relative_humidity_2m",
+                "precipitation",
+                "surface_pressure",
+                "wind_speed_10m",
+                "wind_gusts_10m",
+                "wind_direction_10m",
+                "weather_code"
+            ],
+            "daily": [
+                "weather_code",
+                "temperature_2m_max",
+                "temperature_2m_min",
+                "apparent_temperature_max",
+                "apparent_temperature_min",
+                "precipitation_sum",
+                "wind_speed_10m_max",
+                "wind_gusts_10m_max",
+                "wind_direction_10m_dominant"
+            ]
         }
-        
-        responses = openmeteo.weather_api(url, params=params)
-        response = responses[0]
-        
-        hourly = response.Hourly()
-        hourly_temperature_2m = hourly.Variables(0).ValuesAsNumpy()
-        hourly_surface_pressure = hourly.Variables(1).ValuesAsNumpy()
-        hourly_precipitation = hourly.Variables(2).ValuesAsNumpy()
-        hourly_wind_speed_10m = hourly.Variables(3).ValuesAsNumpy()
-        
-        hourly_data = {"date": pd.date_range(
-            start=pd.to_datetime(hourly.Time(), unit="s"),
-            end=pd.to_datetime(hourly.TimeEnd(), unit="s"),
-            freq=pd.Timedelta(seconds=hourly.Interval()),
-            inclusive="left"
-        )}
-        hourly_data["temperature_2m"] = hourly_temperature_2m.tolist()
-        hourly_data["surface_pressure"] = hourly_surface_pressure.tolist()
-        hourly_data["precipitation"] = hourly_precipitation.tolist()
-        hourly_data["wind_speed_10m"] = hourly_wind_speed_10m.tolist()
-        
-        df = pd.DataFrame(data=hourly_data)
-        df['date'] = df['date'].dt.tz_localize('UTC').dt.tz_convert('America/Chicago')
-        
-        start_time = pd.Timestamp(date_str + ' 00:00:00').tz_localize('America/Chicago')
-        end_time = pd.Timestamp(date_str + ' 23:59:59').tz_localize('America/Chicago')
-        df = df[(df['date'] >= start_time) & (df['date'] <= end_time)]
-        
-        result = []
-        for _, row in df.iterrows():
-            result.append({
-                "time": row["date"].isoformat(),
-                "temperature": row["temperature_2m"],
-                "pressure": row["surface_pressure"],
-                "precipitation": row["precipitation"],
-                "wind_speed": row["wind_speed_10m"]
-            })
-            
+
+        weather_payload = openmeteo_json(weather_url, weather_params)
+        marine_payload = get_marine_payload(date_str)
+
         return make_json_response({
             'date': date_str,
-            'hourly_data': result
+            'source': data_source,
+            'summary': build_daily_summary(weather_payload),
+            'hourly_data': build_hourly_weather(weather_payload),
+            'marine_data': build_hourly_marine(marine_payload)
         })
     except Exception as e:
         return make_json_response({"error": str(e)}, 500)
+
+def openmeteo_json(url, params):
+    response = retry_session.get(url, params=params, timeout=15)
+    response.raise_for_status()
+    payload = response.json()
+    if "error" in payload:
+        raise ValueError(payload.get("reason", "Open-Meteo returned an error"))
+    return payload
+
+def get_marine_payload(date_str):
+    try:
+        return openmeteo_json(
+            "https://marine-api.open-meteo.com/v1/marine",
+            {
+                "latitude": 30.1766,
+                "longitude": -85.8055,
+                "start_date": date_str,
+                "end_date": date_str,
+                "timezone": "America/Chicago",
+                "hourly": [
+                    "wave_height",
+                    "wave_period",
+                    "wave_direction",
+                    "ocean_current_velocity",
+                    "ocean_current_direction",
+                    "sea_surface_temperature"
+                ],
+                "current_velocity_unit": "mph"
+            }
+        )
+    except Exception:
+        return {}
+
+def build_daily_summary(payload):
+    daily = payload.get("daily", {})
+    return {
+        "weather_code": first_value(daily.get("weather_code")),
+        "temp_max": first_value(daily.get("temperature_2m_max")),
+        "temp_min": first_value(daily.get("temperature_2m_min")),
+        "apparent_temp_max": first_value(daily.get("apparent_temperature_max")),
+        "apparent_temp_min": first_value(daily.get("apparent_temperature_min")),
+        "precipitation_sum": first_value(daily.get("precipitation_sum")),
+        "wind_max": first_value(daily.get("wind_speed_10m_max")),
+        "wind_gust_max": first_value(daily.get("wind_gusts_10m_max")),
+        "wind_direction": first_value(daily.get("wind_direction_10m_dominant"))
+    }
+
+def build_hourly_weather(payload):
+    hourly = payload.get("hourly", {})
+    times = hourly.get("time", [])
+    result = []
+
+    for index, time_value in enumerate(times):
+        result.append({
+            "time": local_openmeteo_time(time_value),
+            "temperature": list_value(hourly, "temperature_2m", index),
+            "apparent_temperature": list_value(hourly, "apparent_temperature", index),
+            "humidity": list_value(hourly, "relative_humidity_2m", index),
+            "precipitation": list_value(hourly, "precipitation", index),
+            "pressure": list_value(hourly, "surface_pressure", index),
+            "wind_speed": list_value(hourly, "wind_speed_10m", index),
+            "wind_gust": list_value(hourly, "wind_gusts_10m", index),
+            "wind_direction": list_value(hourly, "wind_direction_10m", index),
+            "weather_code": list_value(hourly, "weather_code", index)
+        })
+
+    return result
+
+def build_hourly_marine(payload):
+    hourly = payload.get("hourly", {})
+    units = payload.get("hourly_units", {})
+    times = hourly.get("time", [])
+    result = []
+
+    for index, time_value in enumerate(times):
+        wave_height_m = list_value(hourly, "wave_height", index)
+        current_velocity = list_value(hourly, "ocean_current_velocity", index)
+        result.append({
+            "time": local_openmeteo_time(time_value),
+            "wave_height_ft": meters_to_feet(wave_height_m),
+            "wave_period": list_value(hourly, "wave_period", index),
+            "wave_direction": list_value(hourly, "wave_direction", index),
+            "ocean_current_mph": current_to_mph(current_velocity, units.get("ocean_current_velocity")),
+            "ocean_current_direction": list_value(hourly, "ocean_current_direction", index),
+            "sea_surface_temperature_c": list_value(hourly, "sea_surface_temperature", index)
+        })
+
+    return result
+
+def list_value(values, key, index):
+    items = values.get(key, [])
+    if index >= len(items):
+        return None
+    value = items[index]
+    return None if pd.isna(value) else value
+
+def first_value(values):
+    if not values:
+        return None
+    value = values[0]
+    return None if pd.isna(value) else value
+
+def local_openmeteo_time(value):
+    central = pytz.timezone('America/Chicago')
+    return central.localize(datetime.fromisoformat(value)).isoformat()
+
+def meters_to_feet(value):
+    return None if value is None else value * 3.28084
+
+def current_to_mph(value, unit):
+    if value is None:
+        return None
+    if unit in ("mph", "mp/h"):
+        return value
+    if unit == "km/h":
+        return value * 0.621371
+    if unit == "m/s":
+        return value * 2.23694
+    if unit == "kn":
+        return value * 1.15078
+    return value

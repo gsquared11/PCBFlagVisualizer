@@ -4,6 +4,5 @@ python-dateutil
 pytz
 python-dotenv
 requests
-openmeteo_requests
 pandas
 retry_requests

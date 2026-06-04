@@ -1,1198 +1,1037 @@
-// Global Variables and DOM Elements
-let currentPage = 1;      // Current page number for pagination
-let limit = 25;           // Number of rows per page
-let offset = 0;           // Offset for pagination
-let chartInstances = [];  // Store chart instances for cleanup
-let currentCalendarMonth = new Date().getMonth();
-let currentCalendarYear = new Date().getFullYear();
-let allFlagData = []; // Store all flag data
-let currentTab = 'calendar'; // Track current active tab
+(() => {
+  "use strict";
 
-// Get refs to DOM elements
-const refreshBtn = document.getElementById("refreshBtn");
-const errorContainer = document.getElementById("errorContainer");
-const loadingContainer = document.getElementById("loadingContainer");
-const tableContainer = document.getElementById("tableContainer");
-const tableHeaders = document.getElementById("tableHeaders");
-const tableBody = document.getElementById("tableBody");
-const flagDate = document.getElementById("flagDate");
-const loadFlagsByDayBtn = document.getElementById("loadFlagsByDayBtn");
-const flagsByDayContainer = document.getElementById("flagsByDayContainer");
-const DateTime = luxon.DateTime;
-const columnNameMap = {
-  date_time: "Time and Date (recorded every 4 hours)",
-  flag_type: "Flag Type",
-};
+  const { DateTime } = luxon;
 
-// Refs to tab elements
-const calendarTabBtn = document.getElementById("calendarTabBtn");
-const chartsTabBtn = document.getElementById("chartsTabBtn");
-const aboutTabBtn = document.getElementById("aboutTabBtn");
-const calendarSection = document.getElementById("calendarSection");
-const chartsSection = document.getElementById("chartsSection");
-const aboutSection = document.getElementById("aboutSection");
+  const BEACH_TIME_ZONE = "America/Chicago";
+  const API = {
+    tableData: "/api/table-data",
+    flagDistribution: "/api/flag-distribution",
+    allTimeFlagDistribution: "/api/all-time-flag-distribution",
+    flagsByDay: "/api/flags-by-day",
+    currentMonthFlags: "/api/current-month-flags",
+    weatherData: "/api/weather-data",
+  };
 
-// Refs to chart elements
-const chart1Title = document.getElementById("chart1Title");
-const chart2Title = document.getElementById("chart2Title");
-const chart3Title = document.getElementById("chart3Title");
-const chart1Container = document.getElementById("chart1");
-const chart2Container = document.getElementById("chart2");
-const chart3Container = document.getElementById("chart3");
-const flagColorMapping = {
-  "green flag": "#36a06b",
-  "yellow flag": "#d6a32b",
-  "red flag": "#d6504e",
-  "double red flag": "#a8322f",
-  "purple flag": "#8d6fd1",
-  "red over purple flag": "#b15f8f",
-  "yellow over purple flag": "#b1897e"
-};
-const flagGradientMapping = {
-  "yellow flag": "linear-gradient(45deg, #ffd700,rgb(202, 202, 23))",
-  "red flag": "linear-gradient(45deg, #ff0000, #ff6666)",
-  "double red flag": "linear-gradient(45deg, #8B0000, #4B0000)",
-  "red over purple flag": "linear-gradient(45deg, #ff0000, #800080)",
-  "yellow over purple flag": "linear-gradient(45deg, #ffd700, #800080)"
-};
+  const FLAGS = {
+    "green flag": {
+      label: "Green Flag",
+      className: "green-flag",
+      color: "#36a06b",
+      severity: 1,
+      description: "Low surf hazard. Conditions are generally calmer, but normal beach caution still applies.",
+    },
+    "yellow flag": {
+      label: "Yellow Flag",
+      className: "yellow-flag",
+      color: "#d6a32b",
+      severity: 2,
+      description: "Medium surf hazard. Moderate surf or currents are possible, so use extra caution.",
+    },
+    "purple flag": {
+      label: "Purple Flag",
+      className: "purple-flag",
+      color: "#8d6fd1",
+      severity: 3,
+      description: "Dangerous marine life may be present. Swim with caution and watch posted guidance.",
+    },
+    "yellow over purple flag": {
+      label: "Yellow Over Purple Flag",
+      className: "yellow-over-purple-flag",
+      color: "#b1897e",
+      severity: 4,
+      description: "Medium surf hazard plus dangerous marine life. Use caution for both water movement and wildlife.",
+    },
+    "red flag": {
+      label: "Red Flag",
+      className: "red-flag",
+      color: "#d6504e",
+      severity: 5,
+      description: "High surf hazard. Strong currents or rough surf make swimming dangerous.",
+    },
+    "red over purple flag": {
+      label: "Red Over Purple Flag",
+      className: "red-over-purple-flag",
+      color: "#b15f8f",
+      severity: 6,
+      description: "High surf hazard plus dangerous marine life. Conditions are hazardous in multiple ways.",
+    },
+    "double red flag": {
+      label: "Double Red Flag",
+      className: "double-red-flag",
+      color: "#a8322f",
+      severity: 7,
+      description: "Water is closed to public use because conditions are extremely hazardous.",
+    },
+  };
 
-// Pagination controls
-const prevPageBtn = document.getElementById("prevPageBtn");
-const nextPageBtn = document.getElementById("nextPageBtn");
-const currentPageDisplay = document.getElementById("currentPage");
+  const UNKNOWN_FLAG = {
+    label: "Unknown",
+    className: "unknown-flag",
+    color: "#6f879e",
+    severity: 0,
+    description: "No recognized flag value was returned for this entry.",
+  };
 
-// Event listeners (user interactions)
-document.addEventListener("DOMContentLoaded", initialize);
+  const state = {
+    table: {
+      limit: 25,
+      offset: 0,
+      page: 1,
+    },
+    calendar: {
+      month: new Date().getMonth(),
+      year: new Date().getFullYear(),
+      selectedDate: null,
+      allFlags: [],
+      refreshTimer: null,
+    },
+    tab: "calendar",
+  };
 
-// Tab navigation event listeners
-calendarTabBtn.addEventListener("click", () => switchTab('calendar'));
-chartsTabBtn.addEventListener("click", () => switchTab('charts'));
-aboutTabBtn.addEventListener("click", () => switchTab('about'));
+  const els = {};
+  const charts = new Map();
 
-// Function to switch between tabs
-function switchTab(tabName) {
-  // Update currentTab
-  currentTab = tabName;
-  
-  // Remove active class from all tabs and content
-  calendarTabBtn.classList.remove('active');
-  chartsTabBtn.classList.remove('active');
-  aboutTabBtn.classList.remove('active');
-  calendarTabBtn.setAttribute('aria-selected', 'false');
-  chartsTabBtn.setAttribute('aria-selected', 'false');
-  aboutTabBtn.setAttribute('aria-selected', 'false');
-  
-  calendarSection.classList.remove('active');
-  chartsSection.classList.remove('active');
-  aboutSection.classList.remove('active');
-  
-  // Add active class to selected tab and content
-  if (tabName === 'calendar') {
-    calendarTabBtn.classList.add('active');
-    calendarTabBtn.setAttribute('aria-selected', 'true');
-    calendarSection.classList.add('active');
-    // Refresh calendar view
-    if (chart1Container) createCalendar();
-    if (allFlagData.length > 0) loadCurrentMonthFlags();
-  } else if (tabName === 'charts') {
-    chartsTabBtn.classList.add('active');
-    chartsTabBtn.setAttribute('aria-selected', 'true');
-    chartsSection.classList.add('active');
-    // Refresh charts if needed
-    if (chartInstances.length === 0) {
-      loadFlagDistribution();
-      loadAllTimeFlagDistribution();
+  document.addEventListener("DOMContentLoaded", init);
+
+  async function init() {
+    cacheElements();
+    wireEvents();
+    applyChartDefaults();
+    setDefaultDate();
+
+    try {
+      await Promise.allSettled([
+        refreshCurrentFlag(),
+        refreshTable(),
+        refreshCalendarData(),
+      ]);
+      renderCalendar();
+      switchTab("calendar");
+      state.calendar.refreshTimer = window.setInterval(refreshCalendarData, 60 * 60 * 1000);
+    } catch (error) {
+      showError(`Failed to initialize app: ${error.message}`);
     }
-  }  else if (tabName === 'about') {
-    aboutTabBtn.classList.add('active');
-    aboutTabBtn.setAttribute('aria-selected', 'true');
-    aboutSection.classList.add('active');
   }
-}
 
-// Trigger data load when the table is changed or refresh button is clicked
-refreshBtn.addEventListener("click", () => {
-  // Always refresh table data and current flag
-  loadTableData();
-  updateCurrentFlag();
-  
-  // Refresh data based on current tab
-  if (currentTab === 'calendar') {
-    createCalendar();
-    loadCurrentMonthFlags();
-  } else if (currentTab === 'charts') {
-    loadFlagDistribution();
-    loadAllTimeFlagDistribution();
+  function cacheElements() {
+    Object.assign(els, {
+      refreshBtn: document.getElementById("refreshBtn"),
+      errorContainer: document.getElementById("errorContainer"),
+      loadingContainer: document.getElementById("loadingContainer"),
+      tableContainer: document.getElementById("tableContainer"),
+      tableHeaders: document.getElementById("tableHeaders"),
+      tableBody: document.getElementById("tableBody"),
+      prevPageBtn: document.getElementById("prevPageBtn"),
+      nextPageBtn: document.getElementById("nextPageBtn"),
+      currentPage: document.getElementById("currentPage"),
+      calendarGrid: document.getElementById("calendar-grid"),
+      calendarTitle: document.querySelector(".calendar-title"),
+      prevMonthBtn: document.getElementById("prevMonthBtn"),
+      nextMonthBtn: document.getElementById("nextMonthBtn"),
+      flagDate: document.getElementById("flagDate"),
+      loadFlagsByDayBtn: document.getElementById("loadFlagsByDayBtn"),
+      datepickerError: document.getElementById("datepickerError"),
+      daySummaryContainer: document.getElementById("daySummaryContainer"),
+      flagsByDayContainer: document.getElementById("flagsByDayContainer"),
+      weatherChartContainer: document.getElementById("weatherChartContainer"),
+      weatherSummary: document.getElementById("weatherSummary"),
+      weatherChart: document.getElementById("weatherChart"),
+      currentFlagCondition: document.getElementById("currentFlagCondition"),
+      currentFlagValue: document.querySelector("#currentFlagCondition .flag-value"),
+      currentFlagDesc: document.querySelector("#currentFlagCondition .flag-desc"),
+      currentFlagStats: document.querySelector("#currentFlagCondition .flag-stats"),
+      monthlyTrendChart: document.getElementById("monthlyTrendChart"),
+      allTimeBarChart: document.getElementById("allTimeBarChart"),
+      chartInsightGrid: document.getElementById("chartInsightGrid"),
+      tabs: Array.from(document.querySelectorAll("[role='tab']")),
+      tabPanels: Array.from(document.querySelectorAll(".tab-content")),
+    });
   }
-});
 
-// Pagination buttons
-prevPageBtn.addEventListener("click", (e) => {
-  e.preventDefault();
-  if (offset > 0) {
-    offset -= limit;
-    currentPage--;
-    loadTableData();
+  function wireEvents() {
+    els.refreshBtn.addEventListener("click", refreshVisibleData);
+    els.prevPageBtn.addEventListener("click", () => changePage(-1));
+    els.nextPageBtn.addEventListener("click", () => changePage(1));
+    els.prevMonthBtn.addEventListener("click", () => moveCalendarMonth(-1));
+    els.nextMonthBtn.addEventListener("click", () => moveCalendarMonth(1));
+    els.loadFlagsByDayBtn.addEventListener("click", () => loadSelectedDate());
+    els.flagDate.addEventListener("input", () => {
+      if (!els.flagDate.value) clearSelectedDatePanels();
+    });
+
+    els.tabs.forEach((tab) => {
+      tab.addEventListener("click", () => switchTab(tab.dataset.tab));
+    });
   }
-});
-nextPageBtn.addEventListener("click", (e) => {
-  e.preventDefault();
-  offset += limit;
-  currentPage++;
-  loadTableData();
-});
 
-// Listen for a click on "Show Flags"
-loadFlagsByDayBtn.addEventListener("click", () => {
-  const selectedDate = flagDate.value; 
-  const datepickerError = document.getElementById("datepickerError");
-  
-  if (!selectedDate) {
-    datepickerError.textContent = "Please select a date.";
-    datepickerError.classList.remove("hidden");
-    return;
+  function applyChartDefaults() {
+    Chart.defaults.color = "#9fb2c6";
+    Chart.defaults.borderColor = "rgba(255, 255, 255, 0.08)";
+    Chart.defaults.font.family = "'IBM Plex Sans', system-ui, -apple-system, sans-serif";
+    Chart.defaults.plugins.tooltip.backgroundColor = "#07151f";
+    Chart.defaults.plugins.tooltip.borderColor = "rgba(255, 255, 255, 0.14)";
+    Chart.defaults.plugins.tooltip.borderWidth = 1;
+    Chart.defaults.plugins.tooltip.padding = 10;
   }
-  
-  datepickerError.classList.add("hidden");
-  loadFlagsByDay(selectedDate);
-});
 
-// Add these event listeners after other event listeners
-document.getElementById('prevMonthBtn').addEventListener('click', () => {
-    if (currentCalendarMonth === 0) {
-        currentCalendarMonth = 11;
-        currentCalendarYear--;
-    } else {
-        currentCalendarMonth--;
-    }
-    createCalendar();
-    loadCurrentMonthFlags();
-});
-
-document.getElementById('nextMonthBtn').addEventListener('click', () => {
-    if (currentCalendarMonth === 11) {
-        currentCalendarMonth = 0;
-        currentCalendarYear++;
-    } else {
-        currentCalendarMonth++;
-    }
-    createCalendar();
-    loadCurrentMonthFlags();
-});
-
-// Initialize the application
-async function initialize() {
-  try {
-    // Load all flag data first
-    const response = await fetch('/api/current-month-flags');
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
-    }
-    allFlagData = await response.json();
-    
-    // Then load everything else
-    await Promise.all([
-      loadTableData(),
-      loadFlagDistribution(),
-      loadAllTimeFlagDistribution(),
-      updateCurrentFlag(),
-      createCalendar(),
-      loadCurrentMonthFlags()
-    ]);
-
-    // Initialize the tabs - make sure calendar tab is active by default
-    switchTab('calendar');
-  } catch (error) {
-    showError("Failed to initialize: " + error.message);
+  function setDefaultDate() {
+    const today = DateTime.now().setZone(BEACH_TIME_ZONE).toISODate();
+    els.flagDate.max = today;
   }
-}
 
-// Displays the most recent flag (id entry) at the top of the website
-async function updateCurrentFlag() {
-  try {
-    // Request only the most recent record.
-    const response = await fetch('/api/table-data?limit=1&offset=0');
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
-    }
-    const json = await response.json();
-    if (json.data && json.data.length > 0) {
-      const latestFlagRaw = json.data[0].flag_type || "unknown";
-      const latestFlag = latestFlagRaw.trim().toLowerCase();
-
-      // Update the flag display element
-      const currentFlagConditionElement = document.getElementById("currentFlagCondition");
-      if (currentFlagConditionElement) {
-        // Update only the flag value portion
-        currentFlagConditionElement.querySelector(".flag-value").textContent = latestFlagRaw;
-
-        // Remove any existing flag type classes
-        currentFlagConditionElement.classList.remove(
-          'yellow-flag',
-          'red-flag',
-          'double-red-flag',
-          'purple-flag',
-          'green-flag',
-          'red-over-purple-flag',
-          'yellow-over-purple-flag'
-        );
-
-        // Add the appropriate flag type class
-        const flagClass = latestFlag.replace(/\s+/g, '-');
-        currentFlagConditionElement.classList.add(flagClass);
+  async function apiGet(url, params = {}) {
+    const endpoint = new URL(url, window.location.origin);
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== "") {
+        endpoint.searchParams.set(key, value);
       }
-    }
-  } catch (error) {
-    // Remove console.error
-  }
-}
+    });
 
-/************
- * FEATURES RELATING TO FLAG DISTRIBUTION DATA FROM THE LAST 3 MONTHS (3 pie charts)
- ************/
+    const response = await fetch(endpoint.pathname + endpoint.search);
+    const payload = await response.json().catch(() => ({}));
 
-// Load flag distribution data from the last 3 months and create 3 pie charts
-async function loadFlagDistribution() {
-  try {
-    // Fetch flag distribution data
-    const response = await fetch("/api/flag-distribution");
     if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
+      throw new Error(payload.error || `HTTP ${response.status}`);
     }
 
-    const data = await response.json();
-
-    // Clear existing chart instances
-    destroyChartInstances();
-
-    // Create pie charts for each month
-    createPieChart(
-      "chart1",
-      chart1Container,
-      data.month1.name,
-      data.month1.data
-    );
-    createPieChart(
-      "chart2",
-      chart2Container,
-      data.month2.name,
-      data.month2.data
-    );
-    createPieChart(
-      "chart3",
-      chart3Container,
-      data.month3.name,
-      data.month3.data
-    );
-
-    // Update chart titles
-    chart1Title.textContent = data.month1.name;
-    chart2Title.textContent = data.month2.name;
-    chart3Title.textContent = data.month3.name;
-  } catch (error) {
-    showError("Failed to load flag distribution: " + error.message);
-  }
-}
-
-// Generate a singular instance of a pie chart using chart.js
-function createPieChart(id, container, monthName, data) {
-  // If no data, show message
-  if (!data || data.length === 0) {
-    container.innerHTML = '<div class="no-data">No data available</div>';
-    return;
+    return payload;
   }
 
-  // Prepare data for Chart.js
-  const labels = data.map((item) => item.flag_type);
-  const values = data.map((item) => item.count);
+  async function refreshVisibleData() {
+    hideError();
+    await Promise.allSettled([refreshCurrentFlag(), refreshTable()]);
 
-  // Directly assign colors based on the flag type mapping
-  const colors = labels.map(
-    (flag) => flagColorMapping[flag.trim().toLowerCase()] || "gray"
-  );
-
-  // Create the canvas element
-  const canvas = document.createElement("canvas");
-  container.innerHTML = "";
-  container.appendChild(canvas);
-
-  // Create the pie chart
-  const ctx = canvas.getContext("2d");
-  const chart = new Chart(ctx, {
-    type: "pie",
-    data: {
-      labels: labels,
-      datasets: [
-        {
-          data: values,
-          backgroundColor: colors,
-          borderColor: "rgba(255, 255, 255, 0.5)",
-          borderWidth: 1,
-        },
-      ],
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          position: "right",
-          labels: {
-            color: "white",
-            font: {
-              size: 12,
-            },
-            padding: 10,
-          },
-        },
-        tooltip: {
-          callbacks: {
-            label: function (context) {
-              const value = context.raw;
-              const total = context.dataset.data.reduce((a, b) => a + b, 0);
-              const percentage = Math.round((value / total) * 100);
-              return `${context.label}: ${value} (${percentage}%)`;
-            },
-          },
-        },
-      },
-    },
-  });
-
-  // Store the chart instance for later cleanup
-  chartInstances.push(chart);
-}
-
-// Destroy chart instances to prevent memory leaks
-function destroyChartInstances() {
-  chartInstances.forEach((chart) => chart.destroy());
-  chartInstances = [];
-}
-
-/************
- * FEATURES RELATING TO ALL-TIME FLAG DISTRIBUTION DATA (bar graph)
- ************/
-
-// Function to load all‑time flag distribution data and render the bar chart
-async function loadAllTimeFlagDistribution() {
-  try {
-    // Fetch all-time flag distro. data
-    const response = await fetch("/api/all-time-flag-distribution");
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
+    if (state.tab === "calendar") {
+      await refreshCalendarData();
+      renderCalendar();
+      if (state.calendar.selectedDate) await loadDay(state.calendar.selectedDate);
     }
-    
-    // Parse json from API
-    const data = await response.json();
 
-    createBarChart("allTimeBarChart", data.data);
-  } catch (error) {
-    showError("Failed to load all‑time flag distribution: " + error.message);
+    if (state.tab === "charts") {
+      await refreshCharts();
+    }
   }
-}
 
-// Create a singular bar graph using Chart.js
-function createBarChart(containerId, data) {
-  const container = document.getElementById(containerId);
+  function switchTab(tabName) {
+    state.tab = tabName;
 
-  // Clear existing content
-  container.innerHTML = "";
+    els.tabs.forEach((tab) => {
+      const isActive = tab.dataset.tab === tabName;
+      tab.classList.toggle("active", isActive);
+      tab.setAttribute("aria-selected", String(isActive));
+    });
 
-  // Create and append a canvas element for the bar chart
-  const canvas = document.createElement("canvas");
-  container.appendChild(canvas);
-  const ctx = canvas.getContext("2d");
+    els.tabPanels.forEach((panel) => {
+      panel.classList.toggle("active", panel.dataset.tabPanel === tabName);
+    });
 
-  // Prepare data for the chart
-  const labels = data.map((item) => item.flag_type);
-  const counts = data.map((item) => item.count);
+    if (tabName === "charts") refreshCharts();
+    if (tabName === "calendar") renderCalendar();
+  }
 
-  // Use the same flag color mapping as before
-  const colors = labels.map(
-    (flag) => flagColorMapping[flag.trim().toLowerCase()] || "gray"
-  );
+  async function refreshCurrentFlag() {
+    try {
+      const payload = await apiGet(API.tableData, { limit: 1, offset: 0 });
+      const latest = payload.data?.[0];
+      if (!latest) return;
 
-  // Create the bar chart
-  new Chart(ctx, {
-    type: "bar",
-    data: {
-      labels: labels,
-      datasets: [
-        {
-          label: "All‑Time Flag Distribution",
-          data: counts,
-          backgroundColor: colors,
-          borderColor: "black",
-          borderWidth: 1,
-        },
-      ],
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: true,
-      scales: {
-        y: {
-          beginAtZero: true,
-          title: {
-            display: true,
-            text: "Count",
-            color: "white",
-          },
-          ticks: {
-            color: "white",
-          },
-          // Light grid lines for contrast
-          grid: {
-            color: "rgba(255, 255, 255, 0.2)",
-          },
-        },
-        x: {
-          title: {
-            display: true,
-            text: "Flag Type",
-            color: "white",
-          },
-          ticks: {
-            color: "white",
-          },
-          grid: {
-            color: "rgba(255, 255, 255, 0.2)",
-          },
-        },
-      },
-      plugins: {
-        // White chart title
-        title: {
-          display: false,
-          text: "All-Time Flag Distribution",
-          color: "white",
-          font: {
-            size: 18,
-          },
-        },
-        legend: {
-          display: false,
-          labels: {
-            color: "white",
-          },
-        },
-        tooltip: {
-          callbacks: {
-            label: function (context) {
-              return `${context.label}: ${context.raw}`;
-            },
-          },
-        },
-      },
-    },
-  });
-}
+      const flag = getFlagMeta(latest.flag_type);
+      const timestamp = formatDateTime(latest.date_time);
 
-/************
- * FEATURES RELATING TO FETCHING DATA BY DAY (user-select menu)
- ************/
+      removeFlagClasses(els.currentFlagCondition);
+      els.currentFlagCondition.classList.add(flag.className);
+      els.currentFlagValue.textContent = flag.label;
+      els.currentFlagDesc.textContent = flag.description;
+      els.currentFlagStats.innerHTML = "";
+      els.currentFlagStats.append(
+        statNode("Updated", timestamp || "Unknown"),
+        statNode("Hazard", severityLabel(flag.severity))
+      );
+    } catch (error) {
+      els.currentFlagValue.textContent = "Unavailable";
+      els.currentFlagDesc.textContent = "Flag API data could not be loaded.";
+      els.currentFlagStats.innerHTML = "";
+    }
+  }
 
-// Fetch and display flags for the selected day
-async function loadFlagsByDay(date) {
-  try {
-    // Parse the date string to check the year
-    const selectedDate = new Date(date);
-    const year = selectedDate.getFullYear();
-    
-    if (year <= 1940) {
-      const datepickerError = document.getElementById("datepickerError");
-      datepickerError.textContent = "Weather data is only available for dates from 01/02/1941 onward.";
-      datepickerError.classList.remove("hidden");
+  async function refreshTable() {
+    setLoading(true);
+    els.tableContainer.classList.remove("hidden");
+
+    try {
+      const payload = await apiGet(API.tableData, {
+        limit: state.table.limit,
+        offset: state.table.offset,
+      });
+      renderTable(payload);
+      renderPagination(payload.pagination);
+      hideError();
+    } catch (error) {
+      showError(`Failed to load raw data: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function renderTable(payload) {
+    els.tableHeaders.replaceChildren();
+    els.tableBody.replaceChildren();
+
+    const rows = payload.data || [];
+    if (!rows.length) {
+      els.tableContainer.classList.add("hidden");
+      showError("No raw flag data is available.");
       return;
     }
 
-    const response = await fetch(`/api/flags-by-day?date=${date}`);
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
-    }
-    const data = await response.json();
-    displayFlagsByDay(data, date);
-    
-    // Load weather data
-    loadWeatherData(date);
-  } catch (error) {
-    showError("Failed to load flags for the selected day: " + error.message);
-    // Hide the weather container if there's an error
-    document.getElementById('weatherChartContainer').classList.add('hidden');
-  }
-}
+    const columns = Object.keys(rows[0]).filter((column) => column !== "id");
+    const labelMap = {
+      date_time: "Recorded Time",
+      flag_type: "Flag",
+    };
 
-// Display the flags for the chosen day in CST
-function displayFlagsByDay(data, date) {
-  // If no data is available for the selected date, show a message
-  if (!data || data.length === 0) {
-    flagsByDayContainer.innerHTML = `<div class="no-data">No flags recorded for ${date}</div>`;
-    return;
-  }
-
-  // Create the heading for the selected date
-  let html = `<h3>Flags for ${date} (CST)</h3>`;
-  html += "<ul class='flags-list'>";
-
-  // Loop through the data and process each flag record in a list
-  data.forEach((row) => {
-    // Format the time from the API response (convert from 24hr to 12hr format)
-    const time24 = row.time;
-    const [hours24, minutes] = time24.split(':');
-    const hours12 = (hours24 % 12) || 12;
-    const ampm = hours24 < 12 ? 'AM' : 'PM';
-    const time12 = `${hours12}:${minutes} ${ampm}`;
-    
-    const flagType = row.flag_type || 'Unknown';
-
-    // Append each flag entry as a list item with flag type in bold and time in italics
-    html += `<li class='flag-entry' data-flag-type="${flagType}">
-               <strong>${flagType}</strong> 
-               <em>(${time12} CST)</em>
-             </li>`;
-  });
-
-  html += "</ul>";
-  flagsByDayContainer.innerHTML = html;
-}
-
-/************
- * FEATURES RELATING TO DISPLAYING ALL OF THE DATA FROM THE DATABASE IN THE TABLE
- ************/
-
-// Load flag data from table API
-async function loadTableData() {
-  // Show loading indicator before data loaded
-  showLoading(true);
-  tableContainer.classList.add("hidden");
-
-  try {
-    // Fetch table data with pagination from the API
-    const response = await fetch(`/api/table-data?limit=${limit}&offset=${offset}`);
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
-    }
-
-    const data = await response.json();
-
-    // Display the fetched table data
-    displayTableData(data);
-
-    // Update pagination controls based on the response
-    updatePagination(data.pagination);
-
-    hideError();  // Hide error messages if any
-  } catch (error) {
-    showError("Failed to load data: " + error.message);
-  } finally {
-    showLoading(false); // Hide loading indicator
-  }
-}
-
-// Generate the HTML to display the data & process it to be more readable
-function displayTableData(data) {
-  // Clear existing table headers and rows first
-  tableHeaders.innerHTML = "";
-  tableBody.innerHTML = "";
-
-  // Check if the received data is empty
-  if (!data || !data.data || data.data.length === 0) {
-    showError("No data available");
-    tableContainer.classList.add("hidden");
-    return;
-  }
-
-  // Create table headers (exclude id column from public view)
-  const columns = Object.keys(data.data[0]).filter(column => column !== 'id');
-  columns.forEach((column) => {
-    const th = document.createElement("th");
-    th.textContent = columnNameMap[column] || column;
-    tableHeaders.appendChild(th);
-  });
-
-  // Populate table rows (exclude id column from public view)
-  data.data.forEach((row) => {
-    const tr = document.createElement("tr");
     columns.forEach((column) => {
-      const td = document.createElement("td");
-      if (column === "date_time" && row[column]) {
-        const date = DateTime.fromISO(row[column], { zone: "utc" })
-          .setZone("America/Chicago");
-        td.textContent = date.toFormat("MMMM d, yyyy h:mm a") + " CST";
-      } else {
-        td.textContent = row[column] !== null ? row[column] : "";
-      }
-      tr.appendChild(td);
+      const th = document.createElement("th");
+      th.textContent = labelMap[column] || titleCase(column.replaceAll("_", " "));
+      els.tableHeaders.append(th);
     });
-    tableBody.appendChild(tr);
-  });
 
-  tableContainer.classList.remove("hidden");
-}
-
-/************
- * HELPER FUNCTIONS
- ************/
-
-// Show loading indicator
-function showLoading(isLoading) {
-  loadingContainer.style.display = isLoading ? "block" : "none";
-}
-
-// Show error message
-function showError(message) {
-  errorContainer.textContent = message;
-  errorContainer.classList.remove("hidden");
-}
-
-// Hide error message
-function hideError() {
-  errorContainer.classList.add("hidden");
-}
-
-// Update the pagination controls
-function updatePagination(pagination) {
-  currentPageDisplay.textContent = `Page ${currentPage}`;
-
-  // Disable Previous button on the first page
-  prevPageBtn.disabled = offset <= 0;
-
-  // Disable Next button if there's no more data
-  nextPageBtn.disabled = !pagination.next_offset;
-}
-
-// Calendar functionality
-function createCalendar() {
-    const calendarGrid = document.getElementById('calendar-grid');
-    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
-                       'July', 'August', 'September', 'October', 'November', 'December'];
-    
-    // Update calendar title with current month and year
-    document.querySelector('.calendar-title').textContent = `${monthNames[currentCalendarMonth]} ${currentCalendarYear}`;
-    
-    // Clear existing calendar
-    calendarGrid.innerHTML = '';
-    
-    // Add day headers
-    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    days.forEach(day => {
-        const dayHeader = document.createElement('div');
-        dayHeader.className = 'calendar-day-header';
-        dayHeader.textContent = day;
-        calendarGrid.appendChild(dayHeader);
+    rows.forEach((row) => {
+      const tr = document.createElement("tr");
+      columns.forEach((column) => {
+        const td = document.createElement("td");
+        td.textContent = column === "date_time" ? formatDateTime(row[column]) : row[column] ?? "";
+        tr.append(td);
+      });
+      els.tableBody.append(tr);
     });
-    
-    // Get first day of month and total days
-    const firstDay = new Date(currentCalendarYear, currentCalendarMonth, 1);
-    const lastDay = new Date(currentCalendarYear, currentCalendarMonth + 1, 0);
-    const totalDays = lastDay.getDate();
-    const startingDay = firstDay.getDay();
-    
-    // Add empty cells for days before the first day of the month
-    for (let i = 0; i < startingDay; i++) {
-        const emptyDay = document.createElement('div');
-        emptyDay.className = 'calendar-day empty';
-        calendarGrid.appendChild(emptyDay);
-    }
-    
-    // Add days of the month
-    for (let day = 1; day <= totalDays; day++) {
-        const dayCell = document.createElement('div');
-        dayCell.className = 'calendar-day';
-        dayCell.dataset.date = `${currentCalendarYear}-${String(currentCalendarMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-        dayCell.innerHTML = `
-            <div class="calendar-day-number">${day}</div>
-            <div class="flags-container"></div>
-        `;
-        
-        // Add click event listener to each day cell
-        dayCell.addEventListener('click', () => {
-            const selectedDate = dayCell.dataset.date;
-            // Remove selected class from any previously selected day
-            document.querySelectorAll('.calendar-day').forEach(day => {
-                day.classList.remove('selected');
-            });
-            // Add selected class to clicked day
-            dayCell.classList.add('selected');
-            // Update the date picker input
-            document.getElementById('flagDate').value = selectedDate;
-            // Load flags for the selected date
-            loadFlagsByDay(selectedDate);
-            // Scroll to the date picker section
-            document.querySelector('.date-picker-container').scrollIntoView({ behavior: 'smooth' });
-        });
-        
-        calendarGrid.appendChild(dayCell);
-    }
-}
 
-function updateCalendarWithFlags(flagData) {
-    const days = document.querySelectorAll('.calendar-day:not(.empty)');
-    const flagsByDate = {};
-    
-    // Group flags by date
-    flagData.forEach(flag => {
-        const date = flag.date;
-        if (!flagsByDate[date]) {
-            flagsByDate[date] = [];
-        }
-        // Clean up flag type and ensure proper formatting
-        const flagType = flag.flag_type.toLowerCase().trim().replace(/\s+/g, '-');
-        flagsByDate[date].push({
-            type: flagType,
-            time: flag.time,
-            originalType: flag.flag_type
-        });
-    });
-    
-    // Update each day cell
-    days.forEach(day => {
-        const date = day.dataset.date;
-        const flagsContainer = day.querySelector('.flags-container');
-        
-        flagsContainer.innerHTML = '';
-        
-        if (flagsByDate[date]) {
-            day.classList.add('has-flags');
-            
-            // Sort flags by time
-            const sortedFlags = flagsByDate[date].sort((a, b) => {
-                return a.time.localeCompare(b.time);
-            });
-            
-            // Add flag indicators
-            sortedFlags.forEach(flag => {
-                const flagIndicator = document.createElement('div');
-                flagIndicator.className = `calendar-flag ${flag.type}`;
-                flagIndicator.title = `${flag.originalType} at ${flag.time}`;
-                flagsContainer.appendChild(flagIndicator);
-            });
+    els.tableContainer.classList.remove("hidden");
+  }
 
-            // Add flag count if there are many flags
-            if (sortedFlags.length > 15) {
-                const countBadge = document.createElement('div');
-                countBadge.style.position = 'absolute';
-                countBadge.style.top = '25px';
-                countBadge.style.right = '5px';
-                countBadge.style.fontSize = '0.7em';
-                countBadge.style.color = 'rgba(255, 255, 255, 0.8)';
-                countBadge.textContent = `${sortedFlags.length} flags`;
-                day.appendChild(countBadge);
-            }
-        } else {
-            day.classList.remove('has-flags');
-        }
-    });
-}
+  function renderPagination(pagination = {}) {
+    els.currentPage.textContent = `Page ${state.table.page}`;
+    els.prevPageBtn.disabled = state.table.offset <= 0;
+    els.nextPageBtn.disabled = pagination.next_offset == null;
+  }
 
-// Function to load current month's flag data
-async function loadCurrentMonthFlags() {
+  function changePage(direction) {
+    const nextOffset = state.table.offset + direction * state.table.limit;
+    if (nextOffset < 0) return;
+
+    state.table.offset = nextOffset;
+    state.table.page += direction;
+    refreshTable();
+  }
+
+  async function refreshCalendarData() {
     try {
-        const response = await fetch('/api/current-month-flags');
-        if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-        const data = await response.json();
-        
-        // Filter data for the current calendar month using string comparison
-        const currentMonthData = data.filter(flag => {
-            // The date from the API is already in YYYY-MM-DD format
-            const [year, month] = flag.date.split('-').map(Number);
-            return month === currentCalendarMonth + 1 && // API month is 1-based, JS month is 0-based
-                   year === currentCalendarYear;
-        });
-        
-        updateCalendarWithFlags(currentMonthData);
+      state.calendar.allFlags = await apiGet(API.currentMonthFlags);
+      renderCalendar();
     } catch (error) {
-        showError('Failed to load current month flags: ' + error.message);
+      showError(`Failed to load calendar flags: ${error.message}`);
     }
-}
-
-// Initialize calendar when the page loads
-document.addEventListener('DOMContentLoaded', () => {
-    createCalendar();
-    loadCurrentMonthFlags();
-    
-    // Refresh calendar data every hour
-    setInterval(loadCurrentMonthFlags, 3600000);
-});
-
-// Function to load weather data and create chart
-async function loadWeatherData(date) {
-  // Check if the date is in the future
-  const selectedDate = new Date(date);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0); // Reset time to compare just dates
-  
-  if (selectedDate > today) {
-    // Hide the weather container for future dates
-    document.getElementById('weatherChartContainer').classList.add('hidden');
-    return;
   }
 
-  try {
-    const response = await fetch(`/api/weather-data?date=${date}`);
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
-    }
-    const data = await response.json();
-    createWeatherChart(data);
-    // Show the weather container after data is loaded
-    document.getElementById('weatherChartContainer').classList.remove('hidden');
-  } catch (error) {
-    console.error('Error loading weather data:', error);
-    const weatherChart = document.getElementById('weatherChart');
-    weatherChart.innerHTML = '<div class="no-data">Weather data unavailable for this date</div>';
-    // Show the weather container even if there's an error
-    document.getElementById('weatherChartContainer').classList.remove('hidden');
+  function moveCalendarMonth(delta) {
+    const next = DateTime.local(state.calendar.year, state.calendar.month + 1, 1).plus({ months: delta });
+    state.calendar.month = next.month - 1;
+    state.calendar.year = next.year;
+    renderCalendar();
   }
-}
 
-// Function to create the weather chart
-function createWeatherChart(data) {
-  const weatherChart = document.getElementById('weatherChart');
-  weatherChart.innerHTML = ''; // Clear previous chart
-  
-  // Create canvas element
-  const canvas = document.createElement('canvas');
-  weatherChart.appendChild(canvas);
-  
-  // Prepare data for chart
-  const times = data.hourly_data.map(item => {
-    const time = new Date(item.time);
-    // Convert to CST and format as 12-hour time
-    return time.toLocaleTimeString('en-US', { 
-      hour: 'numeric', 
-      hour12: true,
-      timeZone: 'America/Chicago'
+  function renderCalendar() {
+    const monthStart = DateTime.local(state.calendar.year, state.calendar.month + 1, 1);
+    const daysInMonth = monthStart.daysInMonth;
+    const startingDay = monthStart.weekday % 7;
+    const flagsByDate = groupFlagsByDate(state.calendar.allFlags);
+
+    els.calendarTitle.textContent = monthStart.toFormat("LLLL yyyy");
+    els.calendarGrid.replaceChildren();
+
+    ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].forEach((day) => {
+      const header = document.createElement("div");
+      header.className = "calendar-day-header";
+      header.textContent = day;
+      els.calendarGrid.append(header);
     });
-  });
-  
-  const temperatures = data.hourly_data.map(item => item.temperature);
-  const pressures = data.hourly_data.map(item => item.pressure);
-  const windSpeeds = data.hourly_data.map(item => item.wind_speed);
-  const precipitation = data.hourly_data.map(item => item.precipitation);
-  
-  // Create the chart
-  new Chart(canvas, {
-    type: 'line',
-    data: {
-      labels: times,
-      datasets: [
-        {
-          label: 'Surface Temperature (°F)',
-          data: temperatures,
-          borderColor: '#ff6b6b',
-          backgroundColor: 'rgba(255, 107, 107, 0.1)',
-          yAxisID: 'y',
-          tension: 0.4
-        },
-        {
-          label: 'Pressure (hPa)',
-          data: pressures,
-          borderColor: '#4ecdc4',
-          backgroundColor: 'rgba(78, 205, 196, 0.1)',
-          yAxisID: 'y1',
-          tension: 0.4
-        },
-        {
-          label: 'Wind Speed (mph)',
-          data: windSpeeds,
-          borderColor: '#ffd166',
-          backgroundColor: 'rgba(255, 209, 102, 0.1)',
-          yAxisID: 'y2',
-          tension: 0.4
-        },
-        {
-          label: 'Precipitation (in)',
-          data: precipitation,
-          borderColor: '#06d6a0',
-          backgroundColor: 'rgba(6, 214, 160, 0.1)',
-          yAxisID: 'y3',
-          tension: 0.4
-        }
-      ]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      interaction: {
-        mode: 'index',
-        intersect: false,
-      },
-      scales: {
-        y: {
-          type: 'linear',
-          display: true,
-          position: 'left',
-          title: {
-            display: true,
-            text: 'Temperature (°F)',
-            color: '#ffffff'
-          },
-          ticks: {
-            color: '#ffffff'
-          },
-          grid: {
-            color: 'rgba(255, 255, 255, 0.1)'
-          }
-        },
-        y1: {
-          type: 'linear',
-          display: true,
-          position: 'right',
-          title: {
-            display: true,
-            text: 'Pressure (hPa)',
-            color: '#ffffff'
-          },
-          ticks: {
-            color: '#ffffff'
-          },
-          grid: {
-            drawOnChartArea: false
-          }
-        },
-        y2: {
-          type: 'linear',
-          display: true,
-          position: 'right',
-          title: {
-            display: true,
-            text: 'Wind Speed (mph)',
-            color: '#ffffff'
-          },
-          ticks: {
-            color: '#ffffff'
-          },
-          grid: {
-            drawOnChartArea: false
-          }
-        },
-        y3: {
-          type: 'linear',
-          display: true,
-          position: 'right',
-          title: {
-            display: true,
-            text: 'Precipitation (in)',
-            color: '#ffffff'
-          },
-          ticks: {
-            color: '#ffffff'
-          },
-          grid: {
-            drawOnChartArea: false
-          }
-        },
-        x: {
-          ticks: {
-            color: '#ffffff',
-            maxRotation: 45,
-            minRotation: 45
-          },
-          grid: {
-            color: 'rgba(255, 255, 255, 0.1)'
-          }
-        }
-      },
-      plugins: {
-        legend: {
-          labels: {
-            color: '#ffffff'
-          }
-        },
-        tooltip: {
-          mode: 'index',
-          intersect: false,
-          callbacks: {
-            label: function(context) {
-              let label = context.dataset.label || '';
-              if (label) {
-                label += ': ';
-              }
-              if (context.parsed.y !== null) {
-                label += context.parsed.y.toFixed(2);
-              }
-              return label;
-            }
-          }
-        }
-      }
+
+    for (let index = 0; index < startingDay; index += 1) {
+      const empty = document.createElement("div");
+      empty.className = "calendar-day empty";
+      els.calendarGrid.append(empty);
     }
-  });
-}
 
-// Add event listener to hide weather container when date is cleared
-document.getElementById('flagDate').addEventListener('input', function(e) {
-  if (!e.target.value) {
-    document.getElementById('weatherChartContainer').classList.add('hidden');
+    for (let day = 1; day <= daysInMonth; day += 1) {
+      const date = monthStart.set({ day }).toISODate();
+      const flags = flagsByDate.get(date) || [];
+      els.calendarGrid.append(calendarDayNode(date, day, flags));
+    }
   }
-});
 
-// Tab switching functionality
-document.addEventListener('DOMContentLoaded', function() {
-  const tabButtons = document.querySelectorAll('.tab-button');
-  const tabContents = document.querySelectorAll('.tab-content');
+  function calendarDayNode(date, day, flags) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "calendar-day";
+    button.dataset.date = date;
+    button.setAttribute("aria-label", `${formatDate(date)} ${flags.length ? summarizeFlags(flags) : "no flags recorded"}`);
+    button.classList.toggle("selected", state.calendar.selectedDate === date);
 
-  tabButtons.forEach(button => {
-    button.addEventListener('click', () => {
-      // Remove active class from all buttons and contents
-      tabButtons.forEach(btn => btn.classList.remove('active'));
-      tabContents.forEach(content => content.classList.remove('active'));
+    const number = document.createElement("span");
+    number.className = "calendar-day-number";
+    number.textContent = day;
+    button.append(number);
 
-      // Add active class to clicked button
-      button.classList.add('active');
+    if (flags.length) {
+      const dominantFlag = mostSevereFlag(flags);
+      button.classList.add("has-flags", dominantFlag.className);
+      button.append(calendarMetaNode(flags));
+    }
 
-      // Show corresponding content
-      const targetId = button.getAttribute('aria-controls');
-      const targetContent = document.getElementById(targetId);
-      targetContent.classList.add('active');
+    button.addEventListener("click", () => {
+      state.calendar.selectedDate = date;
+      els.flagDate.value = date;
+      renderCalendar();
+      loadDay(date);
+      document.querySelector(".date-picker-container").scrollIntoView({ behavior: "smooth", block: "start" });
     });
-  });
 
-  // Initialize first tab as active
-  if (tabButtons.length > 0) {
-    tabButtons[0].classList.add('active');
-    const firstTabId = tabButtons[0].getAttribute('aria-controls');
-    document.getElementById(firstTabId).classList.add('active');
+    return button;
   }
-});
 
-// Weather data handling
-async function fetchWeatherData(date) {
-  try {
-    const response = await fetch(`/api/weather-data?date=${date}`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch weather data');
+  function calendarMetaNode(flags) {
+    const meta = document.createElement("span");
+    meta.className = "calendar-day-meta";
+    const uniqueFlags = new Set(flags.map((flag) => getFlagMeta(flag.flag_type).label));
+    meta.textContent = uniqueFlags.size > 1 ? `${uniqueFlags.size} types` : getFlagMeta(flags[0].flag_type).label.replace(" Flag", "");
+    return meta;
+  }
+
+  async function loadSelectedDate() {
+    const date = els.flagDate.value;
+    if (!date) {
+      showDateError("Please select a date.");
+      return;
     }
-    return await response.json();
-  } catch (error) {
-    console.error('Error fetching weather data:', error);
-    throw error;
+
+    state.calendar.selectedDate = date;
+    hideDateError();
+    renderCalendar();
+    await loadDay(date);
   }
-}
 
-function formatTime(timeString) {
-  return new Date(timeString).toLocaleTimeString('en-US', {
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true,
-    timeZone: 'America/Chicago'
-  });
-}
+  async function loadDay(date) {
+    clearSelectedDatePanels(false);
 
-function updateWeatherChart(data) {
-  const ctx = document.getElementById('weatherChart').getContext('2d');
-  
-  // Filter data for the selected day (12:01 AM to 11:59 PM CST)
-  const filteredData = data.filter(entry => {
-    const time = new Date(entry.time);
-    return time.getHours() >= 0 && time.getHours() <= 23;
-  });
-
-  const chartData = {
-    labels: filteredData.map(entry => formatTime(entry.time)),
-    datasets: [
-      {
-        label: 'Temperature (°F)',
-        data: filteredData.map(entry => entry.temperature),
-        borderColor: 'rgb(255, 99, 132)',
-        backgroundColor: 'rgba(255, 99, 132, 0.2)',
-        yAxisID: 'y',
-        tension: 0.4
-      },
-      {
-        label: 'Wind Speed (mph)',
-        data: filteredData.map(entry => entry.wind_speed),
-        borderColor: 'rgb(54, 162, 235)',
-        backgroundColor: 'rgba(54, 162, 235, 0.2)',
-        yAxisID: 'y1',
-        tension: 0.4
-      },
-      {
-        label: 'Precipitation (in)',
-        data: filteredData.map(entry => entry.precipitation),
-        borderColor: 'rgb(75, 192, 192)',
-        backgroundColor: 'rgba(75, 192, 192, 0.2)',
-        yAxisID: 'y2',
-        tension: 0.4
-      }
-    ]
-  };
-
-  const config = {
-    type: 'line',
-    data: chartData,
-    options: {
-      responsive: true,
-      interaction: {
-        mode: 'index',
-        intersect: false,
-      },
-      plugins: {
-        title: {
-          display: true,
-          text: 'Weather Conditions'
-        },
-        tooltip: {
-          mode: 'index',
-          intersect: false
-        }
-      },
-      scales: {
-        x: {
-          title: {
-            display: true,
-            text: 'Time (CST)'
-          },
-          ticks: {
-            maxRotation: 45,
-            minRotation: 45
-          }
-        },
-        y: {
-          type: 'linear',
-          display: true,
-          position: 'left',
-          title: {
-            display: true,
-            text: 'Temperature (°F)'
-          }
-        },
-        y1: {
-          type: 'linear',
-          display: true,
-          position: 'right',
-          title: {
-            display: true,
-            text: 'Wind Speed (mph)'
-          },
-          grid: {
-            drawOnChartArea: false
-          }
-        },
-        y2: {
-          type: 'linear',
-          display: true,
-          position: 'right',
-          title: {
-            display: true,
-            text: 'Precipitation (in)'
-          },
-          grid: {
-            drawOnChartArea: false
-          }
-        }
-      }
+    try {
+      const flags = await apiGet(API.flagsByDay, { date });
+      renderDayFlags(flags, date);
+      await loadWeather(date, flags);
+    } catch (error) {
+      showError(`Failed to load selected date: ${error.message}`);
+      els.weatherChartContainer.classList.add("hidden");
     }
-  };
-
-  // Destroy existing chart if it exists
-  if (window.weatherChart) {
-    window.weatherChart.destroy();
   }
 
-  // Create new chart
-  window.weatherChart = new Chart(ctx, config);
-}
+  function renderDayFlags(flags, date) {
+    els.daySummaryContainer.replaceChildren();
+    els.flagsByDayContainer.replaceChildren();
+
+    if (!flags.length) {
+      els.daySummaryContainer.append(summaryCard("Flags", "No records", formatDate(date)));
+      els.flagsByDayContainer.append(emptyNode(`No flags recorded for ${formatDate(date)}.`));
+      return;
+    }
+
+    const mostCommon = mostCommonFlag(flags);
+    const highestHazard = mostSevereFlag(flags);
+    const changes = countFlagChanges(flags);
+
+    els.daySummaryContainer.append(
+      summaryCard("Most common", mostCommon.label, `${mostCommon.count} of ${flags.length} readings`),
+      summaryCard("Highest hazard", highestHazard.label, severityLabel(highestHazard.severity)),
+      summaryCard("Flag changes", String(changes), changes === 1 ? "change recorded" : "changes recorded")
+    );
+
+    const list = document.createElement("ol");
+    list.className = "flags-list";
+
+    flags.forEach((entry) => {
+      const flag = getFlagMeta(entry.flag_type);
+      const li = document.createElement("li");
+      li.className = "flag-entry";
+      li.dataset.flagType = flag.label;
+      li.style.setProperty("--fc", flag.color);
+
+      const type = document.createElement("strong");
+      type.textContent = flag.label;
+
+      const time = document.createElement("em");
+      time.textContent = formatTime(entry.date_time || `${date}T${entry.time}:00`);
+
+      li.append(type, time);
+      list.append(li);
+    });
+
+    els.flagsByDayContainer.append(list);
+  }
+
+  async function loadWeather(date, flags) {
+    if (DateTime.fromISO(date) > DateTime.now().setZone(BEACH_TIME_ZONE).startOf("day")) {
+      els.weatherChartContainer.classList.add("hidden");
+      return;
+    }
+
+    try {
+      const weather = await apiGet(API.weatherData, { date });
+      renderWeather(weather, flags);
+      els.weatherChartContainer.classList.remove("hidden");
+    } catch (error) {
+      destroyChart("weather");
+      els.weatherSummary.replaceChildren(emptyNode("Weather and marine data are unavailable for this date."));
+      els.weatherChart.replaceChildren();
+      els.weatherChartContainer.classList.remove("hidden");
+    }
+  }
+
+  function renderWeather(weather, flags) {
+    const hourly = weather.hourly_data || [];
+    const marine = weather.marine_data || [];
+
+    els.weatherSummary.replaceChildren();
+    els.weatherSummary.append(...weatherSummaryCards(weather.summary, hourly, marine));
+
+    if (!hourly.length && !marine.length) {
+      destroyChart("weather");
+      els.weatherChart.replaceChildren(emptyNode("No hourly weather data was returned."));
+      return;
+    }
+
+    renderWeatherChart(hourly, marine, flags);
+  }
+
+  function weatherSummaryCards(summary = {}, hourly = [], marine = []) {
+    const tempValues = hourly.map((row) => row.temperature).filter(isNumber);
+    const windValues = hourly.map((row) => row.wind_speed).filter(isNumber);
+    const gustValues = hourly.map((row) => row.wind_gust).filter(isNumber);
+    const rainTotal = sum(hourly.map((row) => row.precipitation).filter(isNumber));
+    const waveValues = marine.map((row) => row.wave_height_ft).filter(isNumber);
+    const currentValues = marine.map((row) => row.ocean_current_mph).filter(isNumber);
+
+    return [
+      summaryCard("Air", formatRange(summary.temp_min, summary.temp_max, "°F") || formatRange(min(tempValues), max(tempValues), "°F"), "daily temperature range"),
+      summaryCard("Wind", `${formatNumber(summary.wind_max ?? max(windValues), 0)} mph`, `gusts to ${formatNumber(summary.wind_gust_max ?? max(gustValues), 0)} mph`),
+      summaryCard("Rain", `${formatNumber(summary.precipitation_sum ?? rainTotal, 2)} in`, "daily total"),
+      summaryCard("Surf", waveValues.length ? `${formatNumber(max(waveValues), 1)} ft` : "N/A", currentValues.length ? `current ${formatNumber(max(currentValues), 1)} mph` : "marine forecast unavailable"),
+    ];
+  }
+
+  function renderWeatherChart(hourly, marine, flags) {
+    const labels = hourly.map((row) => formatHourLabel(row.time));
+    const marineByHour = new Map(marine.map((row) => [formatHourKey(row.time), row]));
+    const flagByHour = new Map(flags.map((row) => [formatHourKey(row.date_time || row.time), getFlagMeta(row.flag_type).severity]));
+
+    const waveData = hourly.map((row) => marineByHour.get(formatHourKey(row.time))?.wave_height_ft ?? null);
+    const currentData = hourly.map((row) => marineByHour.get(formatHourKey(row.time))?.ocean_current_mph ?? null);
+    const flagSeverity = hourly.map((row) => flagByHour.get(formatHourKey(row.time)) ?? null);
+
+    renderChart("weather", els.weatherChart, {
+      type: "line",
+      data: {
+        labels,
+        datasets: [
+          {
+            type: "line",
+            label: "Wind (mph)",
+            data: hourly.map((row) => row.wind_speed),
+            borderColor: "#3fa1c0",
+            backgroundColor: "rgba(63, 161, 192, 0.12)",
+            pointRadius: 0,
+            tension: 0.25,
+            yAxisID: "wind",
+          },
+          {
+            type: "line",
+            label: "Gusts (mph)",
+            data: hourly.map((row) => row.wind_gust),
+            borderColor: "#f0b84f",
+            backgroundColor: "rgba(240, 184, 79, 0.12)",
+            borderDash: [5, 5],
+            pointRadius: 0,
+            tension: 0.25,
+            yAxisID: "wind",
+          },
+          {
+            type: "bar",
+            label: "Rain (in)",
+            data: hourly.map((row) => row.precipitation),
+            backgroundColor: "rgba(92, 141, 220, 0.35)",
+            borderColor: "rgba(92, 141, 220, 0.7)",
+            borderWidth: 1,
+            yAxisID: "rain",
+          },
+          {
+            type: "line",
+            label: "Wave height (ft)",
+            data: waveData,
+            borderColor: "#d6504e",
+            backgroundColor: "rgba(214, 80, 78, 0.12)",
+            pointRadius: 0,
+            tension: 0.25,
+            yAxisID: "surf",
+            spanGaps: true,
+          },
+          {
+            type: "line",
+            label: "Ocean current (mph)",
+            data: currentData,
+            borderColor: "#8d6fd1",
+            backgroundColor: "rgba(141, 111, 209, 0.12)",
+            pointRadius: 0,
+            tension: 0.25,
+            yAxisID: "surf",
+            spanGaps: true,
+          },
+          {
+            type: "scatter",
+            label: "Flag reading",
+            data: flagSeverity.map((severity, index) => (severity == null ? null : { x: labels[index], y: severity })),
+            borderColor: "#e7eef6",
+            backgroundColor: "#e7eef6",
+            pointRadius: 5,
+            yAxisID: "flag",
+          },
+        ],
+      },
+      options: {
+        maintainAspectRatio: false,
+        interaction: { mode: "index", intersect: false },
+        scales: {
+          x: {
+            grid: { display: false },
+            ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 8 },
+          },
+          wind: {
+            position: "left",
+            beginAtZero: true,
+            title: { display: true, text: "Wind" },
+            ticks: { callback: (value) => `${value} mph` },
+          },
+          surf: {
+            position: "right",
+            beginAtZero: true,
+            title: { display: true, text: "Surf" },
+            ticks: { callback: (value) => `${value}` },
+            grid: { drawOnChartArea: false },
+          },
+          rain: {
+            position: "right",
+            beginAtZero: true,
+            suggestedMax: 0.25,
+            display: false,
+          },
+          flag: {
+            position: "right",
+            min: 0,
+            max: 7,
+            display: false,
+          },
+        },
+        plugins: {
+          legend: { position: "bottom", labels: { usePointStyle: true, boxWidth: 8 } },
+          tooltip: {
+            callbacks: {
+              label: weatherTooltipLabel,
+            },
+          },
+        },
+      },
+    });
+  }
+
+  async function refreshCharts() {
+    try {
+      const [recent, allTime] = await Promise.all([
+        apiGet(API.flagDistribution),
+        apiGet(API.allTimeFlagDistribution),
+      ]);
+
+      renderMonthlyTrendChart(recent);
+      renderAllTimeChart(allTime.data || []);
+      renderChartInsights(recent, allTime.data || []);
+      hideError();
+    } catch (error) {
+      showError(`Failed to load charts: ${error.message}`);
+    }
+  }
+
+  function renderMonthlyTrendChart(payload) {
+    const months = [payload.month3, payload.month2, payload.month1].filter(Boolean);
+    const flags = orderedFlagsFrom(months.flatMap((month) => month.data || []));
+
+    renderChart("monthlyTrend", els.monthlyTrendChart, {
+      type: "bar",
+      data: {
+        labels: months.map((month) => month.name),
+        datasets: flags.map((flag) => ({
+          label: flag.label,
+          data: months.map((month) => countForFlag(month.data, flag.label)),
+          backgroundColor: flag.color,
+          borderWidth: 0,
+          stack: "flags",
+        })),
+      },
+      options: {
+        indexAxis: "y",
+        maintainAspectRatio: false,
+        scales: {
+          x: {
+            stacked: true,
+            beginAtZero: true,
+            title: { display: true, text: "Readings" },
+          },
+          y: {
+            stacked: true,
+            grid: { display: false },
+          },
+        },
+        plugins: {
+          legend: { position: "bottom", labels: { usePointStyle: true, boxWidth: 8 } },
+          tooltip: {
+            callbacks: {
+              footer: (items) => {
+                const month = months[items[0].dataIndex];
+                const total = totalCount(month.data);
+                return `Total readings: ${total}`;
+              },
+              label: (context) => {
+                const month = months[context.dataIndex];
+                const total = totalCount(month.data);
+                const pct = total ? Math.round((context.raw / total) * 100) : 0;
+                return `${context.dataset.label}: ${context.raw} (${pct}%)`;
+              },
+            },
+          },
+        },
+      },
+    });
+  }
+
+  function renderAllTimeChart(data) {
+    const total = totalCount(data);
+    const sorted = [...data].sort((a, b) => getFlagMeta(a.flag_type).severity - getFlagMeta(b.flag_type).severity);
+
+    renderChart("allTime", els.allTimeBarChart, {
+      type: "bar",
+      data: {
+        labels: sorted.map((item) => getFlagMeta(item.flag_type).label),
+        datasets: [
+          {
+            label: "Readings",
+            data: sorted.map((item) => item.count),
+            backgroundColor: sorted.map((item) => getFlagMeta(item.flag_type).color),
+            borderWidth: 0,
+          },
+        ],
+      },
+      options: {
+        indexAxis: "y",
+        maintainAspectRatio: false,
+        scales: {
+          x: {
+            beginAtZero: true,
+            title: { display: true, text: "Readings" },
+          },
+          y: {
+            grid: { display: false },
+          },
+        },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: (context) => {
+                const pct = total ? Math.round((context.raw / total) * 100) : 0;
+                return `${context.raw} readings (${pct}%)`;
+              },
+            },
+          },
+        },
+      },
+    });
+  }
+
+  function renderChartInsights(recent, allTime) {
+    if (!els.chartInsightGrid) return;
+
+    const months = [recent.month3, recent.month2, recent.month1].filter(Boolean);
+    const latest = months[months.length - 1];
+    const latestMostCommon = latest?.data?.length ? mostCommonFlag(latest.data.map((item) => ({
+      flag_type: item.flag_type,
+      count: item.count,
+    }))) : null;
+    const hazardCount = allTime
+      .filter((item) => getFlagMeta(item.flag_type).severity >= FLAGS["red flag"].severity)
+      .reduce((total, item) => total + item.count, 0);
+    const total = totalCount(allTime);
+
+    els.chartInsightGrid.replaceChildren(
+      summaryCard("Latest month", latestMostCommon?.label || "No data", latest ? latest.name : "No month returned"),
+      summaryCard("Hazard share", total ? `${Math.round((hazardCount / total) * 100)}%` : "N/A", "red, double red, or red over purple"),
+      summaryCard("Total readings", formatInteger(total), "all recorded flag entries")
+    );
+  }
+
+  function renderChart(key, container, config) {
+    destroyChart(key);
+    container.replaceChildren();
+
+    const canvas = document.createElement("canvas");
+    container.append(canvas);
+    const chart = new Chart(canvas.getContext("2d"), config);
+    charts.set(key, chart);
+  }
+
+  function destroyChart(key) {
+    const chart = charts.get(key);
+    if (chart) {
+      chart.destroy();
+      charts.delete(key);
+    }
+  }
+
+  function clearSelectedDatePanels(hideWeather = true) {
+    els.daySummaryContainer.replaceChildren();
+    els.flagsByDayContainer.replaceChildren();
+    els.weatherSummary.replaceChildren();
+    els.weatherChart.replaceChildren();
+    destroyChart("weather");
+    if (hideWeather) els.weatherChartContainer.classList.add("hidden");
+  }
+
+  function setLoading(isLoading) {
+    els.loadingContainer.style.display = isLoading ? "flex" : "none";
+  }
+
+  function showError(message) {
+    els.errorContainer.textContent = message;
+    els.errorContainer.classList.remove("hidden");
+  }
+
+  function hideError() {
+    els.errorContainer.classList.add("hidden");
+    els.errorContainer.textContent = "";
+  }
+
+  function showDateError(message) {
+    els.datepickerError.textContent = message;
+    els.datepickerError.classList.remove("hidden");
+  }
+
+  function hideDateError() {
+    els.datepickerError.textContent = "";
+    els.datepickerError.classList.add("hidden");
+  }
+
+  function getFlagMeta(value) {
+    return FLAGS[normalizeFlag(value)] || {
+      ...UNKNOWN_FLAG,
+      label: value ? titleCase(String(value).trim()) : UNKNOWN_FLAG.label,
+    };
+  }
+
+  function normalizeFlag(value) {
+    return String(value || "").trim().toLowerCase().replace(/\s+/g, " ");
+  }
+
+  function removeFlagClasses(node) {
+    Object.values(FLAGS).forEach((flag) => node.classList.remove(flag.className));
+    node.classList.remove(UNKNOWN_FLAG.className);
+  }
+
+  function groupFlagsByDate(flags) {
+    const groups = new Map();
+    flags.forEach((flag) => {
+      if (!groups.has(flag.date)) groups.set(flag.date, []);
+      groups.get(flag.date).push(flag);
+    });
+    return groups;
+  }
+
+  function mostSevereFlag(flags) {
+    return flags
+      .map((flag) => getFlagMeta(flag.flag_type))
+      .sort((a, b) => b.severity - a.severity)[0] || UNKNOWN_FLAG;
+  }
+
+  function mostCommonFlag(flags) {
+    const counts = new Map();
+
+    flags.forEach((flag) => {
+      const meta = getFlagMeta(flag.flag_type);
+      const existing = counts.get(meta.label) || { ...meta, count: 0 };
+      existing.count += flag.count || 1;
+      counts.set(meta.label, existing);
+    });
+
+    return [...counts.values()].sort((a, b) => b.count - a.count || b.severity - a.severity)[0];
+  }
+
+  function countFlagChanges(flags) {
+    return flags.reduce((changes, flag, index) => {
+      if (index === 0) return 0;
+      return normalizeFlag(flag.flag_type) === normalizeFlag(flags[index - 1].flag_type) ? changes : changes + 1;
+    }, 0);
+  }
+
+  function summarizeFlags(flags) {
+    const highest = mostSevereFlag(flags);
+    return `${flags.length} readings, highest hazard ${highest.label}`;
+  }
+
+  function orderedFlagsFrom(items) {
+    const flags = new Map();
+    items.forEach((item) => {
+      const flag = getFlagMeta(item.flag_type);
+      flags.set(flag.label, flag);
+    });
+    return [...flags.values()].sort((a, b) => a.severity - b.severity);
+  }
+
+  function countForFlag(items = [], flagLabel) {
+    return items
+      .filter((item) => getFlagMeta(item.flag_type).label === flagLabel)
+      .reduce((total, item) => total + item.count, 0);
+  }
+
+  function totalCount(items = []) {
+    return items.reduce((total, item) => total + (item.count || 0), 0);
+  }
+
+  function statNode(label, value) {
+    const item = document.createElement("span");
+    item.className = "flag-stat";
+
+    const key = document.createElement("span");
+    key.className = "flag-stat-k";
+    key.textContent = label;
+
+    const val = document.createElement("span");
+    val.className = "flag-stat-v";
+    val.textContent = value;
+
+    item.append(key, val);
+    return item;
+  }
+
+  function summaryCard(label, value, detail) {
+    const card = document.createElement("article");
+    card.className = "summary-card";
+
+    const k = document.createElement("span");
+    k.className = "summary-k";
+    k.textContent = label;
+
+    const v = document.createElement("strong");
+    v.className = "summary-v";
+    v.textContent = value || "N/A";
+
+    const d = document.createElement("span");
+    d.className = "summary-d";
+    d.textContent = detail || "";
+
+    card.append(k, v, d);
+    return card;
+  }
+
+  function emptyNode(message) {
+    const node = document.createElement("div");
+    node.className = "no-data";
+    node.textContent = message;
+    return node;
+  }
+
+  function weatherTooltipLabel(context) {
+    const value = context.parsed.y;
+    if (value == null) return null;
+
+    if (context.dataset.label === "Rain (in)") return `Rain: ${formatNumber(value, 2)} in`;
+    if (context.dataset.label === "Flag reading") return `Flag severity: ${value}/7`;
+    if (context.dataset.label.includes("Wave")) return `Wave height: ${formatNumber(value, 1)} ft`;
+    if (context.dataset.label.includes("current")) return `Ocean current: ${formatNumber(value, 1)} mph`;
+    return `${context.dataset.label}: ${formatNumber(value, 0)}`;
+  }
+
+  function severityLabel(severity) {
+    if (severity >= 7) return "Extreme";
+    if (severity >= 5) return "High";
+    if (severity >= 3) return "Moderate";
+    if (severity >= 1) return "Low";
+    return "Unknown";
+  }
+
+  function formatDateTime(value) {
+    if (!value) return "";
+    const date = DateTime.fromISO(value, { zone: "utc" }).setZone(BEACH_TIME_ZONE);
+    return date.isValid ? `${date.toFormat("MMM d, yyyy h:mm a")} CT` : "";
+  }
+
+  function formatDate(value) {
+    const date = DateTime.fromISO(value, { zone: BEACH_TIME_ZONE });
+    return date.isValid ? date.toFormat("MMM d, yyyy") : value;
+  }
+
+  function formatTime(value) {
+    const date = DateTime.fromISO(value, { zone: "utc" }).setZone(BEACH_TIME_ZONE);
+    if (date.isValid) return date.toFormat("h:mm a");
+    const fallback = DateTime.fromFormat(value, "HH:mm", { zone: BEACH_TIME_ZONE });
+    return fallback.isValid ? fallback.toFormat("h:mm a") : value;
+  }
+
+  function formatHourLabel(value) {
+    const date = DateTime.fromISO(value).setZone(BEACH_TIME_ZONE);
+    return date.isValid ? date.toFormat("ha") : value;
+  }
+
+  function formatHourKey(value) {
+    const parsed = DateTime.fromISO(value, { zone: "utc" });
+    if (parsed.isValid) return parsed.setZone(BEACH_TIME_ZONE).toFormat("yyyy-MM-dd-HH");
+
+    const fallback = DateTime.fromFormat(value, "HH:mm", { zone: BEACH_TIME_ZONE });
+    return fallback.isValid ? fallback.toFormat("yyyy-MM-dd-HH") : value;
+  }
+
+  function formatRange(minValue, maxValue, suffix) {
+    if (!isNumber(minValue) || !isNumber(maxValue)) return "";
+    return `${formatNumber(minValue, 0)}-${formatNumber(maxValue, 0)}${suffix}`;
+  }
+
+  function formatNumber(value, digits = 1) {
+    return isNumber(value) ? Number(value).toFixed(digits) : "N/A";
+  }
+
+  function formatInteger(value) {
+    return new Intl.NumberFormat("en-US").format(value || 0);
+  }
+
+  function titleCase(value) {
+    return String(value).replace(/\w\S*/g, (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase());
+  }
+
+  function isNumber(value) {
+    return typeof value === "number" && Number.isFinite(value);
+  }
+
+  function min(values) {
+    return values.length ? Math.min(...values) : null;
+  }
+
+  function max(values) {
+    return values.length ? Math.max(...values) : null;
+  }
+
+  function sum(values) {
+    return values.reduce((total, value) => total + value, 0);
+  }
+})();
