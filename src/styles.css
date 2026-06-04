@@ -107,6 +107,10 @@ h3 {
    Header
    ============================================================ */
 .site-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.25rem;
   text-align: left;
   margin-bottom: 1.5rem;
   padding-top: 1.5rem;
@@ -388,52 +392,51 @@ h1 span {
   line-height: 1.35;
 }
 
-/* ============================================================
-   Navigation Tabs — flat pills
-   ============================================================ */
-.nav-tabs {
+.site-menu {
   display: flex;
   flex-wrap: wrap;
-  justify-content: flex-start;
-  gap: 0.4rem;
-  margin: 1.25rem 0;
-  border-bottom: 1px solid rgba(72, 183, 207, 0.14);
-  padding-bottom: 1rem;
+  justify-content: flex-end;
+  gap: 0.35rem;
+  flex: 0 0 auto;
+  padding: 0.25rem;
+  background: rgba(10, 28, 43, 0.45);
+  border: 1px solid rgba(72, 183, 207, 0.14);
+  border-radius: 8px;
 }
 
-.tab-button {
-  padding: 0.55rem 1.15rem;
-  border-radius: 7px;
+.site-menu-button {
+  padding: 0.42rem 0.78rem;
+  border-radius: 6px;
   font: inherit;
-  font-size: 0.9rem;
-  font-weight: 500;
+  font-size: 0.82rem;
+  font-weight: 700;
   background: transparent;
-  border: 1px solid rgba(72, 183, 207, 0.14);
+  border: 1px solid transparent;
   color: var(--ink-2);
   cursor: pointer;
   transition: all var(--transition);
   min-width: 0;
   box-shadow: none;
-  letter-spacing: 0;
+  letter-spacing: 0.01em;
   white-space: nowrap;
 }
 
-.tab-button:hover {
+.site-menu-button:hover {
   background: rgba(72, 183, 207, 0.09);
-  border-color: rgba(72, 183, 207, 0.32);
+  border-color: rgba(72, 183, 207, 0.2);
   color: var(--ink);
   transform: none;
   box-shadow: none;
 }
 
-.tab-button.active {
+.site-menu-button.active {
   background: linear-gradient(135deg, var(--accent), #6fc0d8);
   border-color: rgba(111, 192, 216, 0.8);
   color: #061721;
-  font-weight: 600;
+  font-weight: 800;
   box-shadow: none;
 }
-.tab-button.active::after { display: none; }
+.site-menu-button.active::after { display: none; }
 
 .tab-content-container { position: relative; min-height: 200px; }
 .tab-content { display: none; }
@@ -553,9 +556,11 @@ button:disabled {
 .calendar-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 6px;
+  gap: 5px;
   margin-top: 0.75rem;
-  min-width: 100%;
+  width: min(100%, 980px);
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .calendar-day-header {
@@ -574,9 +579,9 @@ button:disabled {
   background: var(--surface-3);
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 7px;
-  padding: 0.5rem;
-  min-height: 60px;
-  aspect-ratio: 1 / 1;
+  padding: 0.45rem;
+  min-height: 56px;
+  aspect-ratio: 1.35 / 1;
   display: flex;
   flex-direction: column;
   position: relative;
@@ -593,7 +598,7 @@ button:disabled {
 }
 
 .calendar-day-number {
-  font-size: 0.78rem;
+  font-size: 0.74rem;
   font-weight: 500;
   color: var(--ink-3);
 }
@@ -621,7 +626,7 @@ button:disabled {
   margin-top: auto;
   display: block;
   color: rgba(255, 255, 255, 0.9);
-  font-size: 0.62rem;
+  font-size: 0.6rem;
   line-height: 1.2;
   font-weight: 600;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
@@ -949,10 +954,63 @@ button:disabled {
 /* ============================================================
    Raw Data Table
    ============================================================ */
-.table-container {
-  margin-top: 1rem;
-  border: 1px solid var(--line);
+.raw-data-section {
+  margin-top: 1.25rem;
+  border: 1px solid rgba(72, 183, 207, 0.14);
   border-radius: var(--radius);
+  background:
+    linear-gradient(180deg, rgba(72, 183, 207, 0.035), rgba(72, 183, 207, 0)),
+    var(--surface);
+  overflow: hidden;
+}
+
+.raw-data-section summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.85rem 1rem;
+  color: var(--ink);
+  cursor: pointer;
+  list-style: none;
+}
+
+.raw-data-section summary::-webkit-details-marker { display: none; }
+
+.raw-data-section summary::after {
+  content: "+";
+  display: grid;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 6px;
+  background: rgba(72, 183, 207, 0.12);
+  color: var(--accent);
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-weight: 700;
+}
+
+.raw-data-section[open] summary::after {
+  content: "-";
+}
+
+.raw-data-section summary span {
+  font-family: "Space Grotesk", "Manrope", system-ui, sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.raw-data-section summary small {
+  margin-left: auto;
+  color: var(--ink-3);
+  font-size: 0.78rem;
+}
+
+.table-container {
+  margin-top: 0;
+  border: 0;
+  border-top: 1px solid var(--line);
+  border-radius: 0;
   overflow: hidden;
 }
 
@@ -1093,9 +1151,7 @@ footer {
 footer a { color: var(--accent); }
 footer a:hover { color: #6fc0d8; }
 
-body > h2,
-body > .table-container,
-body > .pagination,
+body > .raw-data-section,
 body > footer {
   width: min(100%, 1320px);
   margin-left: auto;
@@ -1110,6 +1166,7 @@ body > footer {
   body::before { margin: 0 -1rem; }
   .container { padding: 0; }
 
+  .site-header { align-items: flex-start; flex-direction: column; gap: 0.9rem; }
   .brand-lockup { align-items: flex-start; gap: 0.8rem; }
   .brand-mark { width: 54px; }
   .brand-kicker { font-size: 0.65rem; }
@@ -1138,8 +1195,8 @@ body > footer {
   }
   .flag-value { font-size: 1.6rem; }
 
-  .nav-tabs { gap: 0.3rem; }
-  .tab-button { flex: 1 1 calc(33.333% - 0.3rem); text-align: center; }
+  .site-menu { width: 100%; justify-content: stretch; }
+  .site-menu-button { flex: 1 1 0; text-align: center; }
 
   button { min-height: 44px; }
   .table-container { overflow-x: auto; -webkit-overflow-scrolling: touch; }
@@ -1149,8 +1206,9 @@ body > footer {
   .chart-wide,
   .weather-chart { height: 320px; }
 
-  .calendar-day { min-height: 46px; padding: 0.3rem; }
-  .calendar-day-number { font-size: 0.7rem; }
+  .calendar-day { min-height: 40px; padding: 0.28rem; aspect-ratio: 1 / 1; }
+  .calendar-day-number { font-size: 0.68rem; }
+  .calendar-day-meta { font-size: 0.54rem; }
 
   .date-picker-controls { flex-direction: column; }
   .date-picker-container input[type="date"],
@@ -1162,7 +1220,8 @@ body > footer {
   body::before { margin: 0 -0.75rem; }
   .container { padding: 0; }
   .flag-value { font-size: 1.4rem; }
-  .tab-button { flex: 1 1 100%; }
+  .site-menu { flex-direction: column; }
+  .site-menu-button { width: 100%; }
   .calendar-grid { gap: 4px; }
 }
 

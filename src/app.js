@@ -105,6 +105,7 @@
       limit: 25,
       offset: 0,
       page: 1,
+      hasLoaded: false,
     },
     calendar: {
       month: new Date().getMonth(),
@@ -130,7 +131,6 @@
     try {
       await Promise.allSettled([
         refreshCurrentFlag(),
-        refreshTable(),
         refreshCalendarData(),
       ]);
       renderCalendar();
@@ -146,6 +146,8 @@
       errorContainer: document.getElementById("errorContainer"),
       loadingContainer: document.getElementById("loadingContainer"),
       tableContainer: document.getElementById("tableContainer"),
+      rawDataDetails: document.getElementById("rawDataDetails"),
+      paginationContainer: document.getElementById("paginationContainer"),
       tableHeaders: document.getElementById("tableHeaders"),
       tableBody: document.getElementById("tableBody"),
       prevPageBtn: document.getElementById("prevPageBtn"),
@@ -181,6 +183,11 @@
   function wireEvents() {
     els.prevPageBtn.addEventListener("click", () => changePage(-1));
     els.nextPageBtn.addEventListener("click", () => changePage(1));
+    els.rawDataDetails.addEventListener("toggle", () => {
+      if (els.rawDataDetails.open && !state.table.hasLoaded) refreshTable();
+      if (!els.rawDataDetails.open) els.paginationContainer.classList.add("hidden");
+      if (els.rawDataDetails.open && state.table.hasLoaded) els.paginationContainer.classList.remove("hidden");
+    });
     els.prevMonthBtn.addEventListener("click", () => moveCalendarMonth(-1));
     els.nextMonthBtn.addEventListener("click", () => moveCalendarMonth(1));
     els.loadFlagsByDayBtn.addEventListener("click", () => loadSelectedDate());
@@ -279,6 +286,8 @@
       });
       renderTable(payload);
       renderPagination(payload.pagination);
+      state.table.hasLoaded = true;
+      els.paginationContainer.classList.toggle("hidden", !els.rawDataDetails.open);
       hideError();
     } catch (error) {
       showError(`Failed to load raw data: ${error.message}`);
