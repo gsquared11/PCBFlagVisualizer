@@ -24,6 +24,7 @@
   --f-red:        #d6504e;
   --f-double-red: #a8322f;
   --f-purple:     #8d6fd1;
+  --f-none:       #6f879e;
 
   --radius: 10px;
   --transition: 0.18s ease;
@@ -141,6 +142,7 @@ h1 {
 }
 
 .current-flag-condition.green-flag       { --fc: var(--f-green); }
+.current-flag-condition.no-flag          { --fc: var(--f-none); }
 .current-flag-condition.yellow-flag      { --fc: var(--f-yellow); }
 .current-flag-condition.red-flag         { --fc: var(--f-red); }
 .current-flag-condition.double-red-flag  { --fc: var(--f-double-red); }
@@ -331,16 +333,8 @@ h1 {
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
 /* ============================================================
-   Buttons & controls — flat teal
+   Buttons — flat teal
    ============================================================ */
-.controls {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  margin-bottom: 1.5rem;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
 
 button {
   font: inherit;
@@ -373,18 +367,6 @@ button:disabled {
   color: var(--ink-3);
   opacity: 1;
   cursor: not-allowed;
-}
-
-/* Secondary (ghost) variant for the refresh control */
-#refreshBtn {
-  background: transparent;
-  color: var(--ink-2);
-  border: 1px solid var(--line);
-}
-#refreshBtn:hover {
-  background: var(--surface-2);
-  color: var(--ink);
-  border-color: rgba(255, 255, 255, 0.16);
 }
 
 /* ============================================================
@@ -512,6 +494,7 @@ button:disabled {
 }
 
 .calendar-day.green-flag  { background: var(--f-green); }
+.calendar-day.no-flag     { background: var(--f-none); }
 .calendar-day.yellow-flag { background: var(--f-yellow); }
 .calendar-day.purple-flag { background: var(--f-purple); }
 .calendar-day.red-flag    { background: var(--f-red); }
@@ -647,6 +630,7 @@ button:disabled {
 
 .flag-entry {
   --fc: var(--accent);
+  --flag-swatch: var(--fc);
   padding: 0.7rem 1rem 0.7rem 2.4rem;
   border-bottom: 1px solid var(--line-2);
   display: flex;
@@ -665,18 +649,19 @@ button:disabled {
   height: 12px;
   border-radius: 3px;
   transform: translateY(-50%);
-  background: var(--fc);
+  background: var(--flag-swatch);
 }
 .flag-entry:last-child { border-bottom: none; }
 .flag-entry:hover { background: rgba(255, 255, 255, 0.03); transform: none; filter: none; }
 
 .flag-entry[data-flag-type="Green Flag"]              { --fc: var(--f-green); }
+.flag-entry[data-flag-type="No Flag"]                 { --fc: var(--f-none); }
 .flag-entry[data-flag-type="Yellow Flag"]             { --fc: var(--f-yellow); }
 .flag-entry[data-flag-type="Red Flag"]                { --fc: var(--f-red); }
 .flag-entry[data-flag-type="Double Red Flag"]         { --fc: var(--f-double-red); }
 .flag-entry[data-flag-type="Purple Flag"]             { --fc: var(--f-purple); }
-.flag-entry[data-flag-type="Red Over Purple Flag"]    { --fc: var(--f-red); }
-.flag-entry[data-flag-type="Yellow Over Purple Flag"] { --fc: var(--f-yellow); }
+.flag-entry[data-flag-type="Red Over Purple Flag"]    { --flag-swatch: linear-gradient(135deg, var(--f-red) 0 50%, var(--f-purple) 50%); }
+.flag-entry[data-flag-type="Yellow Over Purple Flag"] { --flag-swatch: linear-gradient(135deg, var(--f-yellow) 0 50%, var(--f-purple) 50%); }
 
 .flag-entry strong { color: var(--ink); font-size: 0.95rem; font-weight: 600; white-space: nowrap; }
 .flag-entry em { color: var(--ink-3); font-style: normal; font-size: 0.82rem; font-family: "IBM Plex Mono", monospace; white-space: nowrap; }
@@ -822,19 +807,46 @@ tr:hover td { background: rgba(255, 255, 255, 0.03); }
 #aboutSection p strong { color: var(--ink); }
 #aboutSection ul { list-style: none; padding: 0; margin: 0; }
 #aboutSection li {
+  --about-flag-color: var(--accent);
+  --about-flag-swatch: var(--about-flag-color);
   margin-bottom: 0.5rem;
-  padding: 0.75rem 0.9rem 0.75rem 1.1rem;
+  padding: 0.75rem 0.9rem 0.75rem 2.6rem;
   position: relative;
   background: var(--surface-2);
   border: 1px solid var(--line-2);
-  border-left: 3px solid var(--accent);
+  border-left: 4px solid var(--about-flag-color);
   border-radius: 7px;
   color: var(--ink-2);
   transition: background var(--transition);
 }
 #aboutSection li:hover { background: rgba(255, 255, 255, 0.03); transform: none; }
-#aboutSection li::before { content: none; }
+#aboutSection li::before {
+  content: "";
+  position: absolute;
+  left: 0.9rem;
+  top: 50%;
+  width: 13px;
+  height: 13px;
+  border-radius: 3px;
+  transform: translateY(-50%);
+  background: var(--about-flag-swatch);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.16);
+}
 #aboutSection li strong { color: var(--ink); }
+#aboutSection li.no-flag { --about-flag-color: var(--f-none); }
+#aboutSection li.green-flag { --about-flag-color: var(--f-green); }
+#aboutSection li.yellow-flag { --about-flag-color: var(--f-yellow); }
+#aboutSection li.red-flag { --about-flag-color: var(--f-red); }
+#aboutSection li.double-red-flag { --about-flag-color: var(--f-double-red); }
+#aboutSection li.purple-flag { --about-flag-color: var(--f-purple); }
+#aboutSection li.yellow-over-purple-flag {
+  --about-flag-color: var(--f-yellow);
+  --about-flag-swatch: linear-gradient(135deg, var(--f-yellow) 0 50%, var(--f-purple) 50%);
+}
+#aboutSection li.red-over-purple-flag {
+  --about-flag-color: var(--f-red);
+  --about-flag-swatch: linear-gradient(135deg, var(--f-red) 0 50%, var(--f-purple) 50%);
+}
 
 /* ============================================================
    Feedback states
@@ -923,9 +935,6 @@ footer a:hover { color: #6fc0d8; }
   .tab-button { flex: 1 1 calc(33.333% - 0.3rem); text-align: center; }
 
   button { min-height: 44px; }
-  #refreshBtn { width: 100%; }
-  .controls { justify-content: stretch; }
-
   .table-container { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   table { min-width: 560px; }
 

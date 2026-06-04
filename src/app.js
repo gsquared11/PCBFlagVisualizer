@@ -14,6 +14,13 @@
   };
 
   const FLAGS = {
+    "no flag": {
+      label: "No Flag",
+      className: "no-flag",
+      color: "#6f879e",
+      severity: 0,
+      description: "No recognized warning flag image was detected by the scraper for this reading.",
+    },
     "green flag": {
       label: "Green Flag",
       className: "green-flag",
@@ -116,7 +123,6 @@
 
   function cacheElements() {
     Object.assign(els, {
-      refreshBtn: document.getElementById("refreshBtn"),
       errorContainer: document.getElementById("errorContainer"),
       loadingContainer: document.getElementById("loadingContainer"),
       tableContainer: document.getElementById("tableContainer"),
@@ -150,7 +156,6 @@
   }
 
   function wireEvents() {
-    els.refreshBtn.addEventListener("click", refreshVisibleData);
     els.prevPageBtn.addEventListener("click", () => changePage(-1));
     els.nextPageBtn.addEventListener("click", () => changePage(1));
     els.prevMonthBtn.addEventListener("click", () => moveCalendarMonth(-1));
@@ -196,21 +201,6 @@
     }
 
     return payload;
-  }
-
-  async function refreshVisibleData() {
-    hideError();
-    await Promise.allSettled([refreshCurrentFlag(), refreshTable()]);
-
-    if (state.tab === "calendar") {
-      await refreshCalendarData();
-      renderCalendar();
-      if (state.calendar.selectedDate) await loadDay(state.calendar.selectedDate);
-    }
-
-    if (state.tab === "charts") {
-      await refreshCharts();
-    }
   }
 
   function switchTab(tabName) {
@@ -468,7 +458,7 @@
       type.textContent = flag.label;
 
       const time = document.createElement("em");
-      time.textContent = formatTime(entry.date_time || `${date}T${entry.time}:00`);
+      time.textContent = formatTime(entry.date_time || `${date}T${entry.time}:00`, entry.timezone);
 
       li.append(type, time);
       list.append(li);
@@ -973,8 +963,8 @@
 
   function formatDateTime(value) {
     if (!value) return "";
-    const date = DateTime.fromISO(value, { zone: "utc" }).setZone(BEACH_TIME_ZONE);
-    return date.isValid ? `${date.toFormat("MMM d, yyyy h:mm a")} CT` : "";
+    const date = parseUtcDateTime(value);
+    return date.isValid ? `${date.toFormat("MMM d, yyyy h:mm a")} ${timeZoneAbbr(date)}` : "";
   }
 
   function formatDate(value) {
@@ -982,24 +972,39 @@
     return date.isValid ? date.toFormat("MMM d, yyyy") : value;
   }
 
-  function formatTime(value) {
-    const date = DateTime.fromISO(value, { zone: "utc" }).setZone(BEACH_TIME_ZONE);
-    if (date.isValid) return date.toFormat("h:mm a");
+  function formatTime(value, explicitZone = "") {
+    const date = parseLocalOrZonedDateTime(value);
+    if (date.isValid) return `${date.toFormat("h:mm a")} ${explicitZone || timeZoneAbbr(date)}`;
     const fallback = DateTime.fromFormat(value, "HH:mm", { zone: BEACH_TIME_ZONE });
-    return fallback.isValid ? fallback.toFormat("h:mm a") : value;
+    return fallback.isValid ? `${fallback.toFormat("h:mm a")} ${explicitZone || timeZoneAbbr(fallback)}` : value;
   }
 
   function formatHourLabel(value) {
-    const date = DateTime.fromISO(value).setZone(BEACH_TIME_ZONE);
+    const date = parseLocalOrZonedDateTime(value);
     return date.isValid ? date.toFormat("ha") : value;
   }
 
   function formatHourKey(value) {
-    const parsed = DateTime.fromISO(value, { zone: "utc" });
+    const parsed = parseLocalOrZonedDateTime(value);
     if (parsed.isValid) return parsed.setZone(BEACH_TIME_ZONE).toFormat("yyyy-MM-dd-HH");
 
     const fallback = DateTime.fromFormat(value, "HH:mm", { zone: BEACH_TIME_ZONE });
     return fallback.isValid ? fallback.toFormat("yyyy-MM-dd-HH") : value;
+  }
+
+  function parseUtcDateTime(value) {
+    return DateTime.fromISO(value, { zone: "utc" }).setZone(BEACH_TIME_ZONE);
+  }
+
+  function parseLocalOrZonedDateTime(value) {
+    const text = String(value || "");
+    const hasExplicitZone = /(?:z|Z|[+-]\d{2}:?\d{2})$/.test(text);
+    const date = DateTime.fromISO(text, hasExplicitZone ? { setZone: true } : { zone: BEACH_TIME_ZONE });
+    return date.isValid ? date.setZone(BEACH_TIME_ZONE) : date;
+  }
+
+  function timeZoneAbbr(date) {
+    return date.offsetNameShort || "CT";
   }
 
   function formatRange(minValue, maxValue, suffix) {

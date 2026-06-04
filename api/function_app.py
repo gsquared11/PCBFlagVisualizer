@@ -16,6 +16,8 @@ load_dotenv()
 app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
 
 connection_string = os.environ.get('SQL_CONNECTION_STRING')
+CENTRAL_TZ = pytz.timezone('America/Chicago')
+UTC_TZ = pytz.UTC
 
 def get_db_connection():
     return pyodbc.connect(connection_string)
@@ -26,6 +28,14 @@ def make_json_response(data, status_code=200):
         mimetype="application/json", 
         status_code=status_code
     )
+
+def as_utc(value):
+    if value.tzinfo is None:
+        return UTC_TZ.localize(value)
+    return value.astimezone(UTC_TZ)
+
+def as_central(value):
+    return as_utc(value).astimezone(CENTRAL_TZ)
 
 @app.route(route="table-data", methods=["GET"])
 def get_flag_data(req: func.HttpRequest) -> func.HttpResponse:
@@ -168,21 +178,17 @@ def get_flags_by_day(req: func.HttpRequest) -> func.HttpResponse:
         if not date_str:
             return make_json_response([])
 
-        cst = pytz.timezone('America/Chicago')
-        utc = pytz.UTC
-        
         day_start_naive = datetime.strptime(date_str, '%Y-%m-%d')
-        day_start_cst = cst.localize(day_start_naive.replace(hour=0, minute=0, second=0, microsecond=0))
-        day_end_cst = cst.localize(day_start_naive.replace(hour=23, minute=59, second=59, microsecond=999999))
+        day_start_central = CENTRAL_TZ.localize(day_start_naive.replace(hour=0, minute=0, second=0, microsecond=0))
+        day_end_central = CENTRAL_TZ.localize(day_start_naive.replace(hour=23, minute=59, second=59, microsecond=999999))
         
-        day_start_utc = day_start_cst.astimezone(utc)
-        day_end_utc = day_end_cst.astimezone(utc)
+        day_start_utc = day_start_central.astimezone(UTC_TZ)
+        day_end_utc = day_end_central.astimezone(UTC_TZ)
         
         conn = get_db_connection()
         cursor = conn.cursor()
         query = """
             SELECT 
-                CONVERT(varchar(5), DATEADD(hour, -5, date_time), 108) as time_cst,
                 flag_type,
                 date_time
             FROM flag_data
@@ -194,12 +200,13 @@ def get_flags_by_day(req: func.HttpRequest) -> func.HttpResponse:
         
         result = []
         for row in rows:
-            time_cst, flag_type, date_time = row
-            dt_cst = date_time.astimezone(cst)
+            flag_type, date_time = row
+            dt_central = as_central(date_time)
             result.append({
-                'time': time_cst,
+                'time': dt_central.strftime('%H:%M'),
+                'timezone': dt_central.tzname(),
                 'flag_type': flag_type.strip() if flag_type else None,
-                'date_time': dt_cst.isoformat()
+                'date_time': dt_central.isoformat()
             })
             
         cursor.close()
@@ -215,8 +222,7 @@ def get_current_month_flags(req: func.HttpRequest) -> func.HttpResponse:
         cursor = conn.cursor()
         query = """
         SELECT 
-            CONVERT(date, DATEADD(hour, -5, date_time)) as date_cst,
-            CONVERT(varchar(5), DATEADD(hour, -5, date_time), 108) as time_cst,
+            date_time,
             flag_type
         FROM flag_data
         ORDER BY date_time ASC
@@ -225,10 +231,12 @@ def get_current_month_flags(req: func.HttpRequest) -> func.HttpResponse:
         rows = cursor.fetchall()
         result = []
         for row in rows:
-            date_cst, time_cst, flag_type = row
+            date_time, flag_type = row
+            dt_central = as_central(date_time)
             result.append({
-                "date": date_cst.strftime("%Y-%m-%d"),
-                "time": time_cst,
+                "date": dt_central.strftime("%Y-%m-%d"),
+                "time": dt_central.strftime("%H:%M"),
+                "timezone": dt_central.tzname(),
                 "flag_type": flag_type.strip() if flag_type else None
             })
         cursor.close()
@@ -246,9 +254,9 @@ def get_weather_data(req: func.HttpRequest) -> func.HttpResponse:
         if not date_str:
             return make_json_response({"error": "No date provided"}, 400)
 
-        requested_date = datetime.strptime(date_str, '%Y-%m-%d')
-        current_date = datetime.now()
-        date_diff = (current_date - requested_date).days
+        requested_date = CENTRAL_TZ.localize(datetime.strptime(date_str, '%Y-%m-%d'))
+        current_date = datetime.now(CENTRAL_TZ)
+        date_diff = (current_date.date() - requested_date.date()).days
 
         if date_diff > 5:
             weather_url = "https://archive-api.open-meteo.com/v1/archive"
@@ -405,8 +413,10 @@ def first_value(values):
     return None if pd.isna(value) else value
 
 def local_openmeteo_time(value):
-    central = pytz.timezone('America/Chicago')
-    return central.localize(datetime.fromisoformat(value)).isoformat()
+    dt = datetime.fromisoformat(value)
+    if dt.tzinfo is None:
+        return CENTRAL_TZ.localize(dt).isoformat()
+    return dt.astimezone(CENTRAL_TZ).isoformat()
 
 def meters_to_feet(value):
     return None if value is None else value * 3.28084
