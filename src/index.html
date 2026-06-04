@@ -9,7 +9,6 @@
   <title>PCB Flag Data Visualizer</title>
   <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/119/119596.png" type="image/x-icon" />
   <link rel="stylesheet" href="./styles.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
 
 <body>
@@ -91,6 +90,21 @@
       <div id="chartsSection" class="tab-content" data-tab-panel="charts">
         <h2>Flag Trends</h2>
         <div id="chartInsightGrid" class="summary-grid"></div>
+
+        <div class="chart-panel">
+          <div class="chart-panel-header">
+            <h3>Monthly Hazard Index</h3>
+          </div>
+          <div id="hazardTrendChart" class="chart chart-wide" role="img" aria-label="Monthly hazard index and high hazard share"></div>
+        </div>
+
+        <div class="chart-panel">
+          <div class="chart-panel-header">
+            <h3>Weekday and Time Pattern</h3>
+          </div>
+          <div id="patternHeatmap" class="pattern-heatmap" aria-label="Weekday and time hazard heatmap"></div>
+          <div id="patternDetail" class="pattern-detail" aria-live="polite"></div>
+        </div>
 
         <div class="chart-panel">
           <div class="chart-panel-header">

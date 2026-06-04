@@ -1,10 +1,11 @@
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap');
 
 :root {
   /* Surfaces */
   --bg:        #0e1c2b;
   --surface:   #14283d;
   --surface-2: #1a3047;
+  --surface-3: #213850;
   --line:      rgba(255, 255, 255, 0.09);
   --line-2:    rgba(255, 255, 255, 0.05);
 
@@ -14,9 +15,10 @@
   --ink-3: #6f879e;
 
   /* Coastal teal accent (interactive / selected only) */
-  --accent:      #3fa1c0;
-  --accent-2:    #348aa6;
-  --accent-soft: rgba(63, 161, 192, 0.16);
+  --accent:      #48b7cf;
+  --accent-2:    #d6a32b;
+  --accent-soft: rgba(72, 183, 207, 0.16);
+  --accent-warm: rgba(214, 163, 43, 0.18);
 
   /* Flag palette — flat, refined */
   --f-green:      #36a06b;
@@ -41,8 +43,10 @@ html {
 }
 
 body {
-  font-family: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
-  background: var(--bg);
+  font-family: "Manrope", system-ui, -apple-system, sans-serif;
+  background:
+    linear-gradient(180deg, rgba(72, 183, 207, 0.08) 0, rgba(72, 183, 207, 0) 240px),
+    var(--bg);
   color: var(--ink);
   line-height: 1.6;
   max-width: 1080px;
@@ -55,7 +59,7 @@ body {
 .calendar-day-number,
 #currentPage,
 td {
-  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
   font-variant-numeric: tabular-nums;
 }
 
@@ -63,14 +67,31 @@ a { color: var(--accent); text-decoration: none; transition: color var(--transit
 a:hover { color: #6fc0d8; }
 
 h2 {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
   font-size: 1.15rem;
-  font-weight: 600;
-  letter-spacing: -0.01em;
+  font-family: "Space Grotesk", "Manrope", system-ui, sans-serif;
+  font-weight: 700;
+  letter-spacing: 0;
   margin: 2rem 0 1rem;
   color: var(--ink);
 }
 
-h3 { font-weight: 600; color: var(--ink); }
+h2::before {
+  content: "";
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 2px;
+  background: linear-gradient(135deg, var(--accent) 0 50%, var(--f-yellow) 50%);
+  flex: 0 0 auto;
+}
+
+h3 {
+  font-family: "Space Grotesk", "Manrope", system-ui, sans-serif;
+  font-weight: 600;
+  color: var(--ink);
+}
 
 /* Remove old decorative waves entirely */
 .wave-decoration { display: none !important; }
@@ -82,8 +103,9 @@ h3 { font-weight: 600; color: var(--ink); }
 
 h1 {
   font-size: clamp(1.4rem, 2.4vw, 1.7rem);
-  font-weight: 600;
-  letter-spacing: -0.02em;
+  font-family: "Space Grotesk", "Manrope", system-ui, sans-serif;
+  font-weight: 700;
+  letter-spacing: 0;
   text-align: left;
   margin: 0 0 0.3rem;
   color: var(--ink);
@@ -92,7 +114,7 @@ h1 {
 .site-subtitle {
   text-align: left;
   font-size: 0.85rem;
-  color: var(--ink-3);
+  color: var(--ink-2);
   margin: 0;
   letter-spacing: 0.02em;
 }
@@ -101,13 +123,25 @@ h1 {
    Container — flat card, no glass
    ============================================================ */
 .container {
-  background: var(--surface);
-  border: 1px solid var(--line);
+  position: relative;
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.025), rgba(255, 255, 255, 0)),
+    var(--surface);
+  border: 1px solid rgba(72, 183, 207, 0.18);
   border-radius: var(--radius);
   padding: 1.75rem;
-  box-shadow: none;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.18);
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
+}
+
+.container::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 5px;
+  background: linear-gradient(90deg, var(--f-green), var(--f-yellow), var(--f-red), var(--f-purple), var(--accent));
 }
 
 /* ============================================================
@@ -228,7 +262,7 @@ h1 {
   font-size: 0.95rem;
   font-weight: 500;
   color: var(--ink);
-  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
@@ -246,8 +280,11 @@ h1 {
 .summary-grid:empty { display: none; }
 
 .summary-card {
-  background: var(--surface-2);
-  border: 1px solid var(--line-2);
+  background:
+    linear-gradient(180deg, rgba(72, 183, 207, 0.07), rgba(72, 183, 207, 0)),
+    var(--surface-2);
+  border: 1px solid rgba(72, 183, 207, 0.12);
+  border-top: 3px solid var(--accent);
   border-radius: 8px;
   padding: 0.85rem 0.95rem;
   min-height: 92px;
@@ -256,6 +293,10 @@ h1 {
   justify-content: space-between;
   gap: 0.35rem;
 }
+
+.summary-card:nth-child(2n) { border-top-color: var(--f-yellow); }
+.summary-card:nth-child(3n) { border-top-color: var(--f-red); }
+.summary-card:nth-child(4n) { border-top-color: var(--f-purple); }
 
 .summary-k {
   font-size: 0.68rem;
@@ -288,7 +329,7 @@ h1 {
   justify-content: flex-start;
   gap: 0.4rem;
   margin: 1.5rem 0;
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid rgba(72, 183, 207, 0.14);
   padding-bottom: 1.25rem;
 }
 
@@ -299,7 +340,7 @@ h1 {
   font-size: 0.9rem;
   font-weight: 500;
   background: transparent;
-  border: 1px solid var(--line);
+  border: 1px solid rgba(72, 183, 207, 0.14);
   color: var(--ink-2);
   cursor: pointer;
   transition: all var(--transition);
@@ -310,17 +351,17 @@ h1 {
 }
 
 .tab-button:hover {
-  background: var(--surface-2);
-  border-color: rgba(255, 255, 255, 0.16);
+  background: rgba(72, 183, 207, 0.09);
+  border-color: rgba(72, 183, 207, 0.32);
   color: var(--ink);
   transform: none;
   box-shadow: none;
 }
 
 .tab-button.active {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #07151f;
+  background: linear-gradient(135deg, var(--accent), #6fc0d8);
+  border-color: rgba(111, 192, 216, 0.8);
+  color: #061721;
   font-weight: 600;
   box-shadow: none;
 }
@@ -373,8 +414,10 @@ button:disabled {
    Calendar
    ============================================================ */
 .calendar-container {
-  background: var(--surface);
-  border: 1px solid var(--line);
+  background:
+    linear-gradient(180deg, rgba(214, 163, 43, 0.045), rgba(214, 163, 43, 0)),
+    var(--surface);
+  border: 1px solid rgba(214, 163, 43, 0.13);
   border-radius: var(--radius);
   padding: 1.25rem;
   margin: 1rem 0;
@@ -402,7 +445,7 @@ button:disabled {
 
 .calendar-nav-btn {
   background: transparent;
-  border: 1px solid var(--line);
+  border: 1px solid rgba(72, 183, 207, 0.18);
   color: var(--ink-2);
   width: 32px;
   height: 32px;
@@ -460,8 +503,8 @@ button:disabled {
 
 /* --- Cell base --- */
 .calendar-day {
-  background: var(--surface-2);
-  border: 1px solid var(--line-2);
+  background: var(--surface-3);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 7px;
   padding: 0.5rem;
   min-height: 60px;
@@ -540,7 +583,7 @@ button:disabled {
   top: 6px;
   right: 6px;
   font-size: 0.6rem;
-  font-family: "IBM Plex Mono", monospace;
+  font-family: "JetBrains Mono", monospace;
   color: rgba(255, 255, 255, 0.9);
 }
 
@@ -548,8 +591,10 @@ button:disabled {
    Date Picker
    ============================================================ */
 .date-picker-container {
-  background: var(--surface);
-  border: 1px solid var(--line);
+  background:
+    linear-gradient(180deg, rgba(72, 183, 207, 0.04), rgba(72, 183, 207, 0)),
+    var(--surface);
+  border: 1px solid rgba(72, 183, 207, 0.14);
   border-radius: var(--radius);
   padding: 1.5rem;
   box-shadow: none;
@@ -577,8 +622,8 @@ button:disabled {
 }
 
 .date-picker-container input[type="date"] {
-  background: var(--surface-2);
-  border: 1px solid var(--line);
+  background: var(--surface-3);
+  border: 1px solid rgba(72, 183, 207, 0.16);
   border-radius: 7px;
   padding: 0.5rem 0.75rem;
   color: var(--ink);
@@ -664,7 +709,7 @@ button:disabled {
 .flag-entry[data-flag-type="Yellow Over Purple Flag"] { --flag-swatch: linear-gradient(135deg, var(--f-yellow) 0 50%, var(--f-purple) 50%); }
 
 .flag-entry strong { color: var(--ink); font-size: 0.95rem; font-weight: 600; white-space: nowrap; }
-.flag-entry em { color: var(--ink-3); font-style: normal; font-size: 0.82rem; font-family: "IBM Plex Mono", monospace; white-space: nowrap; }
+.flag-entry em { color: var(--ink-3); font-style: normal; font-size: 0.82rem; font-family: "JetBrains Mono", monospace; white-space: nowrap; }
 
 .no-data {
   padding: 1.25rem;
@@ -681,8 +726,10 @@ button:disabled {
 .weather-chart-container {
   margin-top: 1.5rem;
   padding: 1.25rem;
-  background: var(--surface);
-  border: 1px solid var(--line);
+  background:
+    linear-gradient(180deg, rgba(141, 111, 209, 0.055), rgba(141, 111, 209, 0)),
+    var(--surface);
+  border: 1px solid rgba(141, 111, 209, 0.16);
   border-radius: var(--radius);
 }
 .weather-chart-container h3 { margin: 0 0 0.5rem; font-size: 1rem; color: var(--ink); }
@@ -700,8 +747,11 @@ button:disabled {
    Distribution charts
    ============================================================ */
 .chart-panel {
-  background: var(--surface);
-  border: 1px solid var(--line);
+  background:
+    linear-gradient(180deg, rgba(72, 183, 207, 0.045), rgba(72, 183, 207, 0)),
+    var(--surface);
+  border: 1px solid rgba(72, 183, 207, 0.14);
+  border-top: 4px solid var(--accent);
   border-radius: var(--radius);
   padding: 1.1rem;
   margin: 1rem 0;
@@ -713,7 +763,11 @@ button:disabled {
 .chart-panel:hover {
   transform: none;
   box-shadow: none;
-  border-color: rgba(255, 255, 255, 0.16);
+  border-color: rgba(72, 183, 207, 0.28);
+}
+
+.chart-panel:nth-of-type(2n) {
+  border-top-color: var(--f-yellow);
 }
 
 .chart-panel-header {
@@ -752,6 +806,78 @@ button:disabled {
   padding: 1rem;
 }
 
+.pattern-heatmap {
+  display: grid;
+  grid-template-columns: minmax(44px, 0.65fr) repeat(6, minmax(54px, 1fr));
+  gap: 6px;
+  overflow-x: auto;
+  padding: 0.75rem;
+  background: var(--surface-2);
+  border: 1px solid var(--line-2);
+  border-radius: 8px;
+}
+
+.heatmap-axis {
+  color: var(--ink-3);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 32px;
+}
+
+.heatmap-day {
+  justify-content: flex-start;
+  padding-left: 0.2rem;
+}
+
+.heatmap-cell {
+  min-width: 54px;
+  min-height: 44px;
+  padding: 0.35rem;
+  border-radius: 7px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.94);
+  background: var(--surface-3);
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 0.78rem;
+  font-weight: 700;
+  transition: filter var(--transition), outline-color var(--transition), transform var(--transition);
+}
+
+.heatmap-cell:not(.empty):hover {
+  filter: brightness(1.12);
+}
+
+.heatmap-cell.selected {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.heatmap-cell.empty {
+  color: var(--ink-3);
+  background: rgba(255, 255, 255, 0.025);
+  cursor: default;
+}
+
+.heatmap-cell.level-0,
+.heatmap-cell.level-1 { background: var(--f-green); }
+.heatmap-cell.level-2 { background: var(--f-yellow); color: #16202b; }
+.heatmap-cell.level-3,
+.heatmap-cell.level-4 { background: var(--f-purple); }
+.heatmap-cell.level-5 { background: var(--f-red); }
+.heatmap-cell.level-6,
+.heatmap-cell.level-7 { background: var(--f-double-red); }
+
+.pattern-detail {
+  margin-top: 0.75rem;
+}
+
+.pattern-detail:empty { display: none; }
+
 /* ============================================================
    Raw Data Table
    ============================================================ */
@@ -778,7 +904,7 @@ th {
   font-weight: 600;
   text-transform: uppercase;
   color: var(--ink-3);
-  font-family: "IBM Plex Sans", sans-serif;
+  font-family: "Manrope", sans-serif;
 }
 
 td { font-size: 0.85rem; color: var(--ink-2); }

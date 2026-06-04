@@ -80,6 +80,25 @@
     description: "No recognized flag value was returned for this entry.",
   };
 
+  const WEEKDAYS = [
+    { index: 0, shortLabel: "Sun", label: "Sunday" },
+    { index: 1, shortLabel: "Mon", label: "Monday" },
+    { index: 2, shortLabel: "Tue", label: "Tuesday" },
+    { index: 3, shortLabel: "Wed", label: "Wednesday" },
+    { index: 4, shortLabel: "Thu", label: "Thursday" },
+    { index: 5, shortLabel: "Fri", label: "Friday" },
+    { index: 6, shortLabel: "Sat", label: "Saturday" },
+  ];
+
+  const TIME_BUCKETS = [
+    { start: 0, shortLabel: "12a", label: "12 AM-4 AM" },
+    { start: 4, shortLabel: "4a", label: "4 AM-8 AM" },
+    { start: 8, shortLabel: "8a", label: "8 AM-12 PM" },
+    { start: 12, shortLabel: "12p", label: "12 PM-4 PM" },
+    { start: 16, shortLabel: "4p", label: "4 PM-8 PM" },
+    { start: 20, shortLabel: "8p", label: "8 PM-12 AM" },
+  ];
+
   const state = {
     table: {
       limit: 25,
@@ -148,6 +167,9 @@
       currentFlagDesc: document.querySelector("#currentFlagCondition .flag-desc"),
       currentFlagStats: document.querySelector("#currentFlagCondition .flag-stats"),
       monthlyTrendChart: document.getElementById("monthlyTrendChart"),
+      hazardTrendChart: document.getElementById("hazardTrendChart"),
+      patternHeatmap: document.getElementById("patternHeatmap"),
+      patternDetail: document.getElementById("patternDetail"),
       allTimeBarChart: document.getElementById("allTimeBarChart"),
       chartInsightGrid: document.getElementById("chartInsightGrid"),
       tabs: Array.from(document.querySelectorAll("[role='tab']")),
@@ -173,7 +195,7 @@
   function applyChartDefaults() {
     Chart.defaults.color = "#9fb2c6";
     Chart.defaults.borderColor = "rgba(255, 255, 255, 0.08)";
-    Chart.defaults.font.family = "'IBM Plex Sans', system-ui, -apple-system, sans-serif";
+    Chart.defaults.font.family = "'Manrope', system-ui, -apple-system, sans-serif";
     Chart.defaults.plugins.tooltip.backgroundColor = "#07151f";
     Chart.defaults.plugins.tooltip.borderColor = "rgba(255, 255, 255, 0.14)";
     Chart.defaults.plugins.tooltip.borderWidth = 1;
@@ -642,18 +664,268 @@
 
   async function refreshCharts() {
     try {
-      const [recent, allTime] = await Promise.all([
+      const [recent, allTime, history] = await Promise.all([
         apiGet(API.flagDistribution),
         apiGet(API.allTimeFlagDistribution),
+        apiGet(API.currentMonthFlags),
       ]);
 
+      state.calendar.allFlags = history || state.calendar.allFlags;
+      renderHazardTrendChart(state.calendar.allFlags);
+      renderPatternHeatmap(state.calendar.allFlags);
       renderMonthlyTrendChart(recent);
       renderAllTimeChart(allTime.data || []);
-      renderChartInsights(recent, allTime.data || []);
+      renderChartInsights(recent, allTime.data || [], state.calendar.allFlags);
       hideError();
     } catch (error) {
       showError(`Failed to load charts: ${error.message}`);
     }
+  }
+
+  function renderHazardTrendChart(history) {
+    const months = monthlyHazardBuckets(history);
+
+    if (!months.length) {
+      destroyChart("hazardTrend");
+      els.hazardTrendChart.replaceChildren(emptyNode("No historical flag records are available."));
+      return;
+    }
+
+    renderChart("hazardTrend", els.hazardTrendChart, {
+      type: "line",
+      data: {
+        labels: months.map((month) => month.label),
+        datasets: [
+          {
+            label: "Average hazard index",
+            data: months.map((month) => month.averageSeverity),
+            borderColor: "#48b7cf",
+            backgroundColor: "rgba(72, 183, 207, 0.16)",
+            pointRadius: 3,
+            tension: 0.25,
+            yAxisID: "severity",
+          },
+          {
+            label: "High hazard share",
+            data: months.map((month) => month.highHazardShare),
+            borderColor: "#d6504e",
+            backgroundColor: "rgba(214, 80, 78, 0.12)",
+            pointRadius: 3,
+            tension: 0.25,
+            yAxisID: "share",
+          },
+        ],
+      },
+      options: {
+        maintainAspectRatio: false,
+        interaction: { mode: "index", intersect: false },
+        scales: {
+          x: {
+            grid: { display: false },
+            ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 8 },
+          },
+          severity: {
+            position: "left",
+            min: 0,
+            max: 7,
+            title: { display: true, text: "Hazard index" },
+          },
+          share: {
+            position: "right",
+            min: 0,
+            max: 100,
+            title: { display: true, text: "High hazard" },
+            ticks: { callback: (value) => `${value}%` },
+            grid: { drawOnChartArea: false },
+          },
+        },
+        plugins: {
+          legend: { position: "bottom", labels: { usePointStyle: true, boxWidth: 8 } },
+          tooltip: {
+            callbacks: {
+              label: (context) => {
+                if (context.dataset.yAxisID === "share") return `High hazard: ${formatNumber(context.raw, 0)}%`;
+                return `Hazard index: ${formatNumber(context.raw, 2)} / 7`;
+              },
+              footer: (items) => {
+                const month = months[items[0].dataIndex];
+                return `${month.count} readings`;
+              },
+            },
+          },
+        },
+      },
+    });
+  }
+
+  function renderPatternHeatmap(history) {
+    const cells = weekdayTimeBuckets(history);
+    const populatedCells = cells.filter((cell) => cell.count > 0);
+
+    els.patternHeatmap.replaceChildren();
+    els.patternDetail.replaceChildren();
+
+    if (!populatedCells.length) {
+      els.patternHeatmap.append(emptyNode("No historical flag records are available."));
+      return;
+    }
+
+    const selectedCell = populatedCells.reduce((best, cell) => {
+      if (!best) return cell;
+      return cell.averageSeverity > best.averageSeverity ? cell : best;
+    }, null);
+
+    const corner = document.createElement("div");
+    corner.className = "heatmap-corner";
+    els.patternHeatmap.append(corner);
+
+    TIME_BUCKETS.forEach((bucket) => {
+      const label = document.createElement("div");
+      label.className = "heatmap-axis heatmap-time";
+      label.textContent = bucket.shortLabel;
+      els.patternHeatmap.append(label);
+    });
+
+    WEEKDAYS.forEach((weekday) => {
+      const day = document.createElement("div");
+      day.className = "heatmap-axis heatmap-day";
+      day.textContent = weekday.shortLabel;
+      els.patternHeatmap.append(day);
+
+      TIME_BUCKETS.forEach((bucket) => {
+        const cell = cells.find((item) => item.weekday === weekday.index && item.bucket === bucket.start);
+        els.patternHeatmap.append(heatmapCellNode(cell, selectedCell));
+      });
+    });
+
+    if (selectedCell) renderPatternDetail(selectedCell);
+  }
+
+  function heatmapCellNode(cell, selectedCell) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "heatmap-cell";
+
+    if (!cell || cell.count === 0) {
+      button.classList.add("empty");
+      button.disabled = true;
+      button.textContent = "—";
+      return button;
+    }
+
+    button.classList.add(`level-${Math.min(7, Math.ceil(cell.averageSeverity))}`);
+    button.classList.toggle(
+      "selected",
+      selectedCell && selectedCell.weekday === cell.weekday && selectedCell.bucket === cell.bucket
+    );
+    button.textContent = formatNumber(cell.averageSeverity, 1);
+    button.setAttribute(
+      "aria-label",
+      `${cell.weekdayLabel} ${cell.bucketLabel}: average hazard ${formatNumber(cell.averageSeverity, 1)} from ${cell.count} readings`
+    );
+    button.addEventListener("click", () => {
+      els.patternHeatmap.querySelectorAll(".heatmap-cell").forEach((node) => node.classList.remove("selected"));
+      button.classList.add("selected");
+      renderPatternDetail(cell);
+    });
+
+    return button;
+  }
+
+  function renderPatternDetail(cell) {
+    const topFlag = mostCommonFlag(cell.entries);
+    els.patternDetail.replaceChildren(
+      summaryCard("Selected window", `${cell.weekdayLabel}, ${cell.bucketLabel}`, `${cell.count} readings`),
+      summaryCard("Average hazard", `${formatNumber(cell.averageSeverity, 1)} / 7`, severityLabel(cell.averageSeverity)),
+      summaryCard("Most common", topFlag?.label || "No data", topFlag ? `${topFlag.count} readings` : "")
+    );
+  }
+
+  function monthlyHazardBuckets(history = []) {
+    const buckets = new Map();
+
+    normalizedFlagEntries(history).forEach((entry) => {
+      const key = entry.date.toFormat("yyyy-MM");
+      if (!buckets.has(key)) {
+        buckets.set(key, {
+          key,
+          label: entry.date.toFormat("LLL yyyy"),
+          count: 0,
+          severityTotal: 0,
+          highHazardCount: 0,
+        });
+      }
+
+      const bucket = buckets.get(key);
+      bucket.count += 1;
+      bucket.severityTotal += entry.flag.severity;
+      if (entry.flag.severity >= FLAGS["red flag"].severity) bucket.highHazardCount += 1;
+    });
+
+    return [...buckets.values()]
+      .sort((a, b) => a.key.localeCompare(b.key))
+      .map((bucket) => ({
+        ...bucket,
+        averageSeverity: bucket.count ? bucket.severityTotal / bucket.count : 0,
+        highHazardShare: bucket.count ? (bucket.highHazardCount / bucket.count) * 100 : 0,
+      }));
+  }
+
+  function weekdayTimeBuckets(history = []) {
+    const buckets = new Map();
+
+    WEEKDAYS.forEach((weekday) => {
+      TIME_BUCKETS.forEach((bucket) => {
+        const key = `${weekday.index}-${bucket.start}`;
+        buckets.set(key, {
+          key,
+          weekday: weekday.index,
+          bucket: bucket.start,
+          weekdayLabel: weekday.label,
+          bucketLabel: bucket.label,
+          count: 0,
+          severityTotal: 0,
+          entries: [],
+        });
+      });
+    });
+
+    normalizedFlagEntries(history).forEach((entry) => {
+      const weekday = entry.date.weekday % 7;
+      const bucketStart = Math.floor(entry.date.hour / 4) * 4;
+      const bucket = buckets.get(`${weekday}-${bucketStart}`);
+      if (!bucket) return;
+
+      bucket.count += 1;
+      bucket.severityTotal += entry.flag.severity;
+      bucket.entries.push({ flag_type: entry.flag.label });
+    });
+
+    return [...buckets.values()].map((bucket) => ({
+      ...bucket,
+      averageSeverity: bucket.count ? bucket.severityTotal / bucket.count : 0,
+    }));
+  }
+
+  function normalizedFlagEntries(history = []) {
+    return history
+      .map((entry) => {
+        const date = parseHistoryDateTime(entry);
+        if (!date.isValid) return null;
+        return {
+          date,
+          flag: getFlagMeta(entry.flag_type),
+          raw: entry,
+        };
+      })
+      .filter(Boolean);
+  }
+
+  function parseHistoryDateTime(entry) {
+    if (entry.date_time) return parseLocalOrZonedDateTime(entry.date_time);
+    if (entry.date && entry.time) return DateTime.fromISO(`${entry.date}T${entry.time}:00`, { zone: BEACH_TIME_ZONE });
+    if (entry.date) return DateTime.fromISO(entry.date, { zone: BEACH_TIME_ZONE });
+    return DateTime.invalid("Missing flag date");
   }
 
   function renderMonthlyTrendChart(payload) {
@@ -752,7 +1024,7 @@
     });
   }
 
-  function renderChartInsights(recent, allTime) {
+  function renderChartInsights(recent, allTime, history = []) {
     if (!els.chartInsightGrid) return;
 
     const months = [recent.month3, recent.month2, recent.month1].filter(Boolean);
@@ -765,10 +1037,14 @@
       .filter((item) => getFlagMeta(item.flag_type).severity >= FLAGS["red flag"].severity)
       .reduce((total, item) => total + item.count, 0);
     const total = totalCount(allTime);
+    const peakWindow = weekdayTimeBuckets(history)
+      .filter((cell) => cell.count >= 3)
+      .sort((a, b) => b.averageSeverity - a.averageSeverity || b.count - a.count)[0];
 
     els.chartInsightGrid.replaceChildren(
       summaryCard("Latest month", latestMostCommon?.label || "No data", latest ? latest.name : "No month returned"),
       summaryCard("Hazard share", total ? `${Math.round((hazardCount / total) * 100)}%` : "N/A", "red, double red, or red over purple"),
+      summaryCard("Peak window", peakWindow ? `${peakWindow.weekdayLabel}, ${peakWindow.bucketLabel}` : "N/A", peakWindow ? `${formatNumber(peakWindow.averageSeverity, 1)} average hazard` : "not enough readings"),
       summaryCard("Total readings", formatInteger(total), "all recorded flag entries")
     );
   }
