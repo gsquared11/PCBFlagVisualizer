@@ -529,7 +529,7 @@ button:disabled {
 }
 
 .calendar-inner {
-  width: min(100%, 980px);
+  width: 100%;
   margin: 0 auto;
 }
 
@@ -616,8 +616,8 @@ button:disabled {
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 7px;
   padding: 0.45rem;
-  min-height: 72px;
-  aspect-ratio: 1.35 / 1;
+  min-height: 0;
+  height: 78px;
   display: flex;
   flex-direction: column;
   position: relative;
@@ -731,36 +731,7 @@ button:disabled {
   margin-bottom: 0.75rem;
 }
 
-.date-picker-container input[type="date"] {
-  background: var(--surface-3);
-  border: 1px solid rgba(72, 183, 207, 0.16);
-  border-radius: 7px;
-  padding: 0.5rem 0.75rem;
-  color: var(--ink);
-  font: inherit;
-  font-size: 0.9rem;
-  flex: 1;
-  min-width: 200px;
-  height: 40px;
-  transition: border-color var(--transition), box-shadow var(--transition);
-}
-.date-picker-container input[type="date"]:focus {
-  outline: none;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-soft);
-}
-.date-picker-container input[type="date"]::-webkit-calendar-picker-indicator {
-  filter: invert(0.8);
-  opacity: 0.7;
-  cursor: pointer;
-}
-.date-picker-container input[type="date"]::-webkit-datetime-edit,
-.date-picker-container input[type="date"]::-webkit-datetime-edit-text,
-.date-picker-container input[type="date"]::-webkit-datetime-edit-month-field,
-.date-picker-container input[type="date"]::-webkit-datetime-edit-day-field,
-.date-picker-container input[type="date"]::-webkit-datetime-edit-year-field {
-  color: var(--ink);
-}
+.date-picker-container input[type="date"] { flex: 1; min-width: 200px; }
 
 .date-picker-container button { height: 40px; min-width: 120px; }
 .date-picker-container button:hover { transform: none; box-shadow: none; }
@@ -1282,7 +1253,7 @@ body > footer {
     column-gap: 0.5rem;
   }
   .calendar-description { font-size: 0.78rem; }
-  .calendar-day { min-height: 40px; padding: 0.28rem; aspect-ratio: 1 / 1; }
+  .calendar-day { height: auto; min-height: 40px; padding: 0.28rem; aspect-ratio: 1 / 1; }
   .calendar-day-number { font-size: 0.68rem; }
   .calendar-day-meta { font-size: 0.54rem; }
 
