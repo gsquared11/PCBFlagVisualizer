@@ -49,10 +49,17 @@ body {
     var(--bg);
   color: var(--ink);
   line-height: 1.6;
-  max-width: 1080px;
-  margin: 0 auto;
-  padding: 2.5rem 2rem 3rem;
+  margin: 0;
+  padding: 0 clamp(1rem, 3vw, 2.5rem) 3rem;
   -webkit-font-smoothing: antialiased;
+}
+
+body::before {
+  content: "";
+  display: block;
+  height: 5px;
+  margin: 0 calc(clamp(1rem, 3vw, 2.5rem) * -1);
+  background: linear-gradient(90deg, var(--f-green), var(--f-yellow), var(--f-red), var(--f-purple), var(--accent));
 }
 
 .mono,
@@ -101,7 +108,8 @@ h3 {
    ============================================================ */
 .site-header {
   text-align: left;
-  margin-bottom: 1.75rem;
+  margin-bottom: 1.5rem;
+  padding-top: 1.5rem;
 }
 
 .brand-lockup {
@@ -189,35 +197,26 @@ h1 span {
 }
 
 /* ============================================================
-   Container — flat card, no glass
+   Main layout
    ============================================================ */
 .container {
   position: relative;
-  overflow: hidden;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.025), rgba(255, 255, 255, 0)),
-    var(--surface);
-  border: 1px solid rgba(72, 183, 207, 0.18);
-  border-radius: var(--radius);
-  padding: 1.75rem;
-  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.18);
+  width: min(100%, 1320px);
+  margin: 0 auto;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
-}
-
-.container::before {
-  content: "";
-  position: absolute;
-  inset: 0 0 auto;
-  height: 5px;
-  background: linear-gradient(90deg, var(--f-green), var(--f-yellow), var(--f-red), var(--f-purple), var(--accent));
 }
 
 /* ============================================================
    Current Flag — hero (Direction C: color field + condition)
    ============================================================ */
 .current-flag-box {
-  margin: 0 0 1.5rem;
+  margin: 0 0 1.25rem;
   overflow: visible;
   border-radius: 0;
 }
@@ -397,9 +396,9 @@ h1 span {
   flex-wrap: wrap;
   justify-content: flex-start;
   gap: 0.4rem;
-  margin: 1.5rem 0;
+  margin: 1.25rem 0;
   border-bottom: 1px solid rgba(72, 183, 207, 0.14);
-  padding-bottom: 1.25rem;
+  padding-bottom: 1rem;
 }
 
 .tab-button {
@@ -489,7 +488,7 @@ button:disabled {
   border: 1px solid rgba(214, 163, 43, 0.13);
   border-radius: var(--radius);
   padding: 1.25rem;
-  margin: 1rem 0;
+  margin: 0.9rem 0;
   box-shadow: none;
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
@@ -667,7 +666,7 @@ button:disabled {
   border-radius: var(--radius);
   padding: 1.5rem;
   box-shadow: none;
-  margin-top: 1.5rem;
+  margin-top: 1rem;
 }
 
 .date-picker-container h2 {
@@ -823,7 +822,7 @@ button:disabled {
   border-top: 4px solid var(--accent);
   border-radius: var(--radius);
   padding: 1.1rem;
-  margin: 1rem 0;
+  margin: 0.9rem 0;
   box-shadow: none;
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
@@ -1094,12 +1093,22 @@ footer {
 footer a { color: var(--accent); }
 footer a:hover { color: #6fc0d8; }
 
+body > h2,
+body > .table-container,
+body > .pagination,
+body > footer {
+  width: min(100%, 1320px);
+  margin-left: auto;
+  margin-right: auto;
+}
+
 /* ============================================================
    Responsive
    ============================================================ */
 @media (max-width: 768px) {
-  body { padding: 1.25rem 1rem 2rem; }
-  .container { padding: 1rem; }
+  body { padding: 0 1rem 2rem; }
+  body::before { margin: 0 -1rem; }
+  .container { padding: 0; }
 
   .brand-lockup { align-items: flex-start; gap: 0.8rem; }
   .brand-mark { width: 54px; }
@@ -1149,8 +1158,9 @@ footer a:hover { color: #6fc0d8; }
 }
 
 @media (max-width: 480px) {
-  body { padding: 1rem 0.75rem 2rem; }
-  .container { padding: 0.85rem; }
+  body { padding: 0 0.75rem 2rem; }
+  body::before { margin: 0 -0.75rem; }
+  .container { padding: 0; }
   .flag-value { font-size: 1.4rem; }
   .tab-button { flex: 1 1 100%; }
   .calendar-grid { gap: 4px; }
