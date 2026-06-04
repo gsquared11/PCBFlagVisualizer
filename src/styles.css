@@ -227,10 +227,10 @@ h1 span {
 
 .current-flag-condition {
   --fc: var(--accent);
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 0.45rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 36%);
+  align-items: center;
+  gap: 1.25rem;
   text-align: left;
   font-size: 1rem;
   font-weight: 400;
@@ -245,6 +245,14 @@ h1 span {
   background:
     linear-gradient(var(--fc), var(--fc)) left center / 8.5rem 100% no-repeat,
     var(--surface);
+}
+
+.current-flag-copy {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.45rem;
+  min-width: 0;
 }
 
 .current-flag-condition.green-flag       { --fc: var(--f-green); }
@@ -337,6 +345,88 @@ h1 span {
   font-family: "JetBrains Mono", ui-monospace, monospace;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
+}
+
+.current-conditions-panel {
+  background:
+    linear-gradient(180deg, rgba(72, 183, 207, 0.06), rgba(72, 183, 207, 0)),
+    rgba(10, 28, 43, 0.35);
+  border: 1px solid rgba(72, 183, 207, 0.14);
+  border-radius: 8px;
+  padding: 0.9rem;
+  min-width: 0;
+}
+
+.conditions-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.7rem;
+}
+
+.conditions-header span,
+.current-meaning strong {
+  color: var(--ink);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.conditions-header small {
+  color: var(--ink-3);
+  font-size: 0.72rem;
+  white-space: nowrap;
+}
+
+.conditions-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+
+.condition-metric {
+  min-width: 0;
+  padding: 0.65rem 0.7rem;
+  background: var(--surface-2);
+  border: 1px solid var(--line-2);
+  border-radius: 7px;
+}
+
+.condition-metric span {
+  display: block;
+  color: var(--ink-3);
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  line-height: 1.2;
+  margin-bottom: 0.3rem;
+  text-transform: uppercase;
+}
+
+.condition-metric strong {
+  display: block;
+  color: var(--ink);
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.current-meaning {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--line-2);
+  color: var(--ink-2);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.current-meaning strong {
+  display: block;
+  margin-bottom: 0.25rem;
 }
 
 /* ============================================================
@@ -1199,6 +1289,8 @@ body > footer {
   h2 { font-size: 1.05rem; }
 
   .current-flag-condition {
+    grid-template-columns: 1fr;
+    gap: 1rem;
     min-height: 0;
     padding: 1.1rem 1.1rem 1.1rem 1.1rem;
     background:
@@ -1219,6 +1311,8 @@ body > footer {
     padding-top: 1.4rem;
   }
   .flag-value { font-size: 1.6rem; }
+  .current-conditions-panel { padding: 0.8rem; }
+  .conditions-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 
   .site-menu {
     top: 0.45rem;
@@ -1286,6 +1380,8 @@ body > footer {
   body::before { margin: 0 -0.75rem; }
   .container { padding: 0; }
   .flag-value { font-size: 1.4rem; }
+  .conditions-header { flex-direction: column; gap: 0.15rem; }
+  .condition-metric { padding: 0.55rem 0.6rem; }
   .site-menu { gap: 0.16rem; padding: 0.16rem; }
   .site-menu-button { width: auto; padding-inline: 0.45rem; }
   .chart-panel { padding: 0.75rem; }

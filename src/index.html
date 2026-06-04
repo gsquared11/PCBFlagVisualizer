@@ -52,10 +52,20 @@
     <!-- Current Flag Display -->
     <div class="current-flag-box">
       <div id="currentFlagCondition" class="current-flag-condition" role="status" aria-live="polite">
-        <span class="flag-label">Current Flag: </span>
-        <span class="flag-value">Loading...</span>
-        <span class="flag-desc"></span>
-        <span class="flag-stats"></span>
+        <div class="current-flag-copy">
+          <span class="flag-label">Current Flag: </span>
+          <span class="flag-value">Loading...</span>
+          <span class="flag-desc"></span>
+          <span class="flag-stats"></span>
+        </div>
+        <aside class="current-conditions-panel" aria-label="Current conditions">
+          <div class="conditions-header">
+            <span>Current Conditions</span>
+            <small id="currentConditionsTime">Loading...</small>
+          </div>
+          <div id="currentConditionsGrid" class="conditions-grid"></div>
+          <div id="currentMeaning" class="current-meaning"></div>
+        </aside>
       </div>
     </div>
 

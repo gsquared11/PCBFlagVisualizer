@@ -98,6 +98,9 @@ function cacheElements() {
     currentFlagValue: document.querySelector("#currentFlagCondition .flag-value"),
     currentFlagDesc: document.querySelector("#currentFlagCondition .flag-desc"),
     currentFlagStats: document.querySelector("#currentFlagCondition .flag-stats"),
+    currentConditionsTime: document.getElementById("currentConditionsTime"),
+    currentConditionsGrid: document.getElementById("currentConditionsGrid"),
+    currentMeaning: document.getElementById("currentMeaning"),
     siteMenu: document.querySelector(".site-menu"),
     monthlyTrendChart: document.getElementById("monthlyTrendChart"),
     hazardTrendChart: document.getElementById("hazardTrendChart"),
@@ -183,7 +186,10 @@ async function refreshCurrentFlag() {
   try {
     const payload = await apiGet(API.tableData, { limit: 1, offset: 0 });
     const latest = payload.data?.[0];
-    if (!latest) return;
+    if (!latest) {
+      renderCurrentConditionsUnavailable();
+      return;
+    }
 
     const flag = getFlagMeta(latest.flag_type);
     const timestamp = formatDateTime(latest.date_time);
@@ -197,11 +203,95 @@ async function refreshCurrentFlag() {
       statNode("Updated", timestamp || "Unknown"),
       statNode("Hazard", severityLabel(flag.severity))
     );
+    await refreshCurrentConditions(flag);
   } catch (error) {
     els.currentFlagValue.textContent = "Unavailable";
     els.currentFlagDesc.textContent = "Flag API data could not be loaded.";
     els.currentFlagStats.innerHTML = "";
+    renderCurrentConditionsUnavailable();
   }
+}
+
+async function refreshCurrentConditions(flag) {
+  const today = DateTime.now().setZone(BEACH_TIME_ZONE).toISODate();
+  const now = DateTime.now().setZone(BEACH_TIME_ZONE);
+
+  try {
+    const weather = await apiGet(API.weatherData, { date: today });
+    const hourly = weather.hourly_data || [];
+    const marine = weather.marine_data || [];
+    const currentWeather = nearestTimedRow(hourly, now);
+    const currentMarine = nearestTimedRow(marine, now);
+    const rainTotal = weather.summary?.precipitation_sum ?? sum(hourly.map((row) => row.precipitation).filter(isNumber));
+
+    els.currentConditionsTime.textContent = currentWeather?.time ? `Near ${formatTime(currentWeather.time)}` : formatDate(today);
+    els.currentConditionsGrid.replaceChildren(
+      conditionMetricNode("Wind", currentWeather?.wind_speed == null ? "N/A" : `${formatNumber(currentWeather.wind_speed, 0)} mph`),
+      conditionMetricNode("Gusts", currentWeather?.wind_gust == null ? "N/A" : `${formatNumber(currentWeather.wind_gust, 0)} mph`),
+      conditionMetricNode("Surf", currentMarine?.wave_height_ft == null ? "N/A" : `${formatNumber(currentMarine.wave_height_ft, 1)} ft`),
+      conditionMetricNode("Rain", rainTotal == null ? "N/A" : `${formatNumber(rainTotal, 2)} in`)
+    );
+    renderCurrentMeaning(flag);
+  } catch (error) {
+    renderCurrentConditionsUnavailable(flag);
+  }
+}
+
+function nearestTimedRow(rows, target) {
+  return rows
+    .map((row) => ({ row, time: DateTime.fromISO(row.time, { setZone: true }).setZone(BEACH_TIME_ZONE) }))
+    .filter((entry) => entry.time.isValid)
+    .sort((a, b) => Math.abs(a.time.diff(target).as("minutes")) - Math.abs(b.time.diff(target).as("minutes")))[0]?.row;
+}
+
+function conditionMetricNode(label, value) {
+  const metric = document.createElement("div");
+  metric.className = "condition-metric";
+
+  const key = document.createElement("span");
+  key.textContent = label;
+
+  const val = document.createElement("strong");
+  val.textContent = value;
+
+  metric.append(key, val);
+  return metric;
+}
+
+function renderCurrentMeaning(flag) {
+  els.currentMeaning.replaceChildren();
+
+  const title = document.createElement("strong");
+  title.textContent = "What this means";
+
+  const body = document.createElement("span");
+  body.textContent = currentMeaningText(flag);
+
+  els.currentMeaning.append(title, body);
+}
+
+function renderCurrentConditionsUnavailable(flag = null) {
+  els.currentConditionsTime.textContent = "Unavailable";
+  els.currentConditionsGrid.replaceChildren(
+    conditionMetricNode("Wind", "N/A"),
+    conditionMetricNode("Gusts", "N/A"),
+    conditionMetricNode("Surf", "N/A"),
+    conditionMetricNode("Rain", "N/A")
+  );
+  if (flag) renderCurrentMeaning(flag);
+  else els.currentMeaning.textContent = "Current weather and surf context could not be loaded.";
+}
+
+function currentMeaningText(flag) {
+  const normalized = flag.label.toLowerCase();
+  if (normalized.includes("double red")) return "Water is closed to public use. Stay out of the Gulf and follow posted beach guidance.";
+  if (normalized.includes("red over purple")) return "High surf hazards and dangerous marine life are both possible. Avoid swimming and stay alert near the shoreline.";
+  if (normalized.includes("red")) return "High surf or strong currents make swimming dangerous. Staying out of the water is the safer call.";
+  if (normalized.includes("yellow over purple")) return "Use caution for moderate surf and marine life. Keep close watch on conditions before entering the water.";
+  if (normalized.includes("purple")) return "Dangerous marine life may be present. Watch for posted guidance and avoid contact with wildlife.";
+  if (normalized.includes("yellow")) return "Moderate surf or currents are possible. Swim with caution and stay near lifeguarded areas.";
+  if (normalized.includes("green")) return "Lower hazard conditions, but currents and surf can still change. Keep normal beach caution.";
+  return "No recognized warning flag was detected. Check official beach signage before making water decisions.";
 }
 
 async function refreshTable() {
