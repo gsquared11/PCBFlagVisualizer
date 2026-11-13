@@ -6,23 +6,6 @@ See the website here: <https://pcbflags.gsquared.dev>
 
 Data collection is handled by [PCBFlagScraper](https://github.com/gsquared11/PCBFlagScraper). Consistent flag data collection for this viewer starts on February 28, 2025.
 
-## Screenshots
-
-<table>
-  <tr>
-    <td><img width="500" alt="Current flag and calendar view" src="https://github.com/user-attachments/assets/ae98bd5d-ba92-4654-b6c5-10486674f767" /></td>
-    <td><img width="500" alt="Weather and surf context chart" src="https://github.com/user-attachments/assets/6a080ac0-45df-4fc1-8e01-d3015bc03d13" /></td>
-  </tr>
-  <tr>
-    <td><img width="500" alt="Flag trends dashboard" src="https://github.com/user-attachments/assets/8a7ded29-3f45-43f6-965f-ec0ff2f78a3b" /></td>
-    <td><img width="500" alt="Flag distribution charts" src="https://github.com/user-attachments/assets/67e5c73c-0142-4f7d-9af9-26a8be1ceec2" /></td>
-  </tr>
-  <tr>
-    <td><img width="500" alt="About beach flags section" src="https://github.com/user-attachments/assets/4a88fc91-2658-47de-a122-f1d5755517ba" /></td>
-    <td><img width="500" alt="Raw data section" src="https://github.com/user-attachments/assets/f5e1f921-cd0f-4d73-88f7-4a54fe87633a" /></td>
-  </tr>
-</table>
-
 ## Features
 
 - **Current Flag Status**: Shows the latest recorded PCB beach flag with hazard context.
