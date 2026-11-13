@@ -8,10 +8,14 @@ Data collection is handled by [PCBFlagScraper](https://github.com/gsquared11/PCB
 
 ## Features
 
-- **Current Flag Status**: Shows the latest recorded PCB beach flag with hazard context.
+- **Current Flag Status**: Shows the latest recorded PCB beach flag with current wind, gusts, surf, and rain. The flag on the page waves harder as the wind picks up.
 - **Interactive Calendar**: Browse recorded flags by month and select individual days for detailed readings.
 - **Weather and Surf Context**: Pulls Open-Meteo weather and marine data for a selected date, including wind, gusts, rain, wave height, and ocean current estimates.
-- **Flag Trend Charts**: Includes a monthly hazard index, high-hazard share, weekday/time heatmap, three-month stacked flag comparison, and all-time distribution since February 28, 2025.
+- **Charts**, grouped into four sections:
+  - *At a glance*: key figures and every day on record as one colored square, with a flag filter and a play-through of the history.
+  - *Through the year*: the flag mix for each calendar month and a monthly hazard index.
+  - *Day to day*: how long each flag usually stays up and what replaces it, plus a weekday/time heatmap.
+  - *Flag counts*: the last three months and the all-time distribution since February 28, 2025.
 - **Collapsible Raw Data**: If you like looking at the cold, hard facts.
 
 ## Technology Stack
@@ -25,6 +29,7 @@ Data collection is handled by [PCBFlagScraper](https://github.com/gsquared11/PCB
 
 - Flag data is collected from the public Panama City Beach flag page by my [PCBFlagScraper](https://github.com/gsquared11/PCBFlagScraper).
 - Charts and summaries are restricted to records on or after February 28, 2025 because earlier records were not collected consistently.
+- Readings are taken every four hours, so flag changes shorter than that are not captured. Stretch lengths in "When a flag goes up" skip any stretch interrupted by a gap of more than 12 hours in the readings.
 - Times are displayed in Panama City Beach local time and dynamically reflect CST or CDT.
 - Open-Meteo weather and marine values are model estimates. Marine data is useful for context, but it should not be used for navigation or safety-critical decisions.
 
@@ -67,7 +72,7 @@ Data collection is handled by [PCBFlagScraper](https://github.com/gsquared11/PCB
 
 - The GitHub Actions workflow deploys `src` as the Static Web Apps frontend and `api` as the Azure Functions backend.
 - The production Static Web App must have `SQL_CONNECTION_STRING` configured in its application settings.
-- The frontend uses browser-loaded CDN scripts for Luxon and Chart.js, so those CDNs must be reachable by clients.
+- The frontend loads Luxon and Chart.js from a CDN and the Inter typeface from Google Fonts, so those must be reachable by clients.
 
 ## API Endpoints
 
@@ -75,5 +80,5 @@ Data collection is handled by [PCBFlagScraper](https://github.com/gsquared11/PCB
 - `/api/flag-distribution`: Recent monthly flag distribution data
 - `/api/all-time-flag-distribution`: Flag distribution since February 28, 2025
 - `/api/flags-by-day`: Get flag data for a specific date
-- `/api/current-month-flags`: Get flag data for the current month
+- `/api/flag-history`: Every flag reading since February 28, 2025
 - `/api/weather-data`: Get Open-Meteo weather and marine context for a specific date

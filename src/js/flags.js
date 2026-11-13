@@ -6,56 +6,56 @@ export const FLAGS = {
     className: "no-flag",
     color: "#6f879e",
     severity: 0,
-    description: "No recognized warning flag image was detected by the scraper for this reading.",
+    description: "No recognized warning flag was detected. Check official beach signage before making water decisions.",
   },
   "green flag": {
     label: "Green Flag",
     className: "green-flag",
     color: "#36a06b",
     severity: 1,
-    description: "Low surf hazard. Conditions are generally calmer, but normal beach caution still applies.",
+    description: "Lower hazard conditions, but currents and surf can still change. Keep normal beach caution.",
   },
   "yellow flag": {
     label: "Yellow Flag",
     className: "yellow-flag",
     color: "#d6a32b",
     severity: 2,
-    description: "Medium surf hazard. Moderate surf or currents are possible, so use extra caution.",
+    description: "Moderate surf or currents are possible. Swim with caution and stay near lifeguarded areas.",
   },
   "purple flag": {
     label: "Purple Flag",
     className: "purple-flag",
     color: "#8d6fd1",
     severity: 3,
-    description: "Dangerous marine life may be present. Swim with caution and watch posted guidance.",
+    description: "Dangerous marine life may be present. Watch for posted guidance and avoid contact with wildlife.",
   },
   "yellow over purple flag": {
     label: "Yellow Over Purple Flag",
     className: "yellow-over-purple-flag",
     color: "#b1897e",
     severity: 4,
-    description: "Medium surf hazard plus dangerous marine life. Use caution for both water movement and wildlife.",
+    description: "Use caution for moderate surf and marine life. Keep close watch on conditions before entering the water.",
   },
   "red flag": {
     label: "Red Flag",
     className: "red-flag",
     color: "#d6504e",
     severity: 5,
-    description: "High surf hazard. Strong currents or rough surf make swimming dangerous.",
+    description: "High surf or strong currents make swimming dangerous. Staying out of the water is the safer call.",
   },
   "red over purple flag": {
     label: "Red Over Purple Flag",
     className: "red-over-purple-flag",
     color: "#b15f8f",
     severity: 6,
-    description: "High surf hazard plus dangerous marine life. Conditions are hazardous in multiple ways.",
+    description: "High surf hazards and dangerous marine life are both possible. Avoid swimming and stay alert near the shoreline.",
   },
   "double red flag": {
     label: "Double Red Flag",
     className: "double-red-flag",
     color: "#a8322f",
     severity: 7,
-    description: "Water is closed to public use because conditions are extremely hazardous.",
+    description: "Water is closed to public use. Stay out of the Gulf and follow posted beach guidance.",
   },
 };
 
@@ -64,7 +64,7 @@ export const UNKNOWN_FLAG = {
   className: "unknown-flag",
   color: "#6f879e",
   severity: 0,
-  description: "No recognized flag value was returned for this entry.",
+  description: "No recognized warning flag was detected. Check official beach signage before making water decisions.",
 };
 
 export function getFlagMeta(value) {

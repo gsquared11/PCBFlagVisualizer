@@ -1,0 +1,233 @@
+/* ============================================================
+   Current flag
+   ============================================================ */
+.current-flag-box { margin: 0 0 2rem; }
+
+.current-flag-condition {
+  --flag-top: var(--f-none);
+  --flag-bottom: var(--f-none);
+  display: grid;
+  grid-template-columns: auto minmax(0, 1.05fr) minmax(0, 1fr);
+  gap: 1.75rem;
+  padding: 1.75rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.current-flag-condition.green-flag      { --flag-top: var(--f-green); }
+.current-flag-condition.yellow-flag     { --flag-top: var(--f-yellow); }
+.current-flag-condition.red-flag        { --flag-top: var(--f-red); }
+.current-flag-condition.purple-flag     { --flag-top: var(--f-purple); }
+.current-flag-condition.double-red-flag {
+  --flag-top: var(--f-double-red);
+  --flag-bottom: var(--f-double-red);
+}
+.current-flag-condition.red-over-purple-flag {
+  --flag-top: var(--f-red);
+  --flag-bottom: var(--f-purple);
+}
+.current-flag-condition.yellow-over-purple-flag {
+  --flag-top: var(--f-yellow);
+  --flag-bottom: var(--f-purple);
+}
+
+/* The flag itself: hoisted when the reading loads, waving with the current wind */
+.flagpole {
+  --slice: 3px;
+  --flag-height: 3.6rem;
+  --wave-duration: 2.8s;
+  --wave-scale: 1;
+  position: relative;
+  width: calc(var(--slice) * 30 + 1.25rem);
+  min-height: 9rem;
+}
+
+.flagpole-pole {
+  position: absolute;
+  left: 0.25rem;
+  top: 0.6rem;
+  bottom: 0;
+  width: 4px;
+  border-radius: 2px;
+  background: var(--ink-3);
+}
+.flagpole-pole::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -0.55rem;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--ink-2);
+  transform: translateX(-50%);
+}
+
+.flagpole-flags {
+  position: absolute;
+  left: calc(0.25rem + 4px);
+  top: 1.1rem;
+  display: grid;
+  gap: 7px;
+  opacity: 0;
+  transform: translateY(4.5rem);
+  transition: transform 1.1s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.35s ease;
+}
+.flagpole.is-raised .flagpole-flags {
+  opacity: 1;
+  transform: none;
+}
+
+.flagpole-flag {
+  display: flex;
+  height: var(--flag-height);
+}
+.flagpole-flag-top    { --flag-color: var(--flag-top); }
+.flagpole-flag-bottom { --flag-color: var(--flag-bottom); display: none; }
+
+:is(.double-red-flag, .red-over-purple-flag, .yellow-over-purple-flag) .flagpole { --flag-height: 2.7rem; }
+:is(.double-red-flag, .red-over-purple-flag, .yellow-over-purple-flag) .flagpole-flag-bottom { display: flex; }
+
+.flagpole-flag span {
+  --reach: calc(var(--i) * 0.17px * var(--wave-scale));
+  width: calc(var(--slice) + 1px);
+  margin-right: -1px;
+  background: var(--flag-color);
+  animation: flag-wave var(--wave-duration) ease-in-out infinite;
+  animation-delay: calc(var(--i) * -0.03 * var(--wave-duration));
+}
+.flagpole-flag span:last-child { border-radius: 0 2px 2px 0; }
+
+@keyframes flag-wave {
+  0%, 100% { transform: translateY(calc(var(--reach) * -1)); }
+  50%      { transform: translateY(var(--reach)); }
+}
+
+.current-flag-copy {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
+.flag-label {
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.flag-value {
+  font-size: clamp(2rem, 4vw, 2.75rem);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.025em;
+}
+
+.flag-desc {
+  max-width: 44ch;
+  margin-top: 0.3rem;
+  color: var(--ink-2);
+}
+.flag-desc:empty { display: none; }
+
+.flag-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1.5rem;
+  margin-top: 0.9rem;
+}
+.flag-stats:empty { display: none; }
+
+.flag-stat {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.4rem;
+}
+.flag-stat-k { color: var(--ink-2); }
+.flag-stat-k::after { content: ":"; }
+.flag-stat-v {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Conditions sit beside the flag as plain figures, not boxes */
+.current-conditions-panel {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+  padding-left: 2rem;
+  border-left: 1px solid var(--line);
+}
+
+.conditions-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+.conditions-header span { font-weight: 600; }
+.conditions-header small {
+  font-size: 0.9375rem;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+
+.conditions-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.condition-metric span {
+  display: block;
+  font-size: 0.9375rem;
+  color: var(--ink-2);
+}
+.condition-metric strong {
+  display: block;
+  font-size: 1.375rem;
+  font-weight: 600;
+  line-height: 1.3;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.current-meaning {
+  margin-top: 1rem;
+  color: var(--ink-2);
+}
+.current-meaning:empty { display: none; }
+
+@media (max-width: 860px) {
+  .current-flag-condition {
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 1.25rem;
+    padding: 1.25rem;
+  }
+
+  .flagpole {
+    --slice: 2px;
+    --flag-height: 2.6rem;
+    align-self: start;
+    min-height: 7rem;
+  }
+  :is(.double-red-flag, .red-over-purple-flag, .yellow-over-purple-flag) .flagpole { --flag-height: 2rem; }
+
+  .current-conditions-panel {
+    grid-column: 1 / -1;
+    padding: 1.25rem 0 0;
+    border-left: 0;
+    border-top: 1px solid var(--line);
+  }
+}
+
+@media (max-width: 640px) {
+  .conditions-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flagpole-flag span { animation: none; }
+}

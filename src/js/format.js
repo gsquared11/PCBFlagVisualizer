@@ -30,3 +30,16 @@ export function max(values) {
 export function sum(values) {
   return values.reduce((total, value) => total + value, 0);
 }
+
+export function median(values) {
+  if (!values.length) return null;
+  const sorted = [...values].sort((a, b) => a - b);
+  const middle = Math.floor(sorted.length / 2);
+  return sorted.length % 2 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2;
+}
+
+export function formatDuration(hours) {
+  if (!isNumber(hours)) return "N/A";
+  if (hours < 48) return `${formatNumber(hours, 0)} hours`;
+  return `${formatNumber(hours / 24, 1)} days`;
+}

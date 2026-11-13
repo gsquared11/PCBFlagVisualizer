@@ -224,8 +224,8 @@ def get_flags_by_day(req: func.HttpRequest) -> func.HttpResponse:
     except Exception as e:
         return make_json_response({"error": str(e)}, 500)
 
-@app.route(route="current-month-flags", methods=["GET"])
-def get_current_month_flags(req: func.HttpRequest) -> func.HttpResponse:
+@app.route(route="flag-history", methods=["GET"])
+def get_flag_history(req: func.HttpRequest) -> func.HttpResponse:
     try:
         conn = get_db_connection()
         cursor = conn.cursor()

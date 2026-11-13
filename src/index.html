@@ -8,7 +8,14 @@
   <meta name="mobile-web-app-status-bar-style" content="black-translucent" />
   <title>PCB Flag Data Visualizer</title>
   <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/119/119596.png" type="image/x-icon" />
-  <link rel="stylesheet" href="./styles.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400..700&display=swap" />
+  <link rel="stylesheet" href="./css/base.css" />
+  <link rel="stylesheet" href="./css/current-flag.css" />
+  <link rel="stylesheet" href="./css/calendar.css" />
+  <link rel="stylesheet" href="./css/charts.css" />
+  <link rel="stylesheet" href="./css/pages.css" />
 </head>
 
 <body>
@@ -19,12 +26,6 @@
         <svg class="brand-mark" viewBox="0 0 72 72" role="img" aria-labelledby="brandMarkTitle brandMarkDesc">
           <title id="brandMarkTitle">PCB flag logo</title>
           <desc id="brandMarkDesc">A beach flag above stylized waves.</desc>
-          <defs>
-            <linearGradient id="brandMarkBg" x1="10" y1="8" x2="62" y2="66" gradientUnits="userSpaceOnUse">
-              <stop stop-color="#1f405b" />
-              <stop offset="1" stop-color="#10283c" />
-            </linearGradient>
-          </defs>
           <rect class="brand-mark-bg" x="4" y="4" width="64" height="64" rx="16" />
           <path class="brand-wave wave-back" d="M12 48c8-7 16-7 24 0s16 7 24 0" />
           <path class="brand-wave wave-front" d="M12 56c8-7 16-7 24 0s16 7 24 0" />
@@ -34,7 +35,7 @@
         </svg>
         <div class="brand-copy">
           <p class="brand-kicker">Panama City Beach</p>
-          <h1><span>PCB Flag</span> Data Visualizer</h1>
+          <h1>PCB Flag Data Visualizer</h1>
           <p class="site-subtitle">Real-time water conditions and historical beach flag patterns</p>
         </div>
       </div>
@@ -52,15 +53,22 @@
     <!-- Current Flag Display -->
     <div class="current-flag-box">
       <div id="currentFlagCondition" class="current-flag-condition" role="status" aria-live="polite">
+        <div id="flagpole" class="flagpole" aria-hidden="true">
+          <span class="flagpole-pole"></span>
+          <div class="flagpole-flags">
+            <span class="flagpole-flag flagpole-flag-top"></span>
+            <span class="flagpole-flag flagpole-flag-bottom"></span>
+          </div>
+        </div>
         <div class="current-flag-copy">
-          <span class="flag-label">Current Flag: </span>
+          <span class="flag-label">Current flag</span>
           <span class="flag-value">Loading...</span>
           <span class="flag-desc"></span>
           <span class="flag-stats"></span>
         </div>
         <aside class="current-conditions-panel" aria-label="Current conditions">
           <div class="conditions-header">
-            <span>Current Conditions</span>
+            <span>Current conditions</span>
             <small id="currentConditionsTime">Loading...</small>
           </div>
           <div id="currentConditionsGrid" class="conditions-grid"></div>
@@ -85,7 +93,7 @@
                 <span class="nav-icon">→</span>
               </button>
             </div>
-            <p class="calendar-description">Click a date to view recorded flags, weather, wind, and surf context. Flag entries are inconsistent before 2/28/2025.</p>
+            <p class="calendar-description">Select a date for its flags and weather.</p>
             <div class="calendar-grid" id="calendar-grid" role="grid" aria-label="Monthly flag calendar">
               <!-- Calendar will be populated by JavaScript -->
             </div>
@@ -94,15 +102,14 @@
 
         <!-- Date Picker Calendar -->
         <div class="calendar-container date-picker-container">
-          <h2>View Flags and Weather Conditions on a Specific Date</h2>
-          <h3>Flag entries are inconsistent before 2/28/2025.</h3>
+          <h2>Flags and weather on a specific date</h2>
+          <p class="calendar-description">Records before 2/28/2025 are incomplete. Weather from
+            <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Open-Meteo</a>.
+          </p>
           <div class="date-picker-controls">
             <input type="date" id="flagDate" placeholder="mm/dd/yyyy" aria-label="Select date to view flags" />
-            <button id="loadFlagsByDayBtn" aria-label="Show flags for selected date">Show Data</button>
+            <button id="loadFlagsByDayBtn" aria-label="Show flags for selected date">Show data</button>
           </div>
-          <p class="calendar-description">Click a date to view the flags and weather conditions for that day. Weather
-            data provided by <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Open-Meteo</a>.
-          </p>
           <div id="datepickerError" class="error hidden" role="alert"></div>
           <div id="daySummaryContainer" class="summary-grid" aria-live="polite"></div>
           <div id="flagsByDayContainer" class="flags-by-day-container" role="region"
@@ -110,9 +117,9 @@
 
           <!-- Weather Chart Container -->
           <div id="weatherChartContainer" class="weather-chart-container hidden">
-            <h3>Weather and Surf Context</h3>
+            <h3>Weather and surf context</h3>
             <div id="weatherSummary" class="summary-grid"></div>
-            <p class="chart-instructions">Click legend items below the chart to hide or show each weather value. Double-click a legend item to isolate that value. Open-Meteo marine values are model estimates and should not be used for navigation.</p>
+            <p class="chart-instructions">Marine values are model estimates, not for navigation.</p>
             <div id="weatherChart" class="weather-chart" role="img" aria-label="Weather conditions chart"></div>
           </div>
         </div>
@@ -120,52 +127,98 @@
 
       <!-- Charts Section -->
       <div id="chartsSection" class="tab-content" data-tab-panel="charts">
-        <h2>Flag Trends</h2>
-        <div id="chartInsightGrid" class="summary-grid"></div>
+        <section class="chart-section">
+          <h2>At a glance</h2>
+          <div id="chartInsightGrid" class="summary-grid"></div>
 
-        <div class="chart-panel">
-          <div class="chart-panel-header">
-            <h3>Monthly Hazard Index</h3>
+          <div class="chart-panel">
+            <div class="chart-panel-header">
+              <h3>Every day on record</h3>
+              <button id="ribbonPlayBtn" class="ghost-button" type="button">Play history</button>
+            </div>
+            <p class="chart-instructions">One square per day, colored by its highest flag.</p>
+            <div id="dayRibbonLegend" class="flag-keys" role="group" aria-label="Highlight one flag"></div>
+            <div id="dayRibbon" class="day-ribbon" role="img" aria-label="Every recorded day, colored by its highest flag"></div>
+            <p id="dayRibbonDetail" class="ribbon-detail" aria-live="polite"></p>
           </div>
-          <div id="hazardTrendChart" class="chart chart-wide" role="img" aria-label="Monthly hazard index and high hazard share"></div>
-        </div>
+        </section>
 
-        <div class="chart-panel">
-          <div class="chart-panel-header">
-            <h3>Weekday and Time Pattern</h3>
-          </div>
-          <div id="patternHeatmap" class="pattern-heatmap" aria-label="Weekday and time hazard heatmap"></div>
-          <div id="patternDetail" class="pattern-detail" aria-live="polite"></div>
-        </div>
+        <section class="chart-section">
+          <h2>Through the year</h2>
+          <div class="chart-pair">
+            <div class="chart-panel">
+              <div class="chart-panel-header">
+                <h3>A typical year</h3>
+              </div>
+              <p class="chart-instructions">Flag mix by calendar month, all years combined.</p>
+              <div id="typicalYearChart" class="chart chart-wide" role="img" aria-label="Share of flag readings by calendar month"></div>
+            </div>
 
-        <div class="chart-panel">
-          <div class="chart-panel-header">
-            <h3>Last 3 Months by Flag Type</h3>
+            <div class="chart-panel">
+              <div class="chart-panel-header">
+                <h3>Monthly hazard index</h3>
+              </div>
+              <div id="hazardTrendChart" class="chart chart-wide" role="img" aria-label="Monthly hazard index and high hazard share"></div>
+            </div>
           </div>
-          <div id="monthlyTrendChart" class="chart chart-wide" role="img" aria-label="Stacked monthly flag comparison"></div>
-        </div>
+        </section>
 
-        <div class="chart-panel">
-          <div class="chart-panel-header">
-            <h3>Flag Distribution Since Feb 28, 2025</h3>
+        <section class="chart-section">
+          <h2>Day to day</h2>
+          <div class="chart-pair">
+            <div class="chart-panel">
+              <div class="chart-panel-header">
+                <h3>When a flag goes up</h3>
+              </div>
+              <p class="chart-instructions">How long it stays up and what replaces it.</p>
+              <div id="followUpPicker" class="flag-keys" role="group" aria-label="Choose a flag"></div>
+              <div id="followUpSummary" class="summary-grid" aria-live="polite"></div>
+              <h4>What replaced it</h4>
+              <ul id="followUpBars" class="follow-up-bars"></ul>
+            </div>
+
+            <div class="chart-panel">
+              <div class="chart-panel-header">
+                <h3>Weekday and time pattern</h3>
+              </div>
+              <p class="chart-instructions">Average hazard, 0 to 7, by day and time.</p>
+              <div id="patternHeatmap" class="pattern-heatmap" aria-label="Weekday and time hazard heatmap"></div>
+              <div id="patternDetail" class="pattern-detail" aria-live="polite"></div>
+            </div>
           </div>
-          <div id="allTimeBarChart" class="chart chart-wide" role="img" aria-label="Flag distribution since February 28, 2025"></div>
-        </div>
+        </section>
+
+        <section class="chart-section">
+          <h2>Flag counts</h2>
+          <div class="chart-pair">
+            <div class="chart-panel">
+              <div class="chart-panel-header">
+                <h3>Last 3 months</h3>
+              </div>
+              <div id="monthlyTrendChart" class="chart chart-wide" role="img" aria-label="Stacked monthly flag comparison"></div>
+            </div>
+
+            <div class="chart-panel">
+              <div class="chart-panel-header">
+                <h3>Since Feb 28, 2025</h3>
+              </div>
+              <div id="allTimeBarChart" class="chart chart-wide" role="img" aria-label="Flag distribution since February 28, 2025"></div>
+            </div>
+          </div>
+        </section>
       </div>
 
       <!-- About Section -->
       <div id="aboutSection" class="tab-content" data-tab-panel="about">
         <h2>About PCB Beach Flags</h2>
         <p>
-          The Panama City Beach, FL (PCB) Flag System is used to inform the public
-          about current water conditions. Flags are color-coded to indicate the
-          level of safety and potential hazards in the water. Only one forum recorded this data before,
-          but it did not provide a way to visualize the data, so I created this tool.
+          Panama City Beach flies color-coded flags to show current water hazards. Only one forum
+          recorded this data before, with no way to visualize it, so I created this tool.
         </p>
-        <p><strong>Note: data collection for this tool consistently started from 2/28/2025.
-            More information of how this data is collected can be found <a
-              href="https://github.com/gsquared11/PCBFlagScraper" target="_blank" rel="noopener noreferrer"><u><span
-                  style="color: #3a86ff;">here</span></u></a>.</strong> </p>
+        <p>
+          Consistent data collection started 2/28/2025.
+          <a href="https://github.com/gsquared11/PCBFlagScraper" target="_blank" rel="noopener noreferrer">How the data is collected</a>.
+        </p>
         <ul>
           <li class="about-flag green-flag">
             <strong>Green Flag:</strong> Low hazard, calm conditions, safe for
@@ -196,25 +249,12 @@
             dangerous marine life.
           </li>
         </ul>
-        <p>
-          Beachgoers should always follow the flag warnings to ensure their
-          safety while enjoying the beach.
-        </p>
+        <p>Always follow the flags posted at the beach.</p>
       </div>
     </div>
 
     <!-- Error Message Container -->
     <div id="errorContainer" class="error hidden" role="alert"></div>
-
-    <!-- Decorative Wave -->
-    <div class="wave-decoration" aria-hidden="true">
-      <svg class="wave1" viewBox="0 0 1440 60" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M0,30 C240,60 480,0 720,30 C960,60 1200,0 1440,30 L1440,60 L0,60 Z" fill="rgba(58,134,255,0.5)"/>
-      </svg>
-      <svg class="wave2" viewBox="0 0 1440 60" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M0,20 C360,55 720,5 1080,35 C1260,50 1380,20 1440,25 L1440,60 L0,60 Z" fill="rgba(131,56,236,0.4)"/>
-      </svg>
-    </div>
   </div>
 
   <!-- Raw Data Table -->
@@ -244,8 +284,9 @@
 
   <!-- Footer -->
   <footer>
-    &copy; 2026 &mdash;
-    <a href="https://github.com/gsquared11" target="_blank" rel="noopener noreferrer">gsquared11</a>
+    Built and maintained by
+    <a href="https://github.com/gsquared11" target="_blank" rel="noopener noreferrer">gsquared11</a>.
+    &copy; 2026
   </footer>
 
   <!-- Scripts -->

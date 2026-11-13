@@ -6,7 +6,7 @@ export const API = {
   flagDistribution: "/api/flag-distribution",
   allTimeFlagDistribution: "/api/all-time-flag-distribution",
   flagsByDay: "/api/flags-by-day",
-  currentMonthFlags: "/api/current-month-flags",
+  flagHistory: "/api/flag-history",
   weatherData: "/api/weather-data",
 };
 

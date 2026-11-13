@@ -1,16 +1,22 @@
-import { formatNumber } from "./format.js";
-
 const charts = new Map();
 
+export const isCompact = () => window.matchMedia("(max-width: 640px)").matches;
+
 export function applyChartDefaults() {
-  const Chart = window.Chart;
-  Chart.defaults.color = "#9fb2c6";
-  Chart.defaults.borderColor = "rgba(255, 255, 255, 0.08)";
-  Chart.defaults.font.family = "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
-  Chart.defaults.plugins.tooltip.backgroundColor = "#07151f";
-  Chart.defaults.plugins.tooltip.borderColor = "rgba(255, 255, 255, 0.14)";
-  Chart.defaults.plugins.tooltip.borderWidth = 1;
-  Chart.defaults.plugins.tooltip.padding = 10;
+  const { defaults } = window.Chart;
+  defaults.color = "#9fb2c6";
+  defaults.borderColor = "rgba(255, 255, 255, 0.08)";
+  defaults.font.family = "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+  defaults.font.size = 14;
+  defaults.maintainAspectRatio = false;
+  defaults.plugins.legend.position = "bottom";
+  Object.assign(defaults.plugins.legend.labels, { usePointStyle: true, boxWidth: 8, boxHeight: 7, padding: 16 });
+  Object.assign(defaults.plugins.tooltip, {
+    backgroundColor: "#07151f",
+    borderColor: "rgba(255, 255, 255, 0.14)",
+    borderWidth: 1,
+    padding: 12,
+  });
 }
 
 export function renderChart(key, container, config) {
@@ -19,25 +25,21 @@ export function renderChart(key, container, config) {
 
   const canvas = document.createElement("canvas");
   container.append(canvas);
-  const chart = new window.Chart(canvas.getContext("2d"), config);
-  charts.set(key, chart);
+  charts.set(key, new window.Chart(canvas.getContext("2d"), config));
 }
 
 export function destroyChart(key) {
-  const chart = charts.get(key);
-  if (chart) {
-    chart.destroy();
-    charts.delete(key);
-  }
+  charts.get(key)?.destroy();
+  charts.delete(key);
 }
 
-export function weatherTooltipLabel(context) {
-  const value = context.parsed.y;
-  if (value == null) return null;
+// Smaller type and tighter legends on phones, for the charts that carry the most labels.
+export const tickFont = () => ({ size: isCompact() ? 12 : 14 });
 
-  if (context.dataset.label === "Rain (in)") return `Rain: ${formatNumber(value, 2)} in`;
-  if (context.dataset.label === "Flag reading") return `Flag severity: ${value}/7`;
-  if (context.dataset.label.includes("Wave")) return `Wave height: ${formatNumber(value, 1)} ft`;
-  if (context.dataset.label.includes("current")) return `Ocean current: ${formatNumber(value, 1)} mph`;
-  return `${context.dataset.label}: ${formatNumber(value, 0)}`;
+export const compactLegend = () => ({
+  labels: isCompact() ? { boxWidth: 7, padding: 12, font: { size: 13 } } : {},
+});
+
+export function lineSeries(label, data, borderColor, backgroundColor, yAxisID, extra = {}) {
+  return { label, data, borderColor, backgroundColor, yAxisID, pointRadius: 0, tension: 0.25, ...extra };
 }
